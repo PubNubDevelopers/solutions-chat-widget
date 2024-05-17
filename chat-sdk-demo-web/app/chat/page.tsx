@@ -11,13 +11,13 @@ import { roboto } from '@/app/fonts';
 export default function Page() {
 
   const searchParams = useSearchParams()
-  const [userId, setUserId] = useState("")
+  const [userId, setUserId] = useState(null | "")
   const [chat, setChat] = useState<Chat | null>(null)
   
   useEffect(() => {
     async function init() {
       setUserId(searchParams.get('userId'))
-      if (userId === "") return;
+      if (userId == null || userId === "") return;
       /*const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,

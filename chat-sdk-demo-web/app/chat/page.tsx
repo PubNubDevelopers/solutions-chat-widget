@@ -11,7 +11,7 @@ import { roboto } from '@/app/fonts';
 export default function Page() {
 
   const searchParams = useSearchParams()
-  const [userId, setUserId] = useState<String, null>("")
+  const [userId, setUserId] = useState<String | null>("")
   const [chat, setChat] = useState<Chat | null>(null)
   
   useEffect(() => {
@@ -26,6 +26,8 @@ export default function Page() {
         storeUserActivityTimestamps: true,
         storeUserActivityInterval: 60000,
       })*/
+
+      //  todo text should not be selectable
 
       setChat(chat)
     }

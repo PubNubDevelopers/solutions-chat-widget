@@ -43,7 +43,7 @@ export default function Page() {
   }
 
   return (
-    <main>
+      <main>
       <div id='header' className="flex flex-row justify-between h-16 bg-sky-950">
         <div id='room-selector' className="flex items-center justify-center gap-2.5 ml-2.5">
           <div id='room-avatar' className="flex justify-center w-12 h-12 rounded-full bg-pubnublightnavy">
@@ -97,7 +97,6 @@ export default function Page() {
         </div>
       </div>
     </main>
-
 
   );
   

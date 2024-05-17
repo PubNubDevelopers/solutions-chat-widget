@@ -9,9 +9,13 @@ export default function Home() {
   const [userId, setUserId] = useState("default-user")
   const router = useRouter()
 
-  function login(event) {
-    event.preventDefault()
-    router.push(`/chat/?userId=${userId}`)
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    router.replace(`/chat/?userId=${userId}`)
+  }
+
+  function handleLoginButton(event: React.MouseEvent<HTMLElement>) {
+    router.replace(`/chat/?userId=${userId}`)
   }
 
   return (
@@ -30,13 +34,13 @@ export default function Home() {
             <div className="text-center text-lg text-pubnubtext font-bold">Log in: Sample Chat App</div>
             <div className="flex text-center text-base text-pubnub font-normal">Built with the PubNub Chat SDK for JavaScript and TypeScript.</div>
           </div>
-          <form className="flex flex-col gap-16" onSubmit={login}>
+          <form className="flex flex-col gap-16" onSubmit={handleSubmit}>
           <div className="flex flex-col">
             <label className="text-sm text-pubnubtext">Choose a User ID / Name</label>
             <input type="text" id="txtUserId" value={userId} onChange={(e) => setUserId(e.target.value)} name="userId" className="bg-white border border-pubnublightgray text-pubnubtext rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
           </div>
           
-            <button type="button" onClick={login} className="bg-pubnubnavy text-pubnubtextlight text-sm py-3 rounded-md shadow-sm w-full">Log in</button>
+            <button type="button" onClick={handleLoginButton} className="bg-pubnubnavy text-pubnubtextlight text-sm py-3 rounded-md shadow-sm w-full">Log in</button>
 
           </form>
         </div>

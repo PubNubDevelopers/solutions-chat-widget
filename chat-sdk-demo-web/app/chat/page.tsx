@@ -11,7 +11,7 @@ import { roboto } from '@/app/fonts';
 export default function Page() {
 
   const searchParams = useSearchParams()
-  const [userId, setUserId] = useState(null | "")
+  const [userId, setUserId] = useState<String, null>("")
   const [chat, setChat] = useState<Chat | null>(null)
   
   useEffect(() => {

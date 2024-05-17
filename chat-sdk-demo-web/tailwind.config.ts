@@ -8,6 +8,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        'pubnubtext': '#171717',
+        'pubnubtextlight': '#FAFAFA',
+        'pubnublightgray': '#D4D4D4',
+        'pubnubnavy': '#161C2D',
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

@@ -13,6 +13,8 @@ const config: Config = {
         'pubnubtextlight': '#FAFAFA',
         'pubnublightgray': '#D4D4D4',
         'pubnubnavy': '#161C2D',
+        'pubnublightnavy': '#FAFAFC',
+        'pubnubbabyblue': '#C3E6FA',
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

@@ -312,8 +312,8 @@ export default function Page () {
             expandCollapse={() => {
               setPublicExpanded(!publicExpanded)
             }}
-            actionIcon={ChatHeaderActionIcon.ADD}
-            action={setCreatingNewMessage}
+            actionIcon={ChatHeaderActionIcon.NONE}
+            action={() => {}}
           />
           {publicExpanded && (
             <div>

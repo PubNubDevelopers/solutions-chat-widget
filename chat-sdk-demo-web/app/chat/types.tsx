@@ -13,7 +13,8 @@ export enum MessageActionsTypes {
 
 export enum ChatHeaderActionIcon {
   MARK_READ = 0,
-  ADD = 1
+  ADD = 1,
+  NONE = 2
 }
 
 export interface CustomQuotedMessage {

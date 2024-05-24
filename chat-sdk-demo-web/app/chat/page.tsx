@@ -1,23 +1,75 @@
-"use client"
+'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { ChatContext } from "./context"
+import { ChatContext } from './context'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect, useContext } from 'react'
-import {loadEnvConfig } from '@next/env'
-import { Channel, Chat, Membership, User } from "@pubnub/chat"
-import Image from "next/image";
-import { roboto } from '@/app/fonts';
+import { loadEnvConfig } from '@next/env'
+import { Channel, Chat, Membership, User } from '@pubnub/chat'
+import Image from 'next/image'
+import { roboto } from '@/app/fonts'
+import Header from './ui-components/header'
+import ChatMenuHeader from './ui-components/chatMenuHeader'
+import ChatMenuItem from './ui-components/chatMenuItem'
+import Avatar from './ui-components/avatar'
+import UnreadIndicator from './ui-components/unreadIndicator'
+import Message from './ui-components/message'
+import MessageList from './ui-components/messageList'
+import MessageListThread from './ui-components/messageListThread'
+import MessageListPinned from './ui-components/messageListPinned'
+import MessageInput from './ui-components/messageInput'
+import NewMessageGroup from './ui-components/newMessageGroup'
+import UserMessage from './ui-components/userMessage'
+import RoomSelector from './ui-components/roomSelector'
+import ProfileScreen from './ui-components/profileScreen'
+import TypingIndicator from './ui-components/typingIndicator'
+import ChatSettingsScreen from './ui-components/chatSettingsScreen'
+import ModalChangeName from './ui-components/modalChangeName'
+import ModalManageMembers from './ui-components/modalManageMembers'
+import searchImg from '@/public/icons/search.svg'
+import {
+  ChatNameModals,
+  MessageActionsTypes,
+  CustomQuotedMessage,
+  ChatHeaderActionIcon
+} from './types'
 
-export default function Page() {
-
+export default function Page () {
   const searchParams = useSearchParams()
-  const [userId, setUserId] = useState<String | null>("")
+  const router = useRouter()
+  const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
-  
+
+  const [unreadExpanded, setUnreadExpanded] = useState(true)
+  const [publicExpanded, setPublicExpanded] = useState(true)
+  const [groupsExpanded, setGroupsExpanded] = useState(true)
+  const [directMessagesExpanded, setDirectMessagesExpanded] = useState(true)
+  const [showThread, setShowThread] = useState(false)
+  const [showPinnedMessages, setShowPinnedMessages] = useState(false)
+  const [roomSelectorVisible, setRoomSelectorVisible] = useState(false)
+  const [profileScreenVisible, setProfileScreenVisible] = useState(false)
+  const [chatSettingsScreenVisible, setChatSettingsScreenVisible] =
+    useState(false)
+  const [creatingNewMessage, setCreatingNewMessage] = useState(false)
+  const [changeUserNameModalVisible, setChangeUserNameModalVisible] =
+    useState(false)
+  const [changeChatNameModalVisible, setChangeChatNameModalVisible] =
+    useState(false)
+  const [manageMembersModalVisible, setManageMembersModalVisible] =
+    useState(false)
+
+  const [userMsg, setUserMsg] = useState({ message: '', href: '' })
+  const [userMsgShown, setUserMsgShown] = useState(false)
+  const [userMsgTimeoutId, setUserMsgTimeoutId] = useState(0)
+
+  const [quotedMessage, setQuotedMessage] =
+    useState<CustomQuotedMessage | null>(null)
+  const [typingUsers, setTypingUsers] = useState<String | null>(null)
+
   useEffect(() => {
-    async function init() {
+    async function init () {
       setUserId(searchParams.get('userId'))
-      if (userId == null || userId === "") return;
+      if (userId == null || userId === '') return
       /*const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
@@ -27,77 +79,376 @@ export default function Page() {
         storeUserActivityInterval: 60000,
       })*/
 
-      //  todo text should not be selectable
-
       setChat(chat)
     }
     init()
   }, [userId, setChat])
 
+  function handleChatSearch (term: string) {
+    console.log(term)
+  }
+
+  function handleMessageDraftChanged (draft: string) {
+    console.log(draft)
+  }
+
+  function messageActionHandler (action, messageId) {
+    switch (action) {
+      case MessageActionsTypes.REPLY_IN_THREAD:
+        setShowThread(true)
+        setShowPinnedMessages(false)
+        showUserMessage(
+          'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
+          ''
+        )
+        break
+      case MessageActionsTypes.QUOTE:
+        let newQuotedMessage: CustomQuotedMessage = {
+          message: 'This is a quoted message. ',
+          sender: 'Sarah Johannsen'
+        }
+        setQuotedMessage(newQuotedMessage)
+        break
+      case MessageActionsTypes.PIN:
+        setShowThread(false)
+        setShowPinnedMessages(true)
+        showUserMessage(
+          'Work in progress: Though supported by the Chat SDK, this demo does not yet support pinning messages',
+          ''
+        )
+        break
+      case MessageActionsTypes.REACT:
+        showUserMessage(
+          'Work in progress: Though supported by the Chat SDK, this demo does not yet support message reactions',
+          ''
+        )
+        break
+    }
+  }
+
+  function logout () {
+    router.replace(`/`)
+  }
+
+  function showUserMessage (message, href) {
+    clearTimeout(userMsgTimeoutId)
+    console.log(message)
+    setUserMsg({ message: message, href: href })
+    console.log(userMsg)
+    setUserMsgShown(true)
+    let timeoutId = window.setTimeout(setUserMsgShown, 5000, false)
+    setUserMsgTimeoutId(timeoutId)
+  }
 
   if (!chat && false) {
     return (
       //  TODO DETECT IF THE PUB / SUB KEYS ARE MISSING
+      //  TODO Need to componentize this UI
       <main>Chat is initializing</main>
     )
   }
 
   return (
-      <main>
-      <div id='header' className="flex flex-row justify-between h-16 bg-sky-950">
-        <div id='room-selector' className="flex items-center justify-center gap-2.5 ml-2.5">
-          <div id='room-avatar' className="flex justify-center w-12 h-12 rounded-full bg-pubnublightnavy">
+    <main className='overscroll-none overflow-y-hidden'>
+      <RoomSelector
+        roomSelectorVisible={roomSelectorVisible}
+        setRoomSelectorVisible={setRoomSelectorVisible}
+      />
+      <ProfileScreen
+        profileScreenVisible={profileScreenVisible}
+        setProfileScreenVisible={setProfileScreenVisible}
+        changeUserNameScreenVisible={changeUserNameModalVisible}
+        name='Philip Soto'
+        logout={() => logout()}
+        changeName={() => setChangeUserNameModalVisible(true)}
+      />
+      <ChatSettingsScreen
+        chatSettingsScreenVisible={chatSettingsScreenVisible}
+        setChatSettingsScreenVisible={setChatSettingsScreenVisible}
+        changeChatNameScreenVisible={changeChatNameModalVisible}
+        manageMembersModalVisible={manageMembersModalVisible}
+        isDirectChat={false}
+        currentChannel='Presumably this will be a PN Channel object'
+        buttonAction={() => {
+          console.log('ToDo: Either delete or leave conversation')
+          showUserMessage(
+            'Work in progress: Though supported by the Chat SDK, this demo does not yet support leaving channels (either 1:1 conversations, or private groups)',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
+          )
+        }}
+        changeChatNameAction={() => {
+          setChangeChatNameModalVisible(true)
+        }}
+        manageMembershipsAction={() => {
+          setManageMembersModalVisible(true)
+        }}
+      />
+      {/* Modal to change the Chat group name */}
+      <ModalChangeName
+        name='Bike lovers'
+        modalType={ChatNameModals.CHANNEL}
+        saveAction={newName => {
+          showUserMessage(
+            'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing channel names',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
+          )
+        }}
+        changeNameModalVisible={changeChatNameModalVisible}
+        setChangeNameModalVisible={setChangeChatNameModalVisible}
+      />
+      <ModalManageMembers
+        saveAction={() => {
+          showUserMessage(
+            "Work in progress: ToDo: This feature will probably be changed to 'View Members'",
+            ''
+          )
+        }}
+        manageMembersModalVisible={manageMembersModalVisible}
+        setManageMembersModalVisible={setManageMembersModalVisible}
+      />
+      {/* Modal to change the user name */}
+      <ModalChangeName
+        name='Philip Soto'
+        modalType={ChatNameModals.USER}
+        saveAction={newName => {
+          showUserMessage(
+            'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing your name',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details'
+          )
+        }}
+        changeNameModalVisible={changeUserNameModalVisible}
+        setChangeNameModalVisible={setChangeUserNameModalVisible}
+      />
+      <Header
+        setRoomSelectorVisible={setRoomSelectorVisible}
+        setProfileScreenVisible={setProfileScreenVisible}
+        showNotificationBadge={true}
+        showMentionsBadge={false}
+        creatingNewMessage={creatingNewMessage}
+        setCreatingNewMessage={setCreatingNewMessage}
+        showUserMessage={showUserMessage}
+      />
+      <UserMessage
+        userMsgShown={userMsgShown}
+        message={userMsg.message}
+        href={userMsg.href}
+      />
+      <div
+        id='chat-main'
+        className={`flex flex-row min-h-screen h-screen overscroll-none  ${
+          (roomSelectorVisible ||
+            profileScreenVisible ||
+            chatSettingsScreenVisible ||
+            changeChatNameModalVisible ||
+            manageMembersModalVisible) &&
+          'blur-sm opacity-40'
+        }`}
+      >
+        <div
+          id='chats-menu'
+          className='flex flex-col min-w-80 w-80 bg-navy50 py-0 overflow-y-auto overscroll-none mt-[64px] pb-6 select-none'
+        >
+          <div id='chats-search' className='relative px-4 mt-5'>
+            <input
+              id='chats-search-input'
+              className='flex w-full rounded-md bg-navy50 border  border-neutral-400 py-[9px] pl-9 px-[13px] text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500'
+              placeholder='Search'
+              onChange={e => {
+                handleChatSearch(e.target.value)
+              }}
+            />
             <Image
-                src="/pn-logo-red-tint.svg"
-                alt="PubNub Logo"
-                className="flex self-center"
-                width={23.81}
-                height={17.07}
-                priority
+              src='/icons/search.svg'
+              alt='Search Icon'
+              className='absolute left-6 top-1/2 h-[20px] w-[20px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900'
+              width={20}
+              height={20}
+              priority
             />
           </div>
-          <div id='room-name' className="text-pubnubtextlight text-base">PubNub</div>
-        </div>
-        <div id='header-actions' className="flex items-center mr-2.5">
-          <div id='btn-message-new' className={`${roboto.className} flex flex-row justify-between items-center font-medium text-sm px-4 mx-2.5 h-10 rounded-lg bg-pubnubbabyblue`}>
-          <Image
-                  src="/icons/plus.svg"
-                  alt="New Message icon"
-                  className="flex self-center mr-3"
-                  width={12}
-                  height={12}
-                  priority
+
+          <ChatMenuHeader
+            text='UNREAD'
+            actionIcon={ChatHeaderActionIcon.MARK_READ}
+            expanded={unreadExpanded}
+            expandCollapse={() => {
+              setUnreadExpanded(!unreadExpanded)
+            }}
+            action={() => {
+              showUserMessage(
+                'Mark all as Read - not yet implemented',
+                'https://www.pubnub.com'
+              )
+            }}
+          />
+          {unreadExpanded && (
+            <div>
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar01.png'
+                text='Label 01'
+                present={1}
+                count='5'
               />
-            New message
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar02.png'
+                text='Label 02'
+                present={0}
+                count='10'
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar03.png'
+                text='Label 03'
+                present={1}
+                avatarBubblePrecedent='+5'
+                count=''
+              />
+            </div>
+          )}
+
+          <div className='w-full border border-navy200 mt-4'></div>
+          <ChatMenuHeader
+            text='PUBLIC CHANNELS'
+            expanded={publicExpanded}
+            expandCollapse={() => {
+              setPublicExpanded(!publicExpanded)
+            }}
+            actionIcon={ChatHeaderActionIcon.ADD}
+            action={setCreatingNewMessage}
+          />
+          {publicExpanded && (
+            <div>
+              <ChatMenuItem
+                avatarUrl='/group/group-global.png'
+                text='General Chat'
+                present={-1}
+              />
+            </div>
+          )}
+
+          <div className='w-full border border-navy200 mt-4'></div>
+          <ChatMenuHeader
+            text='PRIVATE GROUPS'
+            expanded={groupsExpanded}
+            expandCollapse={() => setGroupsExpanded(!groupsExpanded)}
+            actionIcon={ChatHeaderActionIcon.ADD}
+            action={setCreatingNewMessage}
+          />
+          {groupsExpanded && (
+            <div>
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar04.png'
+                text='Label 04'
+                present={1}
+                avatarBubblePrecedent='+2'
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar05.png'
+                text='Label 05'
+                present={0}
+                avatarBubblePrecedent='+5'
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar06.png'
+                text='Label 06'
+                present={1}
+                avatarBubblePrecedent='+1'
+              />
+            </div>
+          )}
+
+          <div className='w-full border border-navy200 mt-4'></div>
+          <ChatMenuHeader
+            text='DIRECT MESSAGES'
+            expanded={directMessagesExpanded}
+            expandCollapse={() =>
+              setDirectMessagesExpanded(!directMessagesExpanded)
+            }
+            actionIcon={ChatHeaderActionIcon.ADD}
+            action={setCreatingNewMessage}
+          />
+          {directMessagesExpanded && (
+            <div>
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar07.png'
+                text='Label 07'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+              />
+            </div>
+          )}
+        </div>
+        <div className='relative w-full'>
+          <div
+            id='chats-main'
+            className='flex flex-col grow w-full max-h-screen py-0 mt-[64px]'
+          >
+            {creatingNewMessage ? (
+              <NewMessageGroup />
+            ) : (
+              <MessageList
+                messageActionHandler={(action, vars) =>
+                  messageActionHandler(action, vars)
+                }
+                setChatSettingsScreenVisible={setChatSettingsScreenVisible}
+                quotedMessage={quotedMessage}
+                setShowPinnedMessages={setShowPinnedMessages}
+                setShowThread={setShowThread}
+              />
+            )}
+            {!quotedMessage && typingUsers && (
+              <TypingIndicator
+                text={
+                  typingUsers
+                }
+              />
+            )}
+            <div className='absolute bottom-0 left-0 right-0'>
+              <MessageInput
+                replyInThread={false}
+                quotedMessage={quotedMessage}
+                setQuotedMessage={setQuotedMessage}
+              />
+            </div>
           </div>
-          <Image
-                  src="/icons/notifications_none.svg"
-                  alt="Notifications"
-                  className="flex self-center m-3"
-                  width={24}
-                  height={24}
-                  priority
-              />
-          <Image
-                  src="/icons/alternate_email.svg"
-                  alt="Mentions"
-                  className="flex self-center m-3"
-                  width={24}
-                  height={24}
-                  priority
-              />
-          <Image
-                  src="/icons/person_outline.svg"
-                  alt="My Profile"
-                  className="flex self-center m-3"
-                  width={24}
-                  height={24}
-                  priority
-              />
         </div>
+        <MessageListThread
+          showThread={showThread}
+          setShowThread={setShowThread}
+        />
+        <MessageListPinned
+          showPinnedMessages={showPinnedMessages}
+          setShowPinnedMessages={setShowPinnedMessages}
+        />
       </div>
     </main>
-
-  );
-  
+  )
 }

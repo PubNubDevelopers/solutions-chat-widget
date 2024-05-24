@@ -1,25 +1,38 @@
 "use client"
 
 import Image from "next/image";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
 
   const [userId, setUserId] = useState("default-user")
   const router = useRouter()
+  const autofocusInput = useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    router.replace(`/chat/?userId=${userId}`)
+    if (userId === "")
+      {
+
+      }
+      else{
+        router.replace(`/chat/?userId=${userId}`)
+      }
   }
 
   function handleLoginButton(event: React.MouseEvent<HTMLElement>) {
-    router.replace(`/chat/?userId=${userId}`)
+    if (userId === "")
+      {
+        autofocusInput.current?.focus()
+      }
+      else {
+        router.replace(`/chat/?userId=${userId}`)
+      }
   }
 
   return (
-    <main className="flex min-h-screen flex-row size-full justify-between">
+    <main className="flex min-h-screen flex-row size-full justify-between select-none">
       <div id="login-form" className="flex flex-col min-h-screen items-center justify-center w-full lg:w-1/2 bg-white">
         <div id="login-container" className="flex flex-col max-w-80 gap-16">
           <div className="flex flex-col gap-3">
@@ -31,16 +44,16 @@ export default function Home() {
               height={75}
               priority
           />
-            <div className="text-center text-lg text-pubnubtext font-bold">Log in: Sample Chat App</div>
+            <div className="text-center text-lg text-neutral900 font-bold">Log in: Sample Chat App</div>
             <div className="flex text-center text-base text-pubnub font-normal">Built with the PubNub Chat SDK for JavaScript and TypeScript.</div>
           </div>
           <form className="flex flex-col gap-16" onSubmit={handleSubmit}>
           <div className="flex flex-col">
-            <label className="text-sm text-pubnubtext">Choose a User ID / Name</label>
-            <input type="text" id="txtUserId" value={userId} onChange={(e) => setUserId(e.target.value)} name="userId" className="bg-white border border-pubnublightgray text-pubnubtext rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
+            <label className="text-sm text-neutral900">Choose a User ID / Name</label>
+            <input type="text" ref={autofocusInput} value={userId} onChange={(e) => setUserId(e.target.value)} name="userId" className={`bg-white border border-neutral300 text-neutral900 rounded-lg focus:ring-1 ${userId === "" ? "focus:ring-red-500" : "focus:ring-inputring"} outline-none block w-full p-2.5`} />
           </div>
           
-            <button type="button" onClick={handleLoginButton} className="bg-pubnubnavy text-pubnubtextlight text-sm py-3 rounded-md shadow-sm w-full">Log in</button>
+            <button type="button"  onClick={handleLoginButton} className="bg-navy900 text-neutral50 text-sm py-3 rounded-md shadow-sm w-full">Log in</button>
 
           </form>
         </div>

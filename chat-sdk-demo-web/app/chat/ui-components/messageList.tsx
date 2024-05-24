@@ -4,6 +4,7 @@ import Message from './message'
 import Image from 'next/image'
 import { CustomQuotedMessage } from '../types'
 
+
 export default function MessageList ({
   messageActionHandler = (action, vars) => {},
   setChatSettingsScreenVisible,
@@ -84,6 +85,9 @@ export default function MessageList ({
           messageText='1Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />
 
+
+    
+
         <Message
           received={false}
           avatarUrl='/avatars/avatar02.png'
@@ -106,6 +110,7 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
+          reactions={['😆','😗','😋']}
           messageText='Augue sit et aenean non tortor senectus sed. Sagittis eget in ut magna semper urna felis velit cursus. Enim nunc leo quis volutpat dis.'
         />
 
@@ -118,6 +123,7 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
+          reactions={['🐕', '🐶']}
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />
 

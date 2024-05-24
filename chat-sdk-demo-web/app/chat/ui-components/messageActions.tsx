@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import ToolTip from './toolTip'
 import { useState } from 'react'
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
 
 export default function MessageActions ({
   received,
@@ -10,16 +12,19 @@ export default function MessageActions ({
   replyInThreadClick,
   quoteMessageClick,
   pinMessageClick,
-  reactMessageClick
+  reactMessageClick,
+  copyMessageClick
 }) {
   const [emoteToolTip, setEmoteToolTip] = useState(false)
   const [quoteToolTip, setQuoteToolTip] = useState(false)
   const [pinToolTip, setPinToolTip] = useState(false)
   const [replyToolTip, setReplyToolTip] = useState(false)
   const [copyToolTip, setCopyToolTip] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   function copyClick (e) {
-    console.log('copy')
+    console.log('ToDo: Actually copy the message')
+    copyMessageClick()
   }
   function copyEnter () {
     setCopyToolTip(true)
@@ -65,7 +70,14 @@ export default function MessageActions ({
   }
 
   function emoteClick (e) {
-    reactMessageClick()
+    setShowEmojiPicker(true)
+    //reactMessageClick()
+  }
+
+  function emojiSelected(data) {
+    console.log(data)
+    setShowEmojiPicker(false)
+    reactMessageClick(data)
   }
 
   function emoteEnter () {
@@ -81,6 +93,7 @@ export default function MessageActions ({
   }
   const handleMessageActionsMouseLeave = e => {
     messageActionsLeave()
+    setShowEmojiPicker(false)
   }
 
   return (
@@ -97,8 +110,8 @@ export default function MessageActions ({
         <div
           className='hover:bg-navy100 hover:rounded-md relative'
           onClick={e => copyClick(e)}
-          onMouseEnter={(e) => copyEnter()}
-          onMouseLeave={(e) => copyLeave()}
+          onMouseEnter={e => copyEnter()}
+          onMouseLeave={e => copyLeave()}
         >
           <Image
             src='/icons/copy.svg'
@@ -116,8 +129,8 @@ export default function MessageActions ({
         <div
           className='hover:bg-navy100 hover:rounded-md relative'
           onClick={e => replyClick(e)}
-          onMouseEnter={(e) => replyEnter()}
-          onMouseLeave={(e) => replyLeave()}
+          onMouseEnter={e => replyEnter()}
+          onMouseLeave={e => replyLeave()}
         >
           <Image
             src='/icons/reply.svg'
@@ -185,10 +198,17 @@ export default function MessageActions ({
             priority
           />
           <ToolTip
-            className={`${emoteToolTip ? 'block' : 'hidden'}`}
+            className={`${emoteToolTip ? 'block' : 'hidden'} bottom-[50px]`}
             tip='React to message'
           />
         </div>
+        {showEmojiPicker && <div
+          className={`absolute  ${
+            received ? 'right-[250px]' : 'left-[60px]'
+          } -top-[50px]`}
+        >
+          <Picker data={data} onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}} />
+        </div>}
       </div>
     </div>
   )

@@ -10,9 +10,6 @@ export default function Header ({
   showMentionsBadge = false,
   showUserMessage
 }) {
-  function toggleCreatingNewMessage () {
-    setCreatingNewMessage(!creatingNewMessage)
-  }
 
   return (
     <div
@@ -21,7 +18,7 @@ export default function Header ({
     >
       <div
         id='room-selector'
-        className='flex items-center justify-center gap-2.5 ml-2.5 cursor-pointer border border-sky-800 rounded-md m-1 px-2'
+        className='flex items-center justify-center gap-2.5 ml-2.5 hover:bg-sky-900 cursor-pointer rounded-md m-1 px-2'
         onClick={e => setRoomSelectorVisible(true)}
       >
         <div
@@ -47,21 +44,11 @@ export default function Header ({
           className={`${
             roboto.className
           } flex flex-row min-w-52 items-center font-medium text-sm px-4 mx-2.5 h-10 rounded-lg ${
-            creatingNewMessage ? 'bg-neutral-200' : 'bg-pubnubbabyblue'
+            'bg-pubnubbabyblue'
           } cursor-pointer`}
-          onClick={() => toggleCreatingNewMessage()}
+          onClick={() => setCreatingNewMessage(true)}
         >
-          {creatingNewMessage ? (
-            <Image
-              src='/icons/close.svg'
-              alt='Close New Message'
-              className='flex self-center mr-3'
-              width={15}
-              height={15}
-              priority
-            />
-          ) : (
-            <Image
+                      <Image
               src='/icons/new_message.svg'
               alt='New Message icon'
               className='flex self-center mr-3'
@@ -69,13 +56,12 @@ export default function Header ({
               height={15}
               priority
             />
-          )}
-          {creatingNewMessage ? 'Cancel New Message' : 'New Message / Group'}
+          New Message / Group
         </div>
         <div
           className='cursor-pointer hover:bg-sky-900 hover:rounded-md'
           onClick={e =>
-            showUserMessage(
+            showUserMessage(null, 
               'Although not supported by this demo, you use the Chat SDK to alert your users with built-in or custom events',
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events'
             )
@@ -98,7 +84,7 @@ export default function Header ({
         <div
           className='cursor-pointer hover:bg-sky-900 hover:rounded-md'
           onClick={e =>
-            showUserMessage(
+            showUserMessage(null, 
               "The Chat SDK supports mentioning users with the '@' syntax, although not yet supported by this demo",
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/mentions'
             )

@@ -31,7 +31,8 @@ import {
   ChatNameModals,
   MessageActionsTypes,
   CustomQuotedMessage,
-  ChatHeaderActionIcon
+  ChatHeaderActionIcon,
+  ToastType
 } from './types'
 
 export default function Page () {
@@ -58,7 +59,12 @@ export default function Page () {
   const [manageMembersModalVisible, setManageMembersModalVisible] =
     useState(false)
 
-  const [userMsg, setUserMsg] = useState({ message: '', href: '' })
+  const [userMsg, setUserMsg] = useState({
+    message: 'Message Text.  Message Text.  ',
+    title: 'Please Note:',
+    href: 'http://www.pubnub.com',
+    type: 0
+  })
   const [userMsgShown, setUserMsgShown] = useState(false)
   const [userMsgTimeoutId, setUserMsgTimeoutId] = useState(0)
 
@@ -92,12 +98,13 @@ export default function Page () {
     console.log(draft)
   }
 
-  function messageActionHandler (action, messageId) {
+  function messageActionHandler (action, data) {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
         setShowThread(true)
         setShowPinnedMessages(false)
         showUserMessage(
+          null,
           'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
           ''
         )
@@ -113,14 +120,24 @@ export default function Page () {
         setShowThread(false)
         setShowPinnedMessages(true)
         showUserMessage(
+          null,
           'Work in progress: Though supported by the Chat SDK, this demo does not yet support pinning messages',
           ''
         )
         break
       case MessageActionsTypes.REACT:
         showUserMessage(
+          `Selected ${data.native}`,
           'Work in progress: Though supported by the Chat SDK, this demo does not yet support message reactions',
           ''
+        )
+        break
+      case MessageActionsTypes.COPY:
+        showUserMessage(
+          'WORK IN PROGRESS!',
+          'Message not copied',
+          '',
+          ToastType.ERROR
         )
         break
     }
@@ -130,21 +147,46 @@ export default function Page () {
     router.replace(`/`)
   }
 
-  function showUserMessage (message, href) {
+  function showUserMessage (title, message, href, type = ToastType.INFO) {
     clearTimeout(userMsgTimeoutId)
-    console.log(message)
-    setUserMsg({ message: message, href: href })
-    console.log(userMsg)
+    setUserMsg({ message: message, href: href, title: title, type: type })
     setUserMsgShown(true)
-    let timeoutId = window.setTimeout(setUserMsgShown, 5000, false)
+    let timeoutId = window.setTimeout(setUserMsgShown, 7000, false)
     setUserMsgTimeoutId(timeoutId)
+  }
+
+  function closeUserMessage () {
+    clearTimeout(userMsgTimeoutId)
+    setUserMsgShown(false)
   }
 
   if (!chat && false) {
     return (
-      //  TODO DETECT IF THE PUB / SUB KEYS ARE MISSING
-      //  TODO Need to componentize this UI
-      <main>Chat is initializing</main>
+      <main>
+        <div className='flex flex-col w-full h-screen justify-center items-center'>
+          <div className='max-w-96 max-h-96 '>
+            <Image
+              src='/chat.svg'
+              alt='Chat Icon'
+              className=''
+              width={1000}
+              height={1000}
+              priority
+            />
+          </div>
+          <div class="flex mb-5 animate-spin">
+              <Image
+                src='/icons/loading.png'
+                alt='Chat Icon'
+                className=''
+                width={50}
+                height={50}
+                priority
+              />
+            </div>
+            <div class="text-2xl">Chat is initializing...</div>
+        </div>
+      </main>
     )
   }
 
@@ -172,6 +214,7 @@ export default function Page () {
         buttonAction={() => {
           console.log('ToDo: Either delete or leave conversation')
           showUserMessage(
+            null,
             'Work in progress: Though supported by the Chat SDK, this demo does not yet support leaving channels (either 1:1 conversations, or private groups)',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
           )
@@ -189,6 +232,7 @@ export default function Page () {
         modalType={ChatNameModals.CHANNEL}
         saveAction={newName => {
           showUserMessage(
+            null,
             'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing channel names',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
           )
@@ -199,6 +243,7 @@ export default function Page () {
       <ModalManageMembers
         saveAction={() => {
           showUserMessage(
+            null,
             "Work in progress: ToDo: This feature will probably be changed to 'View Members'",
             ''
           )
@@ -212,6 +257,7 @@ export default function Page () {
         modalType={ChatNameModals.USER}
         saveAction={newName => {
           showUserMessage(
+            null,
             'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing your name',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details'
           )
@@ -219,6 +265,7 @@ export default function Page () {
         changeNameModalVisible={changeUserNameModalVisible}
         setChangeNameModalVisible={setChangeUserNameModalVisible}
       />
+
       <Header
         setRoomSelectorVisible={setRoomSelectorVisible}
         setProfileScreenVisible={setProfileScreenVisible}
@@ -230,8 +277,13 @@ export default function Page () {
       />
       <UserMessage
         userMsgShown={userMsgShown}
+        title={userMsg.title}
         message={userMsg.message}
         href={userMsg.href}
+        type={userMsg.type}
+        closeToastAction={() => {
+          closeUserMessage()
+        }}
       />
       <div
         id='chat-main'
@@ -276,6 +328,7 @@ export default function Page () {
             }}
             action={() => {
               showUserMessage(
+                null,
                 'Mark all as Read - not yet implemented',
                 'https://www.pubnub.com'
               )
@@ -288,12 +341,28 @@ export default function Page () {
                 text='Label 01'
                 present={1}
                 count='5'
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    null,
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar02.png'
                 text='Label 02'
                 present={0}
                 count='10'
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    null,
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar03.png'
@@ -301,6 +370,14 @@ export default function Page () {
                 present={1}
                 avatarBubblePrecedent='+5'
                 count=''
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    null,
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
               />
             </div>
           )}
@@ -318,7 +395,7 @@ export default function Page () {
           {publicExpanded && (
             <div>
               <ChatMenuItem
-                avatarUrl='/group/group-global.png'
+                avatarUrl='/group/globe1.svg'
                 text='General Chat'
                 present={-1}
               />
@@ -412,7 +489,7 @@ export default function Page () {
             className='flex flex-col grow w-full max-h-screen py-0 mt-[64px]'
           >
             {creatingNewMessage ? (
-              <NewMessageGroup />
+              <NewMessageGroup setCreatingNewMessage={setCreatingNewMessage} />
             ) : (
               <MessageList
                 messageActionHandler={(action, vars) =>
@@ -426,9 +503,8 @@ export default function Page () {
             )}
             {!quotedMessage && typingUsers && (
               <TypingIndicator
-                text={
-                  typingUsers
-                }
+                text={typingUsers}
+                avatarUrl={'/avatars/avatar02.png'}
               />
             )}
             <div className='absolute bottom-0 left-0 right-0'>

@@ -43,6 +43,18 @@ export default function MessageInput ({
         {!replyInThread && (
           <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
             <Image
+              src='/icons/send.svg'
+              alt='Send'
+              className='m-3 cursor-pointer'
+              width={24}
+              height={24}
+              priority
+            />
+          </div>
+        )}
+        {!replyInThread && (
+          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
+            <Image
               src='/icons/smile.svg'
               alt='Smile'
               className='m-3 cursor-pointer'

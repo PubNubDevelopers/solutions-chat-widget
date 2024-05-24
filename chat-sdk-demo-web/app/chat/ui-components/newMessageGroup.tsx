@@ -6,7 +6,7 @@ import Image from 'next/image'
 import NewMessageUserRow from './newMessageUserRow'
 import NewMessageUserPill from './newMessageUserPill'
 
-export default function NewMessageGroup () {
+export default function NewMessageGroup ({setCreatingNewMessage}) {
   let groupMembers = 3
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -20,8 +20,18 @@ export default function NewMessageGroup () {
       <div className='flex flex-col border border-navy-200 min-w-full'>
         <div className='flex flex-row gap-4 py-2'>
           <div
-            className={`${roboto.className} flex flex-row items-center px-6 font-medium text-base`}
+            className={`${roboto.className} flex flex-row items-center px-3 font-medium text-base`}
           >
+            <div className="cursor-pointer" onClick={(e) => setCreatingNewMessage(false)}>
+            <Image
+              src='/icons/west.svg'
+              alt='Send'
+              className='m-3'
+              width={24}
+              height={24}
+              priority
+            />
+            </div>
             New Message / Group
           </div>
           <div

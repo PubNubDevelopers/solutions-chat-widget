@@ -22,17 +22,10 @@ export default function ChatMenuHeader({text, actionIcon, expanded, expandCollap
             </div>
               {text}
             </div>
-            <div className="flex w-12 h-12 items-center justify-center">
+            <div className="flex h-12 items-center justify-center">
               {(actionIcon === ChatHeaderActionIcon.MARK_READ) &&
-              <div className="cursor-pointer" onClick={(e) => action(e)}>
-              <Image
-                src="/icons/check2.svg"
-                alt="More"
-                className="m-3"
-                width={16}
-                height={16}
-                priority
-              /></div>} 
+              <div className="cursor-pointer mr-2 text-sky-700 hover:text-sky-900 font-medium tracking-normal" onClick={(e) => action(e)}>
+              Mark all as read</div>} 
                {(actionIcon === ChatHeaderActionIcon.ADD) && 
               <div className="cursor-pointer" onClick={() => action(true)}>
               <Image

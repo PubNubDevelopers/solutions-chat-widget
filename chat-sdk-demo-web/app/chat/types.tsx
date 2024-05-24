@@ -8,7 +8,8 @@ export enum MessageActionsTypes {
   REPLY_IN_THREAD = "reply",
   QUOTE = "quote",
   PIN = "pin",
-  REACT = "react"
+  REACT = "react",
+  COPY = "copy"
 }
 
 export enum ChatHeaderActionIcon {
@@ -20,4 +21,10 @@ export enum ChatHeaderActionIcon {
 export interface CustomQuotedMessage {
   sender: string;
   message: string;
+}
+
+export enum ToastType {
+  INFO = 0,
+  CHECK = 1,
+  ERROR = 2
 }

@@ -174,7 +174,7 @@ export default function Page () {
               priority
             />
           </div>
-          <div class="flex mb-5 animate-spin">
+          <div className="flex mb-5 animate-spin">
               <Image
                 src='/icons/loading.png'
                 alt='Chat Icon'
@@ -184,7 +184,7 @@ export default function Page () {
                 priority
               />
             </div>
-            <div class="text-2xl">Chat is initializing...</div>
+            <div className="text-2xl">Chat is initializing...</div>
         </div>
       </main>
     )

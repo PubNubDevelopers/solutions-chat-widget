@@ -5,6 +5,7 @@ import { useState } from 'react'
 import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
+import MessageReaction from './messageReaction'
 import { MessageActionsTypes } from '../types'
 import ToolTip from './toolTip'
 
@@ -29,7 +30,7 @@ export default function Message ({
   const [actionsShown, setActionsShown] = useState(false)
   let messageHovered = false
   let actionsHovered = false
-  const arrayOfEmojiReactions = reactions.map((emoji) => emoji + ' ');
+  const arrayOfEmojiReactions = reactions.slice(0, 18).map((emoji, index) => <MessageReaction emoji={emoji} count={index+1} key={index} />);
 
   const handleMessageMouseEnter = e => {
     messageHovered = true
@@ -124,7 +125,7 @@ export default function Message ({
                 <div className='absolute right-[10px] top-[10px]'>
                   <div className='relative'>
                     <ToolTip
-                      className={`${showToolTip ? 'block' : 'hidden'}`}
+                      className={`${showToolTip ? 'block' : 'hidden'} bottom-[0px]`}
                       tip='Unpin'
                       messageActionsTip={false}
                     />
@@ -164,7 +165,7 @@ export default function Message ({
                 priority
               />
             )}
-            <div className="absolute right-[10px] -bottom-[14px] text-lg">
+            <div className="absolute right-[10px] -bottom-[18px] flex flex-row items-center select-none">
             {arrayOfEmojiReactions}
             </div>
             {/* actions go here for received */}

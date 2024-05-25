@@ -49,6 +49,7 @@ export default function MessageListPinned ({
             isRead={true}
             sender='Sarah Johannsen is a very long name'
             dateTime='Tue 29 Aug 17:18'
+            reactions={['🐕', '🐶']}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis '
           />
 

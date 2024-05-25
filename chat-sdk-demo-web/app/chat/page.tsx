@@ -399,6 +399,11 @@ export default function Page () {
                 text='General Chat'
                 present={-1}
               />
+              <ChatMenuItem
+                avatarUrl='/group/globe2.svg'
+                text='Work Chat'
+                present={-1}
+              />
             </div>
           )}
 

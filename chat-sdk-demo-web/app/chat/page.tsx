@@ -76,14 +76,14 @@ export default function Page () {
     async function init () {
       setUserId(searchParams.get('userId'))
       if (userId == null || userId === '') return
-      /*const chat = await Chat.init({
+      const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
         typingTimeout: 2000,
         storeUserActivityTimestamps: true,
         storeUserActivityInterval: 60000,
-      })*/
+      })
 
       setChat(chat)
     }

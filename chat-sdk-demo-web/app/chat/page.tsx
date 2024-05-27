@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { ChatContext } from './context'
+//import { ChatContext } from './context'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useContext } from 'react'
 import { loadEnvConfig } from '@next/env'
@@ -40,6 +40,7 @@ export default function Page () {
   const router = useRouter()
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
+  const [loadMessage, setLoadMessage] = useState("Chat is initializing...")
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
   const [publicExpanded, setPublicExpanded] = useState(true)
@@ -75,8 +76,21 @@ export default function Page () {
   useEffect(() => {
     async function init () {
       setUserId(searchParams.get('userId'))
-      if (userId == null || userId === '') return
-      const chat = await Chat.init({
+      if (userId == null || userId === '') {
+        setLoadMessage("Retrieving User ID")
+        return
+      }
+      if (!process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY)
+        {
+          setLoadMessage("No Publish Key Found")
+          return
+        }
+        if (!process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY)
+          {
+            setLoadMessage("No Subscribe Key Found")
+            return
+          }
+        const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
@@ -86,9 +100,19 @@ export default function Page () {
       })
 
       setChat(chat)
+      console.log(chat.currentUser)
+      if (!chat.currentUser.profileUrl)
+        {
+          //  This is the first time this user has logged in, generate them a random name and profile image
+          //  todo
+          chat.currentUser.update({
+            name: "Darryn Campbell",
+            profileUrl: "/avatars/avatar04.png"
+          })
+        }
     }
     init()
-  }, [userId, setChat])
+  }, [userId, setChat, searchParams])
 
   function handleChatSearch (term: string) {
     console.log(term)
@@ -160,7 +184,7 @@ export default function Page () {
     setUserMsgShown(false)
   }
 
-  if (!chat && false) {
+  if (!chat) {
     return (
       <main>
         <div className='flex flex-col w-full h-screen justify-center items-center'>
@@ -184,7 +208,7 @@ export default function Page () {
                 priority
               />
             </div>
-            <div className="text-2xl">Chat is initializing...</div>
+            <div className="text-2xl">{loadMessage}</div>
         </div>
       </main>
     )
@@ -200,9 +224,10 @@ export default function Page () {
         profileScreenVisible={profileScreenVisible}
         setProfileScreenVisible={setProfileScreenVisible}
         changeUserNameScreenVisible={changeUserNameModalVisible}
-        name='Philip Soto'
+        currentUser={chat.currentUser}
         logout={() => logout()}
-        changeName={() => setChangeUserNameModalVisible(true)}
+        changeName={() => {setChangeUserNameModalVisible(true)}}
+        showUserMessage={showUserMessage}
       />
       <ChatSettingsScreen
         chatSettingsScreenVisible={chatSettingsScreenVisible}
@@ -226,7 +251,7 @@ export default function Page () {
           setManageMembersModalVisible(true)
         }}
       />
-      {/* Modal to change the Chat group name */}
+      {/* Modal to change the Chat group name*/}
       <ModalChangeName
         name='Bike lovers'
         modalType={ChatNameModals.CHANNEL}
@@ -253,13 +278,17 @@ export default function Page () {
       />
       {/* Modal to change the user name */}
       <ModalChangeName
-        name='Philip Soto'
+        name={chat.currentUser.name}
         modalType={ChatNameModals.USER}
-        saveAction={newName => {
+        saveAction={async newName => {
+          await chat.currentUser.update({
+            name: newName
+          })
           showUserMessage(
-            null,
-            'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing your name',
-            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details'
+            "Name Changed",
+            'Your name has been successfully updated',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details',
+            ToastType.CHECK
           )
         }}
         changeNameModalVisible={changeUserNameModalVisible}

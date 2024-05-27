@@ -40,7 +40,7 @@ export default function Page () {
   const router = useRouter()
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
-  const [loadMessage, setLoadMessage] = useState("Chat is initializing...")
+  const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
   const [publicExpanded, setPublicExpanded] = useState(true)
@@ -73,46 +73,106 @@ export default function Page () {
     useState<CustomQuotedMessage | null>(null)
   const [typingUsers, setTypingUsers] = useState<String | null>(null)
 
+  const [activeChannelId, setActiveChannelId] =
+    useState<string>('public-general')
+  const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
+  const [publicChannels, setPublicChannels] = useState<Channel[]>()
+
   useEffect(() => {
     async function init () {
       setUserId(searchParams.get('userId'))
       if (userId == null || userId === '') {
-        setLoadMessage("Retrieving User ID")
+        setLoadMessage('Retrieving User ID')
         return
       }
-      if (!process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY)
-        {
-          setLoadMessage("No Publish Key Found")
-          return
-        }
-        if (!process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY)
-          {
-            setLoadMessage("No Subscribe Key Found")
-            return
-          }
-        const chat = await Chat.init({
+      if (!process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY) {
+        setLoadMessage('No Publish Key Found')
+        return
+      }
+      if (!process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY) {
+        setLoadMessage('No Subscribe Key Found')
+        return
+      }
+      const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
         typingTimeout: 2000,
         storeUserActivityTimestamps: true,
-        storeUserActivityInterval: 60000,
+        storeUserActivityInterval: 60000
       })
 
       setChat(chat)
       console.log(chat.currentUser)
-      if (!chat.currentUser.profileUrl)
-        {
-          //  This is the first time this user has logged in, generate them a random name and profile image
-          //  todo
-          chat.currentUser.update({
-            name: "Darryn Campbell",
-            profileUrl: "/avatars/avatar04.png"
-          })
-        }
+      if (!chat.currentUser.profileUrl) {
+        //  This is the first time this user has logged in, generate them a random name and profile image
+        //  todo
+        chat.currentUser.update({
+          name: 'Darryn Campbell', //  todo should be random
+          profileUrl: '/avatars/avatar04.png' //  todo should be random
+        })
+      }
+
+      //keysetInit()  //  todo listen for channel changes so I pick up the newly created channels
+
+      chat
+        .getChannels({ filter: `type == 'public'` })
+        .then(async channelsResponse => {
+          if (channelsResponse.channels.length < 2) {
+            //  There are fewer than the expected number of public channels on this keyset, do any required Keyset initialization
+            await keysetInit()
+            router.refresh()
+          } else {
+            console.log(channelsResponse.channels[0])
+            setPublicChannels(channelsResponse.channels)
+          }
+        })
     }
     init()
   }, [userId, setChat, searchParams])
+
+  useEffect(() => {
+    updateChannelDetails()
+  }),
+    [activeChannelId]
+
+  const updateChannelDetails = async () => {
+    if (chat && (!activeChannel || activeChannelId != activeChannel.id)) {
+      console.log('1')
+      const details = await chat?.getChannel(activeChannelId)
+      console.log('updating channel details: ')
+      console.log(details)
+      setActiveChannel(details)
+    }
+  }
+
+  async function keysetInit () {
+    try {
+      await chat?.createPublicConversation({
+        channelId: 'public-general',
+        channelData: {
+          name: 'General Chat',
+          description: 'Public group for general conversation',
+          custom: {
+            profileUrl: '/group/globe1.svg'
+          }
+        }
+      })
+    } catch (e) {}
+
+    try {
+      await chat?.createPublicConversation({
+        channelId: 'public-work',
+        channelData: {
+          name: 'Work Chat',
+          description: 'Public group for conversation about work',
+          custom: {
+            profileUrl: '/group/globe2.svg'
+          }
+        }
+      })
+    } catch (e) {}
+  }
 
   function handleChatSearch (term: string) {
     console.log(term)
@@ -198,17 +258,17 @@ export default function Page () {
               priority
             />
           </div>
-          <div className="flex mb-5 animate-spin">
-              <Image
-                src='/icons/loading.png'
-                alt='Chat Icon'
-                className=''
-                width={50}
-                height={50}
-                priority
-              />
-            </div>
-            <div className="text-2xl">{loadMessage}</div>
+          <div className='flex mb-5 animate-spin'>
+            <Image
+              src='/icons/loading.png'
+              alt='Chat Icon'
+              className=''
+              width={50}
+              height={50}
+              priority
+            />
+          </div>
+          <div className='text-2xl'>{loadMessage}</div>
         </div>
       </main>
     )
@@ -226,7 +286,9 @@ export default function Page () {
         changeUserNameScreenVisible={changeUserNameModalVisible}
         currentUser={chat.currentUser}
         logout={() => logout()}
-        changeName={() => {setChangeUserNameModalVisible(true)}}
+        changeName={() => {
+          setChangeUserNameModalVisible(true)
+        }}
         showUserMessage={showUserMessage}
       />
       <ChatSettingsScreen
@@ -285,7 +347,7 @@ export default function Page () {
             name: newName
           })
           showUserMessage(
-            "Name Changed",
+            'Name Changed',
             'Your name has been successfully updated',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details',
             ToastType.CHECK
@@ -378,6 +440,7 @@ export default function Page () {
                     ''
                   )
                 }}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar02.png'
@@ -392,6 +455,7 @@ export default function Page () {
                     ''
                   )
                 }}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar03.png'
@@ -407,6 +471,7 @@ export default function Page () {
                     ''
                   )
                 }}
+                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -423,7 +488,17 @@ export default function Page () {
           />
           {publicExpanded && (
             <div>
-              <ChatMenuItem
+              {publicChannels?.map((publicChannel, index) => (
+                <ChatMenuItem
+                  key={index}
+                  id={publicChannel.id}
+                  avatarUrl={publicChannel.custom.profileUrl}
+                  text={publicChannel.name}
+                  present={-1}
+                  setActiveChannelId={setActiveChannelId}
+                ></ChatMenuItem>
+              ))}
+              {/*<ChatMenuItem
                 avatarUrl='/group/globe1.svg'
                 text='General Chat'
                 present={-1}
@@ -432,7 +507,7 @@ export default function Page () {
                 avatarUrl='/group/globe2.svg'
                 text='Work Chat'
                 present={-1}
-              />
+          />*/}
             </div>
           )}
 
@@ -451,18 +526,21 @@ export default function Page () {
                 text='Label 04'
                 present={1}
                 avatarBubblePrecedent='+2'
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar05.png'
                 text='Label 05'
                 present={0}
                 avatarBubblePrecedent='+5'
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar06.png'
                 text='Label 06'
                 present={1}
                 avatarBubblePrecedent='+1'
+                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -483,36 +561,43 @@ export default function Page () {
                 avatarUrl='/avatars/avatar07.png'
                 text='Label 07'
                 present={1}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
+                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
+                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -526,6 +611,7 @@ export default function Page () {
               <NewMessageGroup setCreatingNewMessage={setCreatingNewMessage} />
             ) : (
               <MessageList
+                activeChannel={activeChannel}
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)
                 }
@@ -543,6 +629,7 @@ export default function Page () {
             )}
             <div className='absolute bottom-0 left-0 right-0'>
               <MessageInput
+                activeChannel={activeChannel}
                 replyInThread={false}
                 quotedMessage={quotedMessage}
                 setQuotedMessage={setQuotedMessage}

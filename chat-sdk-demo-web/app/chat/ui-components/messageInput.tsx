@@ -1,13 +1,26 @@
 import Image from 'next/image'
 import { CustomQuotedMessage } from '../types'
 import QuotedMessage from './quotedMessage'
+import { useState, useEffect } from 'react'
 
 export default function MessageInput ({
+  activeChannel,
   replyInThread,
   quotedMessage,
   setQuotedMessage = any => {}
 }) {
   function handleMessageDraftChanged (draft) {}
+
+  const [text, setText] = useState("Sample Message") //  todo Will be replaced by message draft
+  async function handleSend(event: React.SyntheticEvent) {
+    event.preventDefault()
+    //  todo properly
+    console.log('9')
+    if (!text || !activeChannel) return
+    console.log('sending ' + text)
+    await activeChannel.sendText(text)
+    //setText("") //  todo
+  }
 
   return (
     <div
@@ -31,17 +44,20 @@ export default function MessageInput ({
           quotedMessage ? 'h-[70px]' : 'h-[114px] -mt-[1px]'
         }`}
       >
+        <form className={`flex grow`} onSubmit={(e) => handleSend(e)}>
         <input
           className={`flex grow rounded-md border border-neutral-300 h-[50px] mr-1 ${
             quotedMessage ? '' : 'my-8'
           } ml-6 px-6 text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500`}
           placeholder='Type message'
+          value={text}
           onChange={e => {
-            handleMessageDraftChanged(e.target.value)
+            setText(e.target.value)
+            //handleMessageDraftChanged(e.target.value)
           }}
-        />
+        /></form>
         {!replyInThread && (
-          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
+          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md' onClick={(e) => handleSend(e)}>
             <Image
               src='/icons/send.svg'
               alt='Send'

@@ -97,7 +97,7 @@ export default function MessageActions ({
   }
 
   return (
-    <div className={`relative ${!received && 'self-start'}`}>
+    <div className={`${!received && 'relative self-start'}`}>
       <div
         className={`absolute flex flex-row-reverse p-2 gap-1 w-[252px] z-10 rounded-sm shadow-lg bg-white ${
           received ? 'right-[10px]' : 'left-[10px]'

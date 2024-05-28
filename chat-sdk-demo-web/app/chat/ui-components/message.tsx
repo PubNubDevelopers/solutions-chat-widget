@@ -1,24 +1,25 @@
 import Avatar from './avatar'
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
 import { MessageActionsTypes } from '../types'
 import ToolTip from './toolTip'
+import { TimetokenUtils } from '@pubnub/chat'
 
 export default function Message ({
   received,
   inThread = false,
-  inPinned = false,
+  inPinned= false,
   avatarUrl,
   isRead,
   containsQuote = false,
   sender,
   messageText,
-  dateTime,
+  timetoken = "17179544908908795",
   messageActionHandler = (a, b) => {},
   pinned = false,
   unpinMessageHandler = () => {
@@ -28,8 +29,10 @@ export default function Message ({
 }) {
   const [showToolTip, setShowToolTip] = useState(false)
   const [actionsShown, setActionsShown] = useState(false)
+  const [userReadableDate, setUserReadableDate] = useState("")
   let messageHovered = false
   let actionsHovered = false
+
   const arrayOfEmojiReactions = reactions.slice(0, 18).map((emoji, index) => <MessageReaction emoji={emoji} count={index+1} key={index} />);
 
   const handleMessageMouseEnter = e => {
@@ -62,6 +65,38 @@ export default function Message ({
     }
   }
 
+  useEffect(() => {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ]
+    const days = [
+      'Sun',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat'
+    ]
+    //const temp = days[dateTime?.getDay()]
+    const date = TimetokenUtils.timetokenToDate(timetoken)
+    const datetime = `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${(date.getHours() + "").padStart(2, '0')}:${(date.getMinutes() + "").padStart(2, '0')}`
+
+    setUserReadableDate(datetime)
+    //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
+  }, [userReadableDate])
+
   return (
     <div className='flex flex-col w-full'>
       <div
@@ -71,7 +106,7 @@ export default function Message ({
       >
         {received && !inThread && !inPinned && (
           <div className='min-w-11'>
-            {!inThread && <Avatar present={0} avatarUrl={avatarUrl} />}
+            {!inThread && <Avatar present={-1} avatarUrl={avatarUrl ? avatarUrl : '/avatars/placeholder.png'} />}
           </div>
         )}
 
@@ -95,7 +130,7 @@ export default function Message ({
             <div
               className={`${roboto.className} text-sm font-normal flex text-neutral-600`}
             >
-              {dateTime}
+              {userReadableDate}
             </div>
           </div>
 
@@ -141,7 +176,7 @@ export default function Message ({
                 </div>
               </div>
             )}
-            <div className='flex flex-col'>
+            <div className='flex flex-col w-full'>
               {containsQuote && (
                 <QuotedMessage
                   quotedMessage={{

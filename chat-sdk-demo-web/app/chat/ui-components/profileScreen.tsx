@@ -71,7 +71,7 @@ export default function ProfileScreen ({
             editActionHandler={() => {showUserMessage(
               "Demo Limitation",
               'Though supported by the Chat SDK, this demo does not support changing your user avatar, unless you use the "User Management" feature of BizOps Workspace',
-              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates',
+              'https://www.pubnub.com/docs/bizops-workspace/user-management',
               ToastType.INFO
             )}}
           />

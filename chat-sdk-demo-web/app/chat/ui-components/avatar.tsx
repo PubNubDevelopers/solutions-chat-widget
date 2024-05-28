@@ -10,7 +10,6 @@ export default function Avatar({avatarUrl, present = -1, bubblePrecedent = "", w
             className={`rounded-full ${border && "border-2 border-white"}`}
             width={width}
             height={height}
-            priority
         />
         {/* Presence Indicator */}
         {(present != -1 && bubblePrecedent === "" && (present > 0 ?  

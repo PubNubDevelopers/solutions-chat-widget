@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 //import { ChatContext } from './context'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect, useContext, useCallback } from 'react'
 import { loadEnvConfig } from '@next/env'
 import { Channel, Chat, Membership, User } from '@pubnub/chat'
 import Image from 'next/image'
@@ -73,10 +73,10 @@ export default function Page () {
     useState<CustomQuotedMessage | null>(null)
   const [typingUsers, setTypingUsers] = useState<String | null>(null)
 
-  const [activeChannelId, setActiveChannelId] =
-    useState<string>('public-general')
+  const [activeChannelId, setActiveChannelId] = useState<string>('')
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
   const [publicChannels, setPublicChannels] = useState<Channel[]>()
+  const [users, setUsers] = useState<User[]>([])
 
   useEffect(() => {
     async function init () {
@@ -113,8 +113,6 @@ export default function Page () {
         })
       }
 
-      //keysetInit()  //  todo listen for channel changes so I pick up the newly created channels
-
       chat
         .getChannels({ filter: `type == 'public'` })
         .then(async channelsResponse => {
@@ -127,21 +125,24 @@ export default function Page () {
             setPublicChannels(channelsResponse.channels)
           }
         })
+
+        setActiveChannelId('public-general')
     }
     init()
   }, [userId, setChat, searchParams])
 
   useEffect(() => {
+    console.log('use effect update channel details')
     updateChannelDetails()
   }),
     [activeChannelId]
 
   const updateChannelDetails = async () => {
-    if (chat && (!activeChannel || activeChannelId != activeChannel.id)) {
-      console.log('1')
+    //console.log('UPDATING channel details 1: ')
+    if (chat && activeChannelId != "" && (!activeChannel || activeChannelId != activeChannel.id)) {
+      //console.log('77updating channel details.  active channel ID is ' + activeChannel?.id + ', activechannelid is ' + activeChannelId)
       const details = await chat?.getChannel(activeChannelId)
-      console.log('updating channel details: ')
-      console.log(details)
+      //console.log('UPDATING channel details 2: ')
       setActiveChannel(details)
     }
   }
@@ -224,6 +225,59 @@ export default function Page () {
           ToastType.ERROR
         )
         break
+    }
+  }
+
+  const getUser = useCallback(
+    (userId: string) => {
+      //console.log('useCallback called')
+      const existingUser = users.find((u) => u.id === userId)
+      //console.log('existing user: ' + existingUser)
+      if (!existingUser) {
+        console.log('FETCHING USER INFO')
+        chat?.getUser(userId).then((fetchedUser) => {
+          if (fetchedUser) 
+            {
+                setUsers((users) => [...users, fetchedUser])
+            }
+        })
+        return null
+      }
+      existingUser.streamUpdates((updatedUser) => {
+          {
+            var tempArr1 = [...users]
+            console.log(tempArr1)
+            const indexToChange = tempArr1.findIndex(user => user.id === updatedUser.id)
+            if (indexToChange > -1)
+              {
+                if (updatedUser.name)
+                  {
+                    (tempArr1[indexToChange] as any).name = updatedUser.name
+                  }
+                  if (updatedUser.profileUrl)
+                    {
+                      (tempArr1[indexToChange] as any).profileUrl = updatedUser.profileUrl
+                    }
+                setUsers(tempArr1)
+              }
+              else
+              {
+                //  Error, could not find user to update
+                console.log("Error: Could not find user to update")
+              }    
+          }
+          })
+      return existingUser
+    },
+    [chat, users]
+  )
+
+  function seenUserId (userId) {
+    if (userId == chat?.currentUser.id) {
+      //  No action, this is our own ID
+      return
+    } else {
+      getUser(userId)
     }
   }
 
@@ -612,9 +666,12 @@ export default function Page () {
             ) : (
               <MessageList
                 activeChannel={activeChannel}
+                currentUser={chat.currentUser}
+                users={users}
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)
                 }
+                seenUserId={userId => seenUserId(userId)}
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}
                 setShowPinnedMessages={setShowPinnedMessages}

@@ -18,7 +18,7 @@ export default function MessageInput ({
     console.log('9')
     if (!text || !activeChannel) return
     console.log('sending ' + text)
-    await activeChannel.sendText(text)
+    await activeChannel.sendText(text, {storeInHistory: true})
     //setText("") //  todo
   }
 

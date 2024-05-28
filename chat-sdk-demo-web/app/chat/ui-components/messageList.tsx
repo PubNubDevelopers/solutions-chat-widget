@@ -5,45 +5,52 @@ import UnreadIndicator from './unreadIndicator'
 import Image from 'next/image'
 import { CustomQuotedMessage } from '../types'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Channel, User, Message as pnMessage, MixedTextTypedElement, TimetokenUtils } from '@pubnub/chat'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Channel,
+  User,
+  Message as pnMessage,
+  MixedTextTypedElement,
+  TimetokenUtils
+} from '@pubnub/chat'
 
 export default function MessageList ({
   activeChannel,
+  currentUser,
+  users,
   messageActionHandler = (action, vars) => {},
+  seenUserId = userId => {},
   setChatSettingsScreenVisible,
   quotedMessage,
   setShowPinnedMessages,
   setShowThread
 }) {
+  const [loadedChannelId, setLoadedChannelId] = useState("")
   const [messages, setMessages] = useState<pnMessage[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-  ]
-  const days = [
-    'Sun',
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat'
-  ]
+  const [pinnedMessage, setPinnedMessage] = useState<pnMessage | null>(null)
+  const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    console.log('ACTIVE CHANNEL CHANGED: ' + activeChannel?.id)
     if (!activeChannel) return
+    //if (activeChannel.id === loadedChannelId) return  //  Connect wasn't being called with this applied
+    console.log('ACTIVE CHANNEL CHANGED  - LOADING ')
+    setLoadedChannelId(activeChannel.id)
+    setMessages([])
+    activeChannel
+      .getHistory({ count: 20 })
+      .then((historicalMessagesObj) => {
+        console.log(historicalMessagesObj.messages)
+        setMessages(messages => [...historicalMessagesObj.messages])
+      })
+    //console.log(history)
+    //.then((messages, isMore) => {
+    //  console.log('read history: ' + messages.length + ", " + isMore)
+    //  setMessages(messages => [...messages])
+    //})
+    activeChannel.getPinnedMessage().then(message => {
+      setPinnedMessage(message)
+    })
     console.log('connecting')
     return activeChannel.connect(message => {
       console.log(message)
@@ -51,26 +58,34 @@ export default function MessageList ({
     })
   }, [activeChannel])
 
-  //useEffect(() => {
-  //  console.log(`Message List: active channel updated: ${activeChannel}`)
-  //}), [activeChannel]
+  useEffect(() => {
+    if (!messageListRef.current) return
+    messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+  }, [messages])
 
-  const renderMessagePart = useCallback((messagePart: MixedTextTypedElement) => {
-    if (messagePart.type === "text") {
-      return messagePart.content.text
-    }
-    if (messagePart.type === "plainLink") {
-      return <a href={messagePart.content.link}>{messagePart.content.link}</a>
-    }
-    if (messagePart.type === "textLink") {
-      return <a href={messagePart.content.link}>{messagePart.content.text}</a>
-    }
-    if (messagePart.type === "mention") {
-      return <a href={`https://pubnub.com/${messagePart.content.id}`}>{messagePart.content.name}</a>
-    }
+  const renderMessagePart = useCallback(
+    (messagePart: MixedTextTypedElement) => {
+      if (messagePart.type === 'text') {
+        return messagePart.content.text
+      }
+      if (messagePart.type === 'plainLink') {
+        return <a href={messagePart.content.link}>{messagePart.content.link}</a>
+      }
+      if (messagePart.type === 'textLink') {
+        return <a href={messagePart.content.link}>{messagePart.content.text}</a>
+      }
+      if (messagePart.type === 'mention') {
+        return (
+          <a href={`https://pubnub.com/${messagePart.content.id}`}>
+            {messagePart.content.name}
+          </a>
+        )
+      }
 
-    return ""
-  }, [])
+      return ''
+    },
+    []
+  )
 
   if (!activeChannel)
     return <div className='flex flex-col max-h-screen'>...</div>
@@ -153,45 +168,20 @@ export default function MessageList ({
         className={`flex flex-col overflow-y-auto overscroll-none pb-6 ${
           quotedMessage ? 'mb-[234px]' : 'mb-[178px]'
         }`}
+        ref={messageListRef}
       >
-        {messages.map((message, index) => {
-          //const user = users.find(user => user.id === message.userId)
-          //  todo this probably best belongs in the method itself
-          const date = TimetokenUtils.timetokenToDate(message.timetoken)
-          const datetime = `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${(date.getHours() + "").padStart(2, '0')}:${(date.getMinutes() + "").padStart(2, '0')}`
-          return (
-            //  todo do the proper test for a read message being from myself
-            //  todo need a way of finding the user
-              
-              /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
-              
-              <Message
-              key={index}
-              received={false}
-              avatarUrl='/avatars/avatar01.png'
-              isRead={false}
-              sender="TBD"
-              dateTime={datetime}
-              pinned={false}
-              messageActionHandler={(action, vars) =>
-                messageActionHandler(action, vars)
-              }
-              messageText={message.content.text}
-            />
-            )
-        })}
-
         <Message
           received={true}
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           pinned={true}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          messageText='1Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
+          reactions={['😆', '😗', '😋']}
+          messageText='Very short message.'
         />
 
         <Message
@@ -199,11 +189,11 @@ export default function MessageList ({
           avatarUrl='/avatars/avatar02.png'
           isRead={true}
           sender='Default Text'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          messageText='Augue sit et aenean non tortor senectus sed. Sagittis eget in ut magna semper urna felis velit cursus. Enim nunc leo quis volutpat dis.'
+          messageText='Augue sit et aenean non tortor senectus.'
         />
 
         <Message
@@ -212,7 +202,7 @@ export default function MessageList ({
           isRead={false}
           containsQuote={true}
           sender='Default Text'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
@@ -225,7 +215,7 @@ export default function MessageList ({
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
@@ -238,7 +228,7 @@ export default function MessageList ({
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
@@ -263,7 +253,7 @@ export default function MessageList ({
           isRead={true}
           containsQuote={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
@@ -275,7 +265,7 @@ export default function MessageList ({
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
@@ -287,12 +277,42 @@ export default function MessageList ({
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
           sender='Sarah Johannsen'
-          dateTime='Tue 29 Aug 17:18'
+          timetoken={'17179544908908795'}
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />
+
+        {messages.map((message, index) => {
+          seenUserId(message.userId)
+
+          return (
+            /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
+
+            <Message
+              key={index}
+              received={currentUser.id !== message.userId}
+              avatarUrl={
+                message.userId === currentUser.id
+                  ? currentUser.profileUrl
+                  : users.find(user => user.id === message.userId)?.profileUrl
+              }
+              isRead={false} //  todo - read receipts
+              sender={
+                message.userId === currentUser.id
+                  ? currentUser.name
+                  : users.find(user => user.id === message.userId)?.name
+              }
+              timetoken={message.timetoken}
+              pinned={pinnedMessage?.timetoken === message.timetoken} //  todo - message pinning
+              messageActionHandler={(action, vars) =>
+                messageActionHandler(action, vars)
+              }
+              messageText={message.content.text}
+            />
+          )
+        })}
       </div>
     </div>
   )

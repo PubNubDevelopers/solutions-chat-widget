@@ -48,7 +48,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
             sender='Sarah Johannsen is a very long name'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             reactions={['🐕', '🐶']}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis '
           />
@@ -59,7 +59,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
 
@@ -69,7 +69,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
 
@@ -79,7 +79,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
 
@@ -89,7 +89,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
 
@@ -99,7 +99,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
 
@@ -109,7 +109,7 @@ export default function MessageListPinned ({
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey 222'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
           />
         </div>

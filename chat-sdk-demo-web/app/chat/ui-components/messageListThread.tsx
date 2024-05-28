@@ -44,7 +44,7 @@ export default function MessageListThread ({ showThread, setShowThread }) {
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
             sender='Sarah Johannsen'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             reactions={['🐕', '🐶']}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
           />
@@ -55,7 +55,7 @@ export default function MessageListThread ({ showThread, setShowThread }) {
             avatarUrl='/avatars/avatar02.png'
             isRead={false}
             sender='Philip Soto'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
           />
 
@@ -65,7 +65,7 @@ export default function MessageListThread ({ showThread, setShowThread }) {
             avatarUrl='/avatars/avatar03.png'
             isRead={true}
             sender='Philip Soto'
-            dateTime='Tue 29 Aug 17:18'
+            timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo '
           />
         </div>

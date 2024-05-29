@@ -2,27 +2,19 @@ import Image from 'next/image'
 import Avatar from './avatar'
 import { roboto } from '@/app/fonts'
 import { useState, useEffect } from 'react'
-import {ToastType} from '../types'
+import {ToastType} from '@/app/types'
 
 export default function ProfileScreen ({
   profileScreenVisible,
   setProfileScreenVisible,
-  currentUser,
+  //currentUser,
+  name,
+  profileUrl,
   logout,
   changeName,
   showUserMessage,
   changeUserNameScreenVisible
 }) {
-
-  const [name, setName] = useState(currentUser.name)
-  const [profileUrl, setProfileUrl] = useState(currentUser.profileUrl)
-
-  useEffect(() => {
-    currentUser.streamUpdates((updatedUser) => {
-      if (updatedUser.name) {setName(updatedUser.name)}
-      if (updatedUser.profileUrl) {setProfileUrl(updatedUser.profileUrl)}
-    })
-  }, [currentUser])
 
   return (
     <div

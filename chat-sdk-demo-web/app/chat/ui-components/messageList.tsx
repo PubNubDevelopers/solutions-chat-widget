@@ -3,7 +3,7 @@ import Avatar from './avatar'
 import Message from './message'
 import UnreadIndicator from './unreadIndicator'
 import Image from 'next/image'
-import { CustomQuotedMessage } from '../types'
+import { CustomQuotedMessage } from '@/app/types'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
@@ -31,16 +31,16 @@ export default function MessageList ({
   const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('ACTIVE CHANNEL CHANGED: ' + activeChannel?.id)
+    console.log('ACTIVE CHANNEL CHANGED from MESSAGE LIST: ' + activeChannel?.id)
     if (!activeChannel) return
     //if (activeChannel.id === loadedChannelId) return  //  Connect wasn't being called with this applied
-    console.log('ACTIVE CHANNEL CHANGED  - LOADING ')
+    //console.log('ACTIVE CHANNEL CHANGED  - LOADING ')
     setLoadedChannelId(activeChannel.id)
     setMessages([])
     activeChannel
       .getHistory({ count: 20 })
       .then((historicalMessagesObj) => {
-        console.log(historicalMessagesObj.messages)
+        //console.log(historicalMessagesObj.messages)
         setMessages(messages => [...historicalMessagesObj.messages])
       })
     //console.log(history)
@@ -54,7 +54,14 @@ export default function MessageList ({
     console.log('connecting')
     return activeChannel.connect(message => {
       console.log(message)
-      setMessages(messages => [...messages, message])
+      const sender = users.find(user => user.id === message.userId)
+      console.log(sender)
+      if (!sender)
+        {
+      //  do not recognize the sender, refresh the chat display
+          seenUserId(message.userId)
+        }
+          setMessages(messages => [...messages, message])
     })
   }, [activeChannel])
 
@@ -105,7 +112,7 @@ export default function MessageList ({
                 present={-1}
                 avatarUrl={activeChannel.custom.profileUrl}
               />
-              {activeChannel.name}
+              {activeChannel.name} {activeChannel.type == 'public' && <div>(Public)</div>}
             </div>
           )}
           {activeChannel.type == 'direct' && (
@@ -285,7 +292,7 @@ export default function MessageList ({
         />
 
         {messages.map((message, index) => {
-          seenUserId(message.userId)
+          //seenUserId(message.userId)  //  dcc
 
           return (
             /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
@@ -299,6 +306,7 @@ export default function MessageList ({
                   : users.find(user => user.id === message.userId)?.profileUrl
               }
               isRead={false} //  todo - read receipts
+              showReadIndicator={false} //  todo - probably a better way to convey this information when I implement receipts (setting false since this is a public channel)
               sender={
                 message.userId === currentUser.id
                   ? currentUser.name

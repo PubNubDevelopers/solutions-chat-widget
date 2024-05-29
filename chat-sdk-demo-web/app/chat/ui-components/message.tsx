@@ -6,7 +6,7 @@ import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
-import { MessageActionsTypes } from '../types'
+import { MessageActionsTypes } from '@/app/types'
 import ToolTip from './toolTip'
 import { TimetokenUtils } from '@pubnub/chat'
 
@@ -16,6 +16,7 @@ export default function Message ({
   inPinned= false,
   avatarUrl,
   isRead,
+  showReadIndicator = true,
   containsQuote = false,
   sender,
   messageText,
@@ -63,6 +64,10 @@ export default function Message ({
       setActionsShown(false)
       //console.log('setting actions shown false from message actions mouse leave.  messageHovered is ' + messageHovered)
     }
+  }
+
+  function copyMessageText(messageText) {
+    navigator.clipboard.writeText(messageText)
   }
 
   useEffect(() => {
@@ -190,7 +195,7 @@ export default function Message ({
               )}
               {messageText}
             </div>
-            {!received && (
+            {!received && showReadIndicator && (
               <Image
                 src={`${isRead ? '/icons/read.svg' : '/icons/sent.svg'}`}
                 alt='Read'
@@ -226,7 +231,8 @@ export default function Message ({
                   messageActionHandler(MessageActionsTypes.REACT, data)
                 }}
                 copyMessageClick={() => {
-                  messageActionHandler(MessageActionsTypes.COPY, '')
+                  copyMessageText(messageText)
+                  messageActionHandler(MessageActionsTypes.COPY, {text: messageText})
                 }}
               />
             )}
@@ -254,7 +260,8 @@ export default function Message ({
                 messageActionHandler(MessageActionsTypes.REACT, data)
               }}
               copyMessageClick={() => {
-                messageActionHandler(MessageActionsTypes.COPY, '')
+                copyMessageText(messageText)
+                messageActionHandler(MessageActionsTypes.COPY, {text: messageText})
               }}
             />
           )}

@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 //import { ChatContext } from './context'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useContext, useCallback } from 'react'
+import { useState, useEffect, useContext, useCallback, useRef } from 'react'
 import { loadEnvConfig } from '@next/env'
 import { Channel, Chat, Membership, User } from '@pubnub/chat'
 import Image from 'next/image'
@@ -27,13 +27,14 @@ import ChatSettingsScreen from './ui-components/chatSettingsScreen'
 import ModalChangeName from './ui-components/modalChangeName'
 import ModalManageMembers from './ui-components/modalManageMembers'
 import searchImg from '@/public/icons/search.svg'
+import { testData } from './data/user-data'
 import {
   ChatNameModals,
   MessageActionsTypes,
   CustomQuotedMessage,
   ChatHeaderActionIcon,
   ToastType
-} from './types'
+} from '@/app/types'
 
 export default function Page () {
   const searchParams = useSearchParams()
@@ -60,6 +61,9 @@ export default function Page () {
   const [manageMembersModalVisible, setManageMembersModalVisible] =
     useState(false)
 
+  const [name, setName] = useState('')
+  const [profileUrl, setProfileUrl] = useState('')
+
   const [userMsg, setUserMsg] = useState({
     message: 'Message Text.  Message Text.  ',
     title: 'Please Note:',
@@ -73,11 +77,19 @@ export default function Page () {
     useState<CustomQuotedMessage | null>(null)
   const [typingUsers, setTypingUsers] = useState<String | null>(null)
 
-  const [activeChannelId, setActiveChannelId] = useState<string>('')
+  //const [activeChannelId, setActiveChannelId] = useState<string>('')
+  const [previousChannelId, setPreviousChannelId] = useState(0)
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
+  const [activeChannelMemberships, setActiveChannelMemberships] = useState<
+    User[]
+  >([]) //  Not yet used
   const [publicChannels, setPublicChannels] = useState<Channel[]>()
-  const [users, setUsers] = useState<User[]>([])
+  //const [users, setUsers] = useState<User[]>([])
+  const [activeChannelUsers, setActiveChannelUsers] = useState<User[]>([])
+  const [channelStreamedUsers, setChannelStreamedUsers] = useState<User[]>([])
+  const tempUsers = useRef<User[]>([])
 
+  /* Initialization logic */
   useEffect(() => {
     async function init () {
       setUserId(searchParams.get('userId'))
@@ -104,13 +116,23 @@ export default function Page () {
 
       setChat(chat)
       console.log(chat.currentUser)
+      console.log(testData.avatars)
+
       if (!chat.currentUser.profileUrl) {
         //  This is the first time this user has logged in, generate them a random name and profile image
         //  todo
+        const randomProfileUrl = Math.floor(
+          Math.random() * testData.avatars.length
+        )
         chat.currentUser.update({
-          name: 'Darryn Campbell', //  todo should be random
-          profileUrl: '/avatars/avatar04.png' //  todo should be random
+          name: '' + userId,
+          profileUrl: testData.avatars[randomProfileUrl]
         })
+        setName('' + userId)
+        setProfileUrl(testData.avatars[randomProfileUrl])
+      } else {
+        setName(chat.currentUser.name)
+        setProfileUrl(chat.currentUser.profileUrl)
       }
 
       chat
@@ -121,32 +143,152 @@ export default function Page () {
             await keysetInit()
             router.refresh()
           } else {
-            console.log(channelsResponse.channels[0])
-            setPublicChannels(channelsResponse.channels)
+            //console.log(channelsResponse.channels)
+            console.log('SETTING PUBLIC CHANNELS')
+            if (channelsResponse.channels.length > 0) {
+              //  Join each of the public channels
+              channelsResponse.channels.forEach(channel => {
+                channel.join(message => {
+                  //  todo populate unread messages pane with messages if required (think there is an API to get unread messages on a channel)
+                  console.log(message.content.text)
+                })
+              })
+              //  Keep a local reference to these public channels
+              await setPublicChannels(channelsResponse.channels)
+              //  By default, show the first public channel
+              console.log('setting active channel')
+              setActiveChannel(channelsResponse.channels[0])
+            }
           }
         })
 
-        setActiveChannelId('public-general')
+        //  todo Put this into a useCallback
+      chat.currentUser.getMemberships().then(membershipResponse => {
+        console.log(membershipResponse)
+        const currentMemberOfTheseDirectChannels = membershipResponse.memberships.map((m) => m.channel).filter((c) => c.type === 'direct')
+        const currentMemberOfTheseGroupChannels = membershipResponse.memberships.map((m) => m.channel).filter((c) => c.type === 'group')
+        const directChannelMemberships = membershipResponse.memberships.filter((m) => m.channel.type === 'direct')
+        const groupChannelMemberships = membershipResponse.memberships.filter((m) => m.channel.type === 'group')
+        console.log("Direct:")
+        console.log(currentMemberOfTheseDirectChannels)
+        console.log("Group:")
+        console.log(currentMemberOfTheseGroupChannels)
+        //console.log(currentMemberOfTheseGroupChannels[0].id)
+        console.log("Direct Memberships")
+        console.log(directChannelMemberships)
+      })
     }
     init()
-  }, [userId, setChat, searchParams])
+  }, [userId, setChat, searchParams, router])
 
   useEffect(() => {
-    console.log('use effect update channel details')
-    updateChannelDetails()
-  }),
-    [activeChannelId]
+    if (!chat?.currentUser) return
+    return chat.currentUser.streamUpdates(updatedUser => {
+      //console.log('PROFILE SCREEN STREAM UPDATES: ')
+      //console.log(updatedUser)
+      if (updatedUser.name) {
+        setName(updatedUser.name)
+      }
+      if (updatedUser.profileUrl) {
+        setProfileUrl(updatedUser.profileUrl)
+      }
+    })
+  }, [chat?.currentUser])
 
-  const updateChannelDetails = async () => {
-    //console.log('UPDATING channel details 1: ')
-    if (chat && activeChannelId != "" && (!activeChannel || activeChannelId != activeChannel.id)) {
-      //console.log('77updating channel details.  active channel ID is ' + activeChannel?.id + ', activechannelid is ' + activeChannelId)
-      const details = await chat?.getChannel(activeChannelId)
-      //console.log('UPDATING channel details 2: ')
-      setActiveChannel(details)
+  /* Handle updates to the Public Channels */
+  useEffect(() => {
+    if (chat && publicChannels) {
+      return Channel.streamUpdatesOn(publicChannels, channels => {
+        const updatedPublicChannels = publicChannels.map(
+          (publicChannel, index) => {
+            if (channels[index].name) {
+              //console.log('name changed')
+              ;(publicChannel as any).name = channels[index].name
+            }
+            if (channels[index].custom?.profileUrl) {
+              console.log('profile changed')
+              publicChannel.custom.profileUrl =
+                channels[index].custom.profileUrl
+            }
+            return publicChannel
+          }
+        )
+        setPublicChannels(updatedPublicChannels)
+      })
     }
-  }
+  }, [chat, publicChannels])
 
+  /* Register for updates for user streams */
+  useEffect(() => {
+    //console.log('streaming updates on users 1')
+    if (chat && activeChannelUsers && activeChannelUsers.length > 0) {
+      //  Streaming Updates on users
+      console.log('Streaming updates on users')
+      console.log(activeChannelUsers)
+      setChannelStreamedUsers([...activeChannelUsers])
+      console.log(channelStreamedUsers)
+      const unstream = User.streamUpdatesOn(
+        activeChannelUsers,
+        updatedUsers => {
+          //console.log('RECEIVED an update on Streamed users: ')
+          //console.log(updatedUsers)
+          const updatedUsersArr = activeChannelUsers.map((user, index) => {
+            if (updatedUsers[index].name) {
+              ;(user as any).name = updatedUsers[index].name
+            }
+            if (updatedUsers[index].profileUrl) {
+              ;(user as any).profileUrl = updatedUsers[index].profileUrl
+            }
+            return user
+          })
+          //console.log('setting to:')
+          //console.log(updatedUsersArr)
+          setChannelStreamedUsers(updatedUsersArr)
+        }
+      )
+      return unstream
+    }
+  }, [chat, activeChannelUsers])
+
+  /* Retrieve the members of the active channel & update state variables for users and memberships */
+  const getActiveChannelMembers = useCallback(
+    async (newUserId: string) => {
+      console.log('CALLBACK: New user')
+      activeChannel
+        .getMembers({ sort: { updated: 'desc' }, limit: 100 })
+        .then(response => {
+          if (response.members) {
+            setActiveChannelMemberships(response.members)
+            //  response contains the most recent 100 members
+            const localChannelUsers = response.members.map(
+              (membership, index) => {
+                return membership.user
+              }
+            )
+            console.log('setting channel users')
+            setActiveChannelUsers(localChannelUsers)
+
+            //Membership.streamUpdatesOn(response.members, updatedMemberships => {
+            //  console.log('updated memberships')
+            //  console.log(updatedMemberships)
+            //})
+          }
+        })
+      return
+    },
+    [activeChannel]
+  )
+
+  /* Detect when the user switches channel and update our membership variables */
+  useEffect(() => {
+    if (!chat || !activeChannel) return
+    console.log('ACTIVE CHANNEL CHANGED ' + activeChannel.id)
+
+    //  Retrieve the members of this channel
+    getActiveChannelMembers()
+  }, [chat, activeChannel, previousChannelId, getActiveChannelMembers])
+
+  /* Bootstrap the application if it is run in an empty keyset */
   async function keysetInit () {
     try {
       await chat?.createPublicConversation({
@@ -183,18 +325,32 @@ export default function Page () {
     console.log(draft)
   }
 
-  function messageActionHandler (action, data) {
+  async function messageActionHandler (action, data) {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
+        //  todo this is test code
+        //chat.getChannels().then(channelsResponse => {
+        //  console.log("CHANNELS RESPONSE")
+        //  console.log(channelsResponse)
+        //})
+        //break;
+        //  todo end test code
+
         setShowThread(true)
         setShowPinnedMessages(false)
         showUserMessage(
-          null,
+          'Please Note:',
           'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
           ''
         )
         break
       case MessageActionsTypes.QUOTE:
+        //  todo this is test code
+        //const other = await chat.getUser('test-darryn-2')
+        //await chat.createGroupConversation({users: [other]})
+        //break;
+        //  todo end test code
+
         let newQuotedMessage: CustomQuotedMessage = {
           message: 'This is a quoted message. ',
           sender: 'Sarah Johannsen'
@@ -205,7 +361,7 @@ export default function Page () {
         setShowThread(false)
         setShowPinnedMessages(true)
         showUserMessage(
-          null,
+          'Please Note:',
           'Work in progress: Though supported by the Chat SDK, this demo does not yet support pinning messages',
           ''
         )
@@ -218,60 +374,59 @@ export default function Page () {
         )
         break
       case MessageActionsTypes.COPY:
-        showUserMessage(
-          'WORK IN PROGRESS!',
-          'Message not copied',
-          '',
-          ToastType.ERROR
-        )
+        showUserMessage('Copied', `${data.text}`, '', ToastType.CHECK)
         break
     }
   }
+  /*
+  function uniqueByUserId (users) {
+    const set = new Set()
+    return users.filter(user => {
+      const isDuplicate = set.has(user.id)
+      set.add(user.id)
+      return !isDuplicate
+    })
+  }
+
+
 
   const getUser = useCallback(
-    (userId: string) => {
-      //console.log('useCallback called')
-      const existingUser = users.find((u) => u.id === userId)
+    async (userId: string) => {
+      if (!chat || !users) return
+      console.log('useCallback called for ' + userId)
+      console.log(users)
+      //const existingUser = users.find(user => user.id === userId)
       //console.log('existing user: ' + existingUser)
-      if (!existingUser) {
+      console.log(tempUsers)
+      const existingUserTemp = tempUsers?.current.find(user => user.id === userId)
+      console.log('existing user temp: ' + existingUserTemp)
+      if (!existingUserTemp) {
         console.log('FETCHING USER INFO')
-        chat?.getUser(userId).then((fetchedUser) => {
-          if (fetchedUser) 
-            {
-                setUsers((users) => [...users, fetchedUser])
-            }
-        })
+        const fetchedUser = await chat?.getUser(userId)
+        if (fetchedUser)
+          {
+            console.log('calling set users')
+            tempUsers?.current.push(fetchedUser)
+            console.log(tempUsers.current)
+            //setUsers([...users, fetchedUser])
+          }
+        //chat?.getUser(userId).then(fetchedUser => {
+        //  if (fetchedUser) {
+        //    //console.log('Calling set Users')
+        //    setUsers(users => {
+        //      return uniqueByUserId([...users, fetchedUser])
+        //    })
+        //  }
+        //})
         return null
       }
-      existingUser.streamUpdates((updatedUser) => {
-          {
-            var tempArr1 = [...users]
-            console.log(tempArr1)
-            const indexToChange = tempArr1.findIndex(user => user.id === updatedUser.id)
-            if (indexToChange > -1)
-              {
-                if (updatedUser.name)
-                  {
-                    (tempArr1[indexToChange] as any).name = updatedUser.name
-                  }
-                  if (updatedUser.profileUrl)
-                    {
-                      (tempArr1[indexToChange] as any).profileUrl = updatedUser.profileUrl
-                    }
-                setUsers(tempArr1)
-              }
-              else
-              {
-                //  Error, could not find user to update
-                console.log("Error: Could not find user to update")
-              }    
-          }
-          })
-      return existingUser
-    },
-    [chat, users]
+      
+      return existingUserTemp
+    }, [tempUsers]
   )
+  */
 
+  /*
   function seenUserId (userId) {
     if (userId == chat?.currentUser.id) {
       //  No action, this is our own ID
@@ -280,12 +435,18 @@ export default function Page () {
       getUser(userId)
     }
   }
+  */
 
   function logout () {
     router.replace(`/`)
   }
 
-  function showUserMessage (title, message, href, type = ToastType.INFO) {
+  function showUserMessage (
+    title: string,
+    message: string,
+    href: string,
+    type = ToastType.INFO
+  ) {
     clearTimeout(userMsgTimeoutId)
     setUserMsg({ message: message, href: href, title: title, type: type })
     setUserMsgShown(true)
@@ -338,7 +499,9 @@ export default function Page () {
         profileScreenVisible={profileScreenVisible}
         setProfileScreenVisible={setProfileScreenVisible}
         changeUserNameScreenVisible={changeUserNameModalVisible}
-        currentUser={chat.currentUser}
+        //currentUser={chat.currentUser}
+        name={name}
+        profileUrl={profileUrl}
         logout={() => logout()}
         changeName={() => {
           setChangeUserNameModalVisible(true)
@@ -351,11 +514,14 @@ export default function Page () {
         changeChatNameScreenVisible={changeChatNameModalVisible}
         manageMembersModalVisible={manageMembersModalVisible}
         isDirectChat={false}
-        currentChannel='Presumably this will be a PN Channel object'
+        activeChannel={activeChannel}
+        activeChannelUsers={activeChannelUsers}
+        //users={users}
+        //currentChannel='Presumably this will be a PN Channel object'
         buttonAction={() => {
           console.log('ToDo: Either delete or leave conversation')
           showUserMessage(
-            null,
+            'Please Note:',
             'Work in progress: Though supported by the Chat SDK, this demo does not yet support leaving channels (either 1:1 conversations, or private groups)',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
           )
@@ -366,15 +532,21 @@ export default function Page () {
         manageMembershipsAction={() => {
           setManageMembersModalVisible(true)
         }}
+        showUserMessage={showUserMessage}
       />
       {/* Modal to change the Chat group name*/}
       <ModalChangeName
-        name='Bike lovers'
+        activeChannel={activeChannel}
         modalType={ChatNameModals.CHANNEL}
-        saveAction={newName => {
+        showUserMessage={showUserMessage}
+        saveAction={async newName => {
+          await activeChannel.update({
+            name: newName
+          })
+          setName(newName)
           showUserMessage(
-            null,
-            'Work in progress: Though supported by the Chat SDK, this demo does not yet support changing channel names',
+            'Channel Name Changed',
+            'The channel name has been successfully updated',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
           )
         }}
@@ -382,24 +554,22 @@ export default function Page () {
         setChangeNameModalVisible={setChangeChatNameModalVisible}
       />
       <ModalManageMembers
+        activeChannelUsers={activeChannelUsers}
         saveAction={() => {
-          showUserMessage(
-            null,
-            "Work in progress: ToDo: This feature will probably be changed to 'View Members'",
-            ''
-          )
+          setManageMembersModalVisible(false)
         }}
         manageMembersModalVisible={manageMembersModalVisible}
         setManageMembersModalVisible={setManageMembersModalVisible}
       />
       {/* Modal to change the user name */}
       <ModalChangeName
-        name={chat.currentUser.name}
+        name={name}
         modalType={ChatNameModals.USER}
         saveAction={async newName => {
           await chat.currentUser.update({
             name: newName
           })
+          setName(newName)
           showUserMessage(
             'Name Changed',
             'Your name has been successfully updated',
@@ -473,7 +643,7 @@ export default function Page () {
             }}
             action={() => {
               showUserMessage(
-                null,
+                'Please Note:',
                 'Mark all as Read - not yet implemented',
                 'https://www.pubnub.com'
               )
@@ -489,12 +659,11 @@ export default function Page () {
                 markAsRead={true}
                 markAsReadAction={() => {
                   showUserMessage(
-                    null,
+                    'Please Note:',
                     'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
                     ''
                   )
                 }}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar02.png'
@@ -504,12 +673,11 @@ export default function Page () {
                 markAsRead={true}
                 markAsReadAction={() => {
                   showUserMessage(
-                    null,
+                    'Please Note:',
                     'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
                     ''
                   )
                 }}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar03.png'
@@ -520,12 +688,11 @@ export default function Page () {
                 markAsRead={true}
                 markAsReadAction={() => {
                   showUserMessage(
-                    null,
+                    'Please Note:',
                     'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
                     ''
                   )
                 }}
-                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -545,11 +712,12 @@ export default function Page () {
               {publicChannels?.map((publicChannel, index) => (
                 <ChatMenuItem
                   key={index}
-                  id={publicChannel.id}
                   avatarUrl={publicChannel.custom.profileUrl}
                   text={publicChannel.name}
                   present={-1}
-                  setActiveChannelId={setActiveChannelId}
+                  setActiveChannel={() => {
+                    setActiveChannel(publicChannels[index])
+                  }}
                 ></ChatMenuItem>
               ))}
               {/*<ChatMenuItem
@@ -580,21 +748,18 @@ export default function Page () {
                 text='Label 04'
                 present={1}
                 avatarBubblePrecedent='+2'
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar05.png'
                 text='Label 05'
                 present={0}
                 avatarBubblePrecedent='+5'
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar06.png'
                 text='Label 06'
                 present={1}
                 avatarBubblePrecedent='+1'
-                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -615,43 +780,36 @@ export default function Page () {
                 avatarUrl='/avatars/avatar07.png'
                 text='Label 07'
                 present={1}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar08.png'
                 text='Label 08'
                 present={0}
-                setActiveChannelId={setActiveChannelId}
               />
               <ChatMenuItem
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
-                setActiveChannelId={setActiveChannelId}
               />
             </div>
           )}
@@ -667,11 +825,14 @@ export default function Page () {
               <MessageList
                 activeChannel={activeChannel}
                 currentUser={chat.currentUser}
-                users={users}
+                users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)
                 }
-                seenUserId={userId => seenUserId(userId)}
+                seenUserId={newUserId => {
+                  console.log('new user: ' + newUserId)
+                  getActiveChannelMembers()
+                }}
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}
                 setShowPinnedMessages={setShowPinnedMessages}

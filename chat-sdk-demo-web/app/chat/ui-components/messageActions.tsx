@@ -23,7 +23,6 @@ export default function MessageActions ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   function copyClick (e) {
-    console.log('ToDo: Actually copy the message')
     copyMessageClick()
   }
   function copyEnter () {

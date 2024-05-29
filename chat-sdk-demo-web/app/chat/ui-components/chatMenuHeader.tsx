@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { roboto } from '@/app/fonts';
 import { useState } from 'react'
-import { ChatHeaderActionIcon } from '../types'
+import { ChatHeaderActionIcon } from '@/app/types'
 
 
 export default function ChatMenuHeader({text, actionIcon, expanded, expandCollapse, action = (b) => {}}) {

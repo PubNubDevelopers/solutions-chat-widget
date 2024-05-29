@@ -1,5 +1,5 @@
 export enum ChatNameModals {
-    UNDEFINED = "undefined",
+    UNDEFINED ="undefined",
     USER = "user",
     CHANNEL = "channel"
   }

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { CustomQuotedMessage } from '../types'
+import { CustomQuotedMessage } from '@/app/types'
 import QuotedMessage from './quotedMessage'
 import { useState, useEffect } from 'react'
 
@@ -11,20 +11,17 @@ export default function MessageInput ({
 }) {
   function handleMessageDraftChanged (draft) {}
 
-  const [text, setText] = useState("Sample Message") //  todo Will be replaced by message draft
+  const [text, setText] = useState("") //  todo Will be replaced by message draft
   async function handleSend(event: React.SyntheticEvent) {
     event.preventDefault()
-    //  todo properly
-    console.log('9')
     if (!text || !activeChannel) return
-    console.log('sending ' + text)
     await activeChannel.sendText(text, {storeInHistory: true})
-    //setText("") //  todo
+    setText("")
   }
 
   return (
     <div
-      className={`flex flex-col w-full items-center border border-navy200 ${
+      className={`flex flex-col w-full items-center border border-navy200 select-none ${
         quotedMessage ? 'h-[170px]' : ''
       } pr-6`}
     >

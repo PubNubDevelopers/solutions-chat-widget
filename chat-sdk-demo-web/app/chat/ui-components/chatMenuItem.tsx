@@ -5,7 +5,6 @@ import { useState } from 'react'
 import ToolTip from './toolTip'
 
 export default function ChatMenuItem ({
-  id="",
   avatarUrl,
   text,
   present = -1,
@@ -13,7 +12,7 @@ export default function ChatMenuItem ({
   count = '',
   markAsRead = false,
   markAsReadAction = () => {},
-  setActiveChannelId
+  setActiveChannel = () => {}
 }) {
 
   const [showToolTip, setShowToolTip] = useState(false)
@@ -26,7 +25,7 @@ export default function ChatMenuItem ({
 }
 
   return (
-    <div className='flex flex-col cursor-pointer' onClick={() => setActiveChannelId(id)}>
+    <div className='flex flex-col cursor-pointer' onClick={() => setActiveChannel()}>
       <div className='flex flex-row justify-between items-center w-full pl-4'>
         <div className='flex flex-row py-2 gap-3 h-12 text-sm items-center text-neutral900'>
           <Avatar

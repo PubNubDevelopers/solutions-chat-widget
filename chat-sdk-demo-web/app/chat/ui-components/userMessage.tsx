@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { ToastType } from '../types'
+import { ToastType } from '@/app/types'
 
 export default function UserMessage ({
   userMsgShown,

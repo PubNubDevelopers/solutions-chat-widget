@@ -100,7 +100,7 @@ export default function Message ({
 
     setUserReadableDate(datetime)
     //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
-  }, [userReadableDate])
+  }, [timetoken, userReadableDate])
 
   return (
     <div className='flex flex-col w-full'>

@@ -15,14 +15,14 @@ export default function ModalChangeName ({
   const [newChatName, setNewChatName] = useState("")
 
   useEffect(() => {
-    if (!activeChannel) return
+    if (!activeChannel || modalType == ChatNameModals.USER) return
     setNewChatName(activeChannel.name)
-  }, [activeChannel])
+  }, [activeChannel, modalType])
 
   useEffect(() => {
-    if (!name) return
+    if (!name || modalType == ChatNameModals.CHANNEL) return
     setNewChatName(name)
-  }, [name])
+  }, [modalType, name])
 
   return (
     <div
@@ -102,6 +102,12 @@ export default function ModalChangeName ({
                   else{
                     saveAction(newChatName)
                     setChangeNameModalVisible(false)
+                    showUserMessage(
+                      'Name Changed',
+                      'Your name has been successfully updated',
+                      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details',
+                      ToastType.CHECK
+                    )
                       }
               }}
             >

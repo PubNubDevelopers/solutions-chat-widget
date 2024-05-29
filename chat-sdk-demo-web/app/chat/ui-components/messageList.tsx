@@ -18,8 +18,10 @@ export default function MessageList ({
   activeChannel,
   currentUser,
   users,
+  groupUsers,
   messageActionHandler = (action, vars) => {},
   seenUserId = userId => {},
+  usersHaveChanged,
   setChatSettingsScreenVisible,
   quotedMessage,
   setShowPinnedMessages,
@@ -33,8 +35,28 @@ export default function MessageList ({
   useEffect(() => {
     console.log('ACTIVE CHANNEL CHANGED from MESSAGE LIST: ' + activeChannel?.id)
     if (!activeChannel) return
-    //if (activeChannel.id === loadedChannelId) return  //  Connect wasn't being called with this applied
+    if (activeChannel.id !== loadedChannelId) {  //  Connect wasn't being called with this applied
+    setLoadedChannelId(activeChannel.id)
     //console.log('ACTIVE CHANNEL CHANGED  - LOADING ')
+
+    console.log("GROUP USERS")
+    console.log(groupUsers)
+
+    //  todo disconnect as needed
+    
+    if (groupUsers)
+      {
+        console.log("Streaming Users Updates")
+        User.streamUpdatesOn(
+          groupUsers,
+          updatedUsers => {
+            console.log("NEED TO UPDATE USERS 1")
+            console.log(updatedUsers)
+            usersHaveChanged()
+          }
+        )
+      }
+
     setLoadedChannelId(activeChannel.id)
     setMessages([])
     activeChannel
@@ -51,6 +73,7 @@ export default function MessageList ({
     activeChannel.getPinnedMessage().then(message => {
       setPinnedMessage(message)
     })
+  }
     console.log('connecting')
     return activeChannel.connect(message => {
       console.log(message)
@@ -63,7 +86,7 @@ export default function MessageList ({
         }
           setMessages(messages => [...messages, message])
     })
-  }, [activeChannel])
+  }, [activeChannel, loadedChannelId, seenUserId, users])
 
   useEffect(() => {
     if (!messageListRef.current) return
@@ -118,13 +141,13 @@ export default function MessageList ({
           {activeChannel.type == 'direct' && (
             <div className='flex flex-row justify-center items-center gap-3'>
               <Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />
-              Sarah Johannsen
+              Sarah Johannsen todo direct chat
             </div>
           )}
           {activeChannel.type == 'group' && (
             <div className='flex flex-row justify-center items-center gap-3'>
               <Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />
-              Sarah Johannsen
+              Sarah Johannsen todo private group
             </div>
           )}
         </div>
@@ -303,14 +326,14 @@ export default function MessageList ({
               avatarUrl={
                 message.userId === currentUser.id
                   ? currentUser.profileUrl
-                  : users.find(user => user.id === message.userId)?.profileUrl
+                  : groupUsers?.find(user => user.id === message.userId)?.profileUrl
               }
               isRead={false} //  todo - read receipts
               showReadIndicator={false} //  todo - probably a better way to convey this information when I implement receipts (setting false since this is a public channel)
               sender={
                 message.userId === currentUser.id
                   ? currentUser.name
-                  : users.find(user => user.id === message.userId)?.name
+                  : groupUsers?.find(user => user.id === message.userId)?.name
               }
               timetoken={message.timetoken}
               pinned={pinnedMessage?.timetoken === message.timetoken} //  todo - message pinning

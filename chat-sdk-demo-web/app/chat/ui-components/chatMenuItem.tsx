@@ -12,7 +12,7 @@ export default function ChatMenuItem ({
   count = '',
   markAsRead = false,
   markAsReadAction = () => {},
-  setActiveChannel = () => {}
+  setActiveChannel = () => {},
 }) {
 
   const [showToolTip, setShowToolTip] = useState(false)

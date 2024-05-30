@@ -17,76 +17,53 @@ import {
 export default function MessageList ({
   activeChannel,
   currentUser,
-  users,
   groupUsers,
   messageActionHandler = (action, vars) => {},
-  seenUserId = userId => {},
   usersHaveChanged,
   setChatSettingsScreenVisible,
   quotedMessage,
   setShowPinnedMessages,
   setShowThread
 }) {
-  const [loadedChannelId, setLoadedChannelId] = useState("")
+  const MAX_AVATARS_SHOWN = 9
+  const [loadedChannelId, setLoadedChannelId] = useState('')
   const [messages, setMessages] = useState<pnMessage[]>([])
   const [pinnedMessage, setPinnedMessage] = useState<pnMessage | null>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('ACTIVE CHANNEL CHANGED from MESSAGE LIST: ' + activeChannel?.id)
+    console.log(
+      'ACTIVE CHANNEL CHANGED from MESSAGE LIST: ' + activeChannel?.id
+    )
     if (!activeChannel) return
-    if (activeChannel.id !== loadedChannelId) {  //  Connect wasn't being called with this applied
-    setLoadedChannelId(activeChannel.id)
-    //console.log('ACTIVE CHANNEL CHANGED  - LOADING ')
+    if (activeChannel.id !== loadedChannelId) {
+      //  Connect wasn't being called with this applied
+      setLoadedChannelId(activeChannel.id)
 
-    console.log("GROUP USERS")
-    console.log(groupUsers)
+      console.log('GROUP USERS')
+      console.log(groupUsers)
 
-    //  todo disconnect as needed
-    
-    if (groupUsers)
-      {
-        console.log("Streaming Users Updates")
-        User.streamUpdatesOn(
-          groupUsers,
-          updatedUsers => {
-            console.log("NEED TO UPDATE USERS 1")
-            console.log(updatedUsers)
-            usersHaveChanged()
-          }
-        )
+      //  todo disconnect as needed
+
+      if (groupUsers) {
+        User.streamUpdatesOn(groupUsers, updatedUsers => {
+          usersHaveChanged()
+        })
       }
 
-    setLoadedChannelId(activeChannel.id)
-    setMessages([])
-    activeChannel
-      .getHistory({ count: 20 })
-      .then((historicalMessagesObj) => {
-        //console.log(historicalMessagesObj.messages)
+      setMessages([])
+      activeChannel.getHistory({ count: 20 }).then(historicalMessagesObj => {
         setMessages(messages => [...historicalMessagesObj.messages])
       })
-    //console.log(history)
-    //.then((messages, isMore) => {
-    //  console.log('read history: ' + messages.length + ", " + isMore)
-    //  setMessages(messages => [...messages])
-    //})
-    activeChannel.getPinnedMessage().then(message => {
-      setPinnedMessage(message)
-    })
-  }
-    console.log('connecting')
+      activeChannel.getPinnedMessage().then(message => {
+        setPinnedMessage(message)
+      })
+    }
     return activeChannel.connect(message => {
       console.log(message)
-      const sender = users.find(user => user.id === message.userId)
-      console.log(sender)
-      if (!sender)
-        {
-      //  do not recognize the sender, refresh the chat display
-          seenUserId(message.userId)
-        }
-          setMessages(messages => [...messages, message])
+      setMessages(messages => [...messages, message])
     })
-  }, [activeChannel, loadedChannelId, seenUserId, users])
+  }, [activeChannel, loadedChannelId])
 
   useEffect(() => {
     if (!messageListRef.current) return
@@ -135,19 +112,40 @@ export default function MessageList ({
                 present={-1}
                 avatarUrl={activeChannel.custom.profileUrl}
               />
-              {activeChannel.name} {activeChannel.type == 'public' && <div>(Public)</div>}
+              {activeChannel.name}{' '}
+              {activeChannel.type == 'public' && <div>(Public)</div>}
             </div>
           )}
           {activeChannel.type == 'direct' && (
             <div className='flex flex-row justify-center items-center gap-3'>
-              <Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />
-              Sarah Johannsen todo direct chat
+              <div className='flex flex-row -space-x-2.0'>
+                {groupUsers?.map((member, index) => (
+                  <Avatar
+                    key={index}
+                    avatarUrl={member.profileUrl}
+                    present={1}
+                  />
+                ))}
+              </div>
+              1:1 between {groupUsers?.map((member, index) => `${member.name}${groupUsers.length - 1 != index ? ' and ' : ''}`)}
             </div>
           )}
           {activeChannel.type == 'group' && (
             <div className='flex flex-row justify-center items-center gap-3'>
-              <Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />
-              Sarah Johannsen todo private group
+              <div className='flex flex-row -space-x-2.0'>
+                {groupUsers?.map(
+                  (member, index) =>
+                    index < MAX_AVATARS_SHOWN && (
+                      <Avatar
+                        key={index}
+                        avatarUrl={member.profileUrl}
+                        present={1}
+                      />
+                    )
+                )}
+              </div>
+              {/*<Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />*/}
+              {activeChannel.name} (Private Group)
             </div>
           )}
         </div>
@@ -157,7 +155,7 @@ export default function MessageList ({
           <div className='flex flex-row'>
             {/* Pin with number of pinned messages */}
             <div className='flex justify-center items-center rounded min-w-6 px-2 my-2 border text-xs font-normal border-navy50 bg-neutral-100'>
-              3
+              0
             </div>
             <div
               className='p-3 py-3 cursor-pointer hover:bg-neutral-100 hover:rounded-md'
@@ -326,7 +324,8 @@ export default function MessageList ({
               avatarUrl={
                 message.userId === currentUser.id
                   ? currentUser.profileUrl
-                  : groupUsers?.find(user => user.id === message.userId)?.profileUrl
+                  : groupUsers?.find(user => user.id === message.userId)
+                      ?.profileUrl
               }
               isRead={false} //  todo - read receipts
               showReadIndicator={false} //  todo - probably a better way to convey this information when I implement receipts (setting false since this is a public channel)

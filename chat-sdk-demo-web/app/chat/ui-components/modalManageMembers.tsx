@@ -3,14 +3,19 @@ import { useState } from 'react'
 import { roboto } from '@/app/fonts'
 import Avatar from './avatar'
 import ManagedMember from './managedMember'
+import {
+  ChatEventTypes
+} from '@/app/types'
 
 export default function ModalManageMembers ({
   activeChannelUsers,
+  currentUserId,
+  activeChannel,
   saveAction,
   manageMembersModalVisible,
   setManageMembersModalVisible,
+  sendChatEvent
 }) {
-
   return (
     <div
       className={`${
@@ -38,24 +43,33 @@ export default function ModalManageMembers ({
         </div>
         <div className='flex flex-col px-12 pb-12 gap-3'>
           <div className='flex font-semibold text-lg justify-center text-neutral-900 mb-2'>
-            View Members ({activeChannelUsers.length})
+            View Members ({activeChannelUsers?.length})
           </div>
           <div className='flex font-normal text-base justify-center text-neutral-600'>
-            A membership associates a user with a specific channel and is created / destroyed when a user joins or leaves a channel respectively.
+            A membership associates a user with a specific channel and is
+            created / destroyed when a user joins or leaves a channel
+            respectively.
           </div>
 
           <div className='flex flex-col my-2 max-h-[40vh] overflow-y-auto overscroll-none'>
+            {activeChannelUsers?.map((user, index) => {
+              return (
+                <ManagedMember
+                  key={index}
+                  userId={`${user.id}`}
+                  name={`${user.name}`}
+                  avatarUrl={user.profileUrl}
+                  present={1}
+                  removeAction={userId => {
+                    let arr: User[] = [user]
+                    sendChatEvent(ChatEventTypes.KICK, arr, {kickedBy: currentUserId, channelAffected: activeChannel.id})
+                  }}
+                  lastElement={index == activeChannelUsers?.length - 1}
+                />
+              )
+            })}
 
-
-          {activeChannelUsers.map((user, index) => {
-
-          return (
-            <ManagedMember key={index} name={`${user.name}`} avatarUrl={user.profileUrl} removeAction={() => {}} lastElement={index == activeChannelUsers.length-1}/>
-          )
-        })}
-
-
-          {/*<ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+            {/*<ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
@@ -72,7 +86,6 @@ export default function ModalManageMembers ({
           <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
       <ManagedMember name="Leslie Alexander" avatarUrl="/avatars/avatar12.png" removeAction={() => {console.log("ToDo: Remove Member")}} lastElement={true}/>*/}
-
           </div>
           <div className='flex flex-row justify-end'>
             {/*<div

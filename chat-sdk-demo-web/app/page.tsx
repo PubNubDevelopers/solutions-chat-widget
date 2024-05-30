@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 export default function Home () {
   const [userId, setUserId] = useState('')
   const [userName, setUserName] = useState('')
+  const [showSpinner, setShowSpinner] = useState(false)
   const router = useRouter()
   const autofocusInput = useRef<HTMLInputElement>(null)
 
@@ -17,9 +18,8 @@ export default function Home () {
     setUserId(valAsId)
   }
 
-  function convertToId(orig)
-  {
-    return orig.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()
+  function convertToId (orig) {
+    return orig.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,6 +34,7 @@ export default function Home () {
     if (userId === '') {
       autofocusInput.current?.focus()
     } else {
+      setShowSpinner(true)
       router.replace(`/chat/?userId=${userId}`)
     }
   }
@@ -81,9 +82,19 @@ export default function Home () {
             <button
               type='button'
               onClick={handleLoginButton}
-              className='bg-navy900 text-neutral50 text-sm py-3 rounded-md shadow-sm w-full'
+              className='relative bg-navy900 text-neutral50 text-sm py-3 rounded-md shadow-sm w-full'
             >
               Log in
+              <div className={`${!showSpinner && "hidden"} absolute -right-[50px] bottom-0 animate-spin`}>
+                  <Image
+                    src='/icons/loading.png'
+                    alt='Chat Icon'
+                    className=''
+                    width={40}
+                    height={40}
+                    priority
+                  />
+                </div>
             </button>
           </form>
         </div>

@@ -28,3 +28,9 @@ export enum ToastType {
   CHECK = 1,
   ERROR = 2
 }
+
+export enum ChatEventTypes {
+  LEAVE = 0,
+  JOIN = 1,
+  KICK = 2,
+}

@@ -3,6 +3,7 @@ import Avatar from './avatar'
 import { roboto } from '@/app/fonts'
 import { Membership, User } from '@pubnub/chat'
 import { useState, useEffect } from 'react'
+import { ToastType } from '@/app/types'
 
 export default function ChatSettingsScreen ({
   chatSettingsScreenVisible,
@@ -164,9 +165,9 @@ export default function ChatSettingsScreen ({
                 Get notified about new messages and mentions from chats
               </div>
             </div>
-            <div className='h-6 relative inline-block' onClick={() => {showUserMessage('Work in progress:',
+            <div className='h-6 relative inline-block' onClick={() => {showUserMessage('Work in Progress:',
             'Though supported by the Chat SDK, this demo does not yet support custom events or notifications',
-            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events')}}>
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.ERROR)}}>
               {/* ToDo: Checkbox is currently disabled with no handlers */}
               <input type='checkbox' defaultChecked={false} />
             </div>

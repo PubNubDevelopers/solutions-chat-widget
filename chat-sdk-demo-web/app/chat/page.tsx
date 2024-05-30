@@ -1,7 +1,6 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-//import { ChatContext } from './context'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useContext, useCallback, useRef } from 'react'
 import { loadEnvConfig } from '@next/env'
@@ -33,7 +32,8 @@ import {
   MessageActionsTypes,
   CustomQuotedMessage,
   ChatHeaderActionIcon,
-  ToastType
+  ToastType,
+  ChatEventTypes
 } from '@/app/types'
 
 export default function Page () {
@@ -73,7 +73,7 @@ export default function Page () {
   const [userMsgShown, setUserMsgShown] = useState(false)
   const [userMsgTimeoutId, setUserMsgTimeoutId] = useState(0)
   const [refreshMembersTimeoutId, setRefreshMembersTimeoutId] = useState(0)
-//  const [forceUpdate, setForceUpdate] = useState(0)
+  //  const [forceUpdate, setForceUpdate] = useState(0)
 
   const [quotedMessage, setQuotedMessage] =
     useState<CustomQuotedMessage | null>(null)
@@ -83,22 +83,18 @@ export default function Page () {
   const [publicChannels, setPublicChannels] = useState<Channel[]>()
   const [privateGroups, setPrivateGroups] = useState<Channel[]>()
   const [directChats, setDirectChats] = useState<Channel[]>()
+  const [publicChannelsMemberships, setPublicChannelsMemberships] =
+    useState<Membership[]>()
   const [privateGroupsMemberships, setPrivateGroupsMemberships] =
     useState<Membership[]>()
   const [directChatsMemberships, setDirectChatsMemberships] =
     useState<Membership[]>()
+  const [publicChannelsUsers, setPublicChannelsUsers] = useState<User[][]>([])
   const [privateGroupsUsers, setPrivateGroupsUsers] = useState<User[][]>([])
   const [directChatsUsers, setDirectChatsUsers] = useState<User[][]>([])
 
   //  State of the currently active Channel
-  //const [activeChannelId, setActiveChannelId] = useState<string>('')
-  //const [users, setUsers] = useState<User[]>([])
-  const [activeChannelUsers, setActiveChannelUsers] = useState<User[]>([])
-  const [channelStreamedUsers, setChannelStreamedUsers] = useState<User[]>([])
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
-  const [activeChannelMemberships, setActiveChannelMemberships] = useState<
-    Membership[]
-  >([]) //  Not yet used
   const [activeChannelGroupIndex, setActiveChannelGroupIndex] = useState(-1)
 
   /* Bootstrap the application if it is run in an empty keyset */
@@ -131,9 +127,47 @@ export default function Page () {
     } catch (e) {}
   }
 
+  /*  Initialize or Update all the state arrays related to public groups */
+  async function updateChannelMembershipsForPublic (chat) {
+    if (!chat) return
+    chat.currentUser.getMemberships({}).then(async membershipResponse => {
+      const currentMemberOfThesePublicChannels = membershipResponse.memberships
+        .map(m => m.channel)
+        .filter(c => c.type === 'public')
+      setPublicChannels(currentMemberOfThesePublicChannels)
+      const publicChannelMemberships = membershipResponse.memberships.filter(
+        m => m.channel.type === 'public'
+      )
+      setPublicChannelsMemberships(publicChannelMemberships)
+
+      //  Get the users for every public group I am a member of
+      let tempPublicUsers: User[][] = []
+      for (
+        var indexGroup = 0;
+        indexGroup < currentMemberOfThesePublicChannels.length;
+        indexGroup++
+      ) {
+        var tempIndex = indexGroup
+        const response = await currentMemberOfThesePublicChannels[
+          indexGroup
+        ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
+        //.then(function (response) {
+        if (response.members) {
+          //  response contains the most recent 100 members
+          const channelUsers = response.members.map((membership, index) => {
+            return membership.user
+          })
+          tempPublicUsers[tempIndex] = channelUsers
+        }
+        //            }, tempIndex)
+      }
+      setPublicChannelsUsers(tempPublicUsers)
+      //})
+    })
+  }
+
   /* Initialize or Update all the state arrays related to private groups */
   async function updateChannelMembershipsForGroups (chat) {
-    console.log('Initialize Channel Memberships for Groups')
     if (!chat) return
     chat.currentUser
       .getMemberships({ sort: { updated: 'desc' } })
@@ -154,39 +188,25 @@ export default function Page () {
           indexGroup < currentMemberOfTheseGroupChannels.length;
           indexGroup++
         ) {
-          console.log('iter: ' + indexGroup)
           //currentMemberOfTheseGroupChannels.forEach((channel, index) => {
           var tempIndex = indexGroup
-          const response = await currentMemberOfTheseGroupChannels[indexGroup]
-            .getMembers({ sort: { updated: 'desc' }, limit: 100 })
-            //.then(function (response) {
-              if (response.members) {
-                //  response contains the most recent 100 members
-                const channelUsers = response.members.map(
-                  (membership, index) => {
-                    return membership.user
-                  }
-                )
-                console.log('PRIVATE GROUPS')
-                console.log(channelUsers)
-                console.log('index is ' + tempIndex)
-                tempGroupUsers[tempIndex] = channelUsers
-                //setPrivateGroupsUsers[index](channelUsers)
-              }
-//            }, tempIndex)
+          const response = await currentMemberOfTheseGroupChannels[
+            indexGroup
+          ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
+          if (response.members) {
+            const channelUsers = response.members.map((membership, index) => {
+              return membership.user
+            })
+            tempGroupUsers[tempIndex] = channelUsers
+          }
         }
-        console.log('SETTING PRIVATE GROUPS 2')
-        console.log(tempGroupUsers)
         setPrivateGroupsUsers(tempGroupUsers)
-        //})
       })
   }
 
   /* Initialize or Update all the state arrays related to Direct message pairs */
   async function updateChannelMembershipsForDirects (chat) {
-    console.log('Inside updateChannelMembershipsForDirects')
     if (!chat) return
-    console.log('Inside updateChannelMembershipsForDirects 2')
     chat.currentUser
       .getMemberships({ sort: { updated: 'desc' } })
       .then(async membershipResponse => {
@@ -209,47 +229,20 @@ export default function Page () {
         ) {
           //currentMemberOfTheseDirectChannels.forEach(channel => {
           var tempIndex = indexDirects
-          const response = await currentMemberOfTheseDirectChannels[indexDirects]
-            .getMembers({ sort: { updated: 'desc' }, limit: 100 })
-            //.then(function (response) {
-          
-              if (response.members) {
-                //  response contains the most recent 100 members
-                const channelUsers = response.members.map(
-                  (membership, index) => {
-                    return membership.user
-                  }
-                )
-                console.log('DIRECTS')
-                console.log(channelUsers)
-                tempDirectUsers[tempIndex] = channelUsers
-                //setDirectChatsUsers(channelUsers)
-              }
-//            }, tempIndex)
-            /*
-          currentMemberOfTheseDirectChannels[indexDirects]
-            .getMembers({ sort: { updated: 'desc' }, limit: 100 })
-            .then(function (response) {
-              if (response.members) {
-                //  response contains the most recent 100 members
-                const channelUsers = response.members.map(
-                  (membership, index) => {
-                    return membership.user
-                  }
-                )
-                console.log('DIRECTS')
-                console.log(channelUsers)
-                tempDirectUsers[tempIndex] = channelUsers
-                //setDirectChatsUsers(channelUsers)
-              }
-            }, tempIndex)
+          const response = await currentMemberOfTheseDirectChannels[
+            indexDirects
+          ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
+          //.then(function (response) {
 
-            */
+          if (response.members) {
+            //  response contains the most recent 100 members
+            const channelUsers = response.members.map((membership, index) => {
+              return membership.user
+            })
+            tempDirectUsers[tempIndex] = channelUsers
+          }
         }
-        console.log('SET DIRECT CHAT USERS')
-        console.log(tempDirectUsers)
         setDirectChatsUsers(tempDirectUsers)
-        //setForceUpdate(1)
       })
   }
 
@@ -279,8 +272,6 @@ export default function Page () {
       })
 
       setChat(chat)
-      console.log(chat.currentUser)
-      console.log(testData.avatars)
 
       if (!chat.currentUser.profileUrl) {
         //  This is the first time this user has logged in, generate them a random name and profile image
@@ -307,53 +298,48 @@ export default function Page () {
             await keysetInit()
             router.refresh()
           } else {
-            //console.log(channelsResponse.channels)
-            console.log('SETTING PUBLIC CHANNELS')
+            //  Join public channels
             if (channelsResponse.channels.length > 0) {
               //  Join each of the public channels
               channelsResponse.channels.forEach(channel => {
                 channel.join(message => {
                   //  todo populate unread messages pane with messages if required (think there is an API to get unread messages on a channel)
                   console.log(message.content.text)
+                  //  todo send a message to everyone else in this public channel that I have joined (they can then update their channel users)
                 })
               })
-              //  Keep a local reference to these public channels
-              await setPublicChannels(channelsResponse.channels)
-              //  By default, show the first public channel
-
-              console.log('setting active channel')
-              setActiveChannel(channelsResponse.channels[0])
             }
           }
         })
 
-      //  todo Put this into a useCallback to reuse when receive notification that somebody has joined or left a group
       //  Initialization for private groups and direct messages
-      console.log('Calling updateChannelMembershipForGroups')
+      updateChannelMembershipsForPublic(chat)
       updateChannelMembershipsForGroups(chat)
-      console.log('Calling Initialize Channel Memberships for Direct Messages')
       updateChannelMembershipsForDirects(chat)
-      //setTimeout(() => {console.log(publicChannels); setActiveChannel(publicChannels[0])}, "5000")
-      //setForceUpdate(1)
+      //  A useEffect below is responsible for setting the initial channel
     }
     init()
     //updateChannelMembershipsForDirects()
   }, [userId, setChat, searchParams, router])
 
-  /*
   useEffect(() => {
-    if (!chat || !forceUpdate || !publicChannels) return
-    //  todo
-    console.log('FORCING UPDATE')
-    setActiveChannel(publicChannels[0])
-  }, [chat, forceUpdate, publicChannels])
-*/
+    if (
+      chat &&
+      publicChannels?.length > 0 &&
+      publicChannelsUsers?.length > 0 &&
+      !activeChannel
+    ) {
+      console.log('Setting active channel on init')
+      setActiveChannelGroupIndex(0)
+      setActiveChannel(publicChannels[0])
+    }
+  }, [activeChannel, chat, publicChannels, publicChannelsUsers])
 
   useEffect(() => {
-    if (!chat?.currentUser) return
+    if (!chat) return
+    console.log('streaming updates current user: ' + chat.currentUser.id)
     return chat.currentUser.streamUpdates(updatedUser => {
-      //console.log('PROFILE SCREEN STREAM UPDATES: ')
-      //console.log(updatedUser)
+      console.log('received update')
       if (updatedUser.name) {
         setName(updatedUser.name)
       }
@@ -361,20 +347,18 @@ export default function Page () {
         setProfileUrl(updatedUser.profileUrl)
       }
     })
-  }, [chat?.currentUser])
+  }, [chat])
 
   /* Handle updates to the Public Channels */
   useEffect(() => {
-    if (chat && publicChannels) {
+    if (chat && publicChannels && publicChannels.length > 0) {
       return Channel.streamUpdatesOn(publicChannels, channels => {
         const updatedPublicChannels = publicChannels.map(
           (publicChannel, index) => {
             if (channels[index].name) {
-              //console.log('name changed')
               ;(publicChannel as any).name = channels[index].name
             }
             if (channels[index].custom?.profileUrl) {
-              console.log('profile changed')
               publicChannel.custom.profileUrl =
                 channels[index].custom.profileUrl
             }
@@ -388,22 +372,31 @@ export default function Page () {
 
   /* Handle updates to the Private Groups */
   useEffect(() => {
-    if (chat && privateGroups) {
-      //  todo stream events
+    if (chat && privateGroups && privateGroups.length > 0) {
+      return Channel.streamUpdatesOn(privateGroups, channels => {
+        const updatedPrivateGroups = privateGroups.map(
+          (privateGroup, index) => {
+            if (channels[index].name) {
+              ;(privateGroup as any).name = channels[index].name
+            }
+            return privateGroup
+          }
+        )
+        setPrivateGroups(updatedPrivateGroups)
+      })
     }
   }, [chat, privateGroups])
 
   /* Handle updates to the Direct Message Groups */
   useEffect(() => {
-    if (chat && directChats) {
-      //  todo stream events
+    if (chat && directChats && directChats.length > 0) {
+      //  Note: We do not need to stream updates on direct chats since we do not use the channel name, only the user info (name, avatar)
     }
   }, [chat, directChats])
 
   /* Listen for  */
   useEffect(() => {
     if (!chat) return
-    console.log('listening for events')
     //  todo Handle received custom events, sent as a result of users joining or leaving channels I'm part of
     const removeCustomListener = chat.listenForEvents({
       channel: chat.currentUser.id,
@@ -424,81 +417,26 @@ export default function Page () {
     }
   }, [chat])
 
-  /* Register for updates for user streams */
-  useEffect(() => {
-    //console.log('streaming updates on users 1')
-    if (chat && activeChannelUsers && activeChannelUsers.length > 0) {
-      //  Streaming Updates on users
-      console.log('Streaming updates on users')
-      console.log(activeChannelUsers)
-      setChannelStreamedUsers([...activeChannelUsers])
-      console.log(channelStreamedUsers)
-      const unstream = User.streamUpdatesOn(
-        activeChannelUsers,
-        updatedUsers => {
-          //console.log('RECEIVED an update on Streamed users: ')
-          //console.log(updatedUsers)
-          const updatedUsersArr = activeChannelUsers.map((user, index) => {
-            if (updatedUsers[index].name) {
-              ;(user as any).name = updatedUsers[index].name
-            }
-            if (updatedUsers[index].profileUrl) {
-              ;(user as any).profileUrl = updatedUsers[index].profileUrl
-            }
-            return user
-          })
-          //console.log('setting to:')
-          //console.log(updatedUsersArr)
-          setChannelStreamedUsers(updatedUsersArr)
-        }
-      )
-      return unstream
-    }
-  }, [chat, activeChannelUsers])
-
-  /* Retrieve the members of the active channel & update state variables for users and memberships */
-  const getActiveChannelMembers = useCallback(async () => {
-    console.log('CALLBACK: New user')
-    activeChannel
-      ?.getMembers({ sort: { updated: 'desc' }, limit: 100 })
-      .then(response => {
-        if (response.members) {
-          setActiveChannelMemberships(response.members)
-          //  response contains the most recent 100 members
-          const localChannelUsers = response.members.map(
-            (membership, index) => {
-              return membership.user
-            }
-          )
-          console.log('setting channel users')
-          setActiveChannelUsers(localChannelUsers)
-
-          //Membership.streamUpdatesOn(response.members, updatedMemberships => {
-          //  console.log('updated memberships')
-          //  console.log(updatedMemberships)
-          //})
-        }
-      })
-    return
-  }, [activeChannel])
-
-
-  const refreshMembersFromServer = useCallback(async (groupType) => {
-    console.log('CALLBACK: Refresh Members from server')
+  /* 
+  Will refresh all of the users and channels associated with this user's memberships
+  You could do this using the objects from the StreamUpdatesOn() callbacks, but 
+  this way is expedient for a proof of concept.  The Channel name updates use the StreamUpdatesOn() callback directly.
+  */
+  const refreshMembersFromServer = useCallback(async () => {
     if (!chat) return
+    return //  TODO REMOVE THIS TO ENABLE OBJECT UPDATES.  IT'S JUST A PAIN WHEN DEBUGGING
 
     clearTimeout(refreshMembersTimeoutId)
     let setTimeoutId = setTimeout(() => {
       console.log('timeout fired')
-      updateChannelMembershipsForDirects(chat);
-    //  setActiveChannel(activeChannel)
-    }, "1000");
+      updateChannelMembershipsForPublic(chat)
+      updateChannelMembershipsForDirects(chat)
+      updateChannelMembershipsForGroups(chat)
+    }, '3000')
     setRefreshMembersTimeoutId(setTimeoutId)
-    //  TODO The Groups too if needed
 
     return
-  }, [chat])
-
+  }, [chat, refreshMembersTimeoutId])
 
   /* Detect when the user switches channel and update our membership variables */
   useEffect(() => {
@@ -506,8 +444,8 @@ export default function Page () {
     console.log('ACTIVE CHANNEL CHANGED ' + activeChannel.id)
 
     //  Retrieve the members of this channel
-    getActiveChannelMembers()
-  }, [chat, activeChannel, getActiveChannelMembers])
+    //getActiveChannelMembers()
+  }, [chat, activeChannel /*, getActiveChannelMembers*/])
 
   function handleChatSearch (term: string) {
     console.log(term)
@@ -517,14 +455,33 @@ export default function Page () {
     console.log(draft)
   }
 
+  function sendChatEvent (
+    eventType: ChatEventType,
+    recipients: User[],
+    payload
+  ) {
+    recipients.forEach(async recipient => {
+      //  Don't send the message to myself
+      console.log('sending event: ' + eventType)
+      if (recipient.id !== chat.currentUser.id) {
+        await chat.emitEvent({
+          channel: recipient.id,
+          type: 'custom',
+          method: 'publish',
+          payload: {
+            action: eventType,
+            body: payload
+          }
+        })
+      }
+    })
+  }
+
   async function messageActionHandler (action, data) {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
         //  todo this is test code
-        //chat.getChannels().then(channelsResponse => {
-        //  console.log("CHANNELS RESPONSE")
-        //  console.log(channelsResponse)
-        //})
+
         //console.log("Sending custom event")
         //await chat.emitEvent({
         //  channel: 'test-darryn-2', //  Sending to other test user
@@ -580,64 +537,6 @@ export default function Page () {
         break
     }
   }
-  /*
-  function uniqueByUserId (users) {
-    const set = new Set()
-    return users.filter(user => {
-      const isDuplicate = set.has(user.id)
-      set.add(user.id)
-      return !isDuplicate
-    })
-  }
-
-
-
-  const getUser = useCallback(
-    async (userId: string) => {
-      if (!chat || !users) return
-      console.log('useCallback called for ' + userId)
-      console.log(users)
-      //const existingUser = users.find(user => user.id === userId)
-      //console.log('existing user: ' + existingUser)
-      console.log(tempUsers)
-      const existingUserTemp = tempUsers?.current.find(user => user.id === userId)
-      console.log('existing user temp: ' + existingUserTemp)
-      if (!existingUserTemp) {
-        console.log('FETCHING USER INFO')
-        const fetchedUser = await chat?.getUser(userId)
-        if (fetchedUser)
-          {
-            console.log('calling set users')
-            tempUsers?.current.push(fetchedUser)
-            console.log(tempUsers.current)
-            //setUsers([...users, fetchedUser])
-          }
-        //chat?.getUser(userId).then(fetchedUser => {
-        //  if (fetchedUser) {
-        //    //console.log('Calling set Users')
-        //    setUsers(users => {
-        //      return uniqueByUserId([...users, fetchedUser])
-        //    })
-        //  }
-        //})
-        return null
-      }
-      
-      return existingUserTemp
-    }, [tempUsers]
-  )
-  */
-
-  /*
-  function seenUserId (userId) {
-    if (userId == chat?.currentUser.id) {
-      //  No action, this is our own ID
-      return
-    } else {
-      getUser(userId)
-    }
-  }
-  */
 
   function logout () {
     router.replace(`/`)
@@ -717,16 +616,33 @@ export default function Page () {
         manageMembersModalVisible={manageMembersModalVisible}
         isDirectChat={false}
         activeChannel={activeChannel}
-        activeChannelUsers={activeChannelUsers}
-        //users={users}
-        //currentChannel='Presumably this will be a PN Channel object'
-        buttonAction={() => {
-          console.log('ToDo: Either delete or leave conversation')
+        activeChannelUsers={
+          activeChannel?.type == 'group' && activeChannelGroupIndex > -1
+            ? privateGroupsUsers[activeChannelGroupIndex]
+            : activeChannel?.type == 'direct' && activeChannelGroupIndex > -1
+            ? directChatsUsers[activeChannelGroupIndex]
+            : publicChannelsUsers[activeChannelGroupIndex]
+        }
+        buttonAction={async () => {
+          sendChatEvent(
+            ChatEventTypes.LEAVE,
+            activeChannel.type == 'group'
+              ? privateGroupsUsers[activeChannelGroupIndex]
+              : directChatsUsers[activeChannelGroupIndex],
+            { userLeaving: chat.currentUser.id }
+          )
+          //  todo uncomment this - I commented it out until I build up my test harness for joining a channel
+          //await activeChannel.leave()
           showUserMessage(
-            'Please Note:',
-            'Work in progress: Though supported by the Chat SDK, this demo does not yet support leaving channels (either 1:1 conversations, or private groups)',
+            'You Left:',
+            'You have left this group, please select a different channel or create a new group / DM',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
           )
+          if (publicChannels.length > 0) {
+            setActiveChannel(publicChannels[0])
+          }
+          setChatSettingsScreenVisible(false)
+          refreshMembersFromServer()
         }}
         changeChatNameAction={() => {
           setChangeChatNameModalVisible(true)
@@ -757,9 +673,20 @@ export default function Page () {
         setChangeNameModalVisible={setChangeChatNameModalVisible}
       />
       <ModalManageMembers
-        activeChannelUsers={activeChannelUsers}
+        activeChannelUsers={
+          activeChannel?.type == 'group' && activeChannelGroupIndex > -1
+            ? privateGroupsUsers[activeChannelGroupIndex]
+            : activeChannel?.type == 'direct' && activeChannelGroupIndex > -1
+            ? directChatsUsers[activeChannelGroupIndex]
+            : publicChannelsUsers[activeChannelGroupIndex]
+        }
+        currentUserId={chat.currentUser.id}
+        activeChannel={activeChannel}
         saveAction={() => {
           setManageMembersModalVisible(false)
+        }}
+        sendChatEvent={(eventType, recipients, payload) => {
+          sendChatEvent(eventType, recipients, payload)
         }}
         manageMembersModalVisible={manageMembersModalVisible}
         setManageMembersModalVisible={setManageMembersModalVisible}
@@ -920,6 +847,7 @@ export default function Page () {
                   present={-1}
                   setActiveChannel={() => {
                     setActiveChannel(publicChannels[index])
+                    setActiveChannelGroupIndex(index)
                   }}
                 ></ChatMenuItem>
               ))}
@@ -969,7 +897,6 @@ export default function Page () {
                   }
                   setActiveChannel={() => {
                     setActiveChannel(privateGroups[index])
-                    console.log('selected private group index ' + index)
                     setActiveChannelGroupIndex(index)
                   }}
                 />
@@ -1080,23 +1007,21 @@ export default function Page () {
               <MessageList
                 activeChannel={activeChannel}
                 currentUser={chat.currentUser}
-                users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers .  todo can I reuse what I'm doing for private groups and dms?
+                //users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers .  todo can I reuse what I'm doing for private groups and dms?
                 groupUsers={
                   activeChannel?.type == 'group' && activeChannelGroupIndex > -1
                     ? privateGroupsUsers[activeChannelGroupIndex]
                     : activeChannel?.type == 'direct' &&
                       activeChannelGroupIndex > -1
                     ? directChatsUsers[activeChannelGroupIndex]
-                    : null
+                    : publicChannelsUsers[activeChannelGroupIndex]
                 }
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)
                 }
-                seenUserId={newUserId => {
-                  console.log('new user: ' + newUserId)
-                  getActiveChannelMembers()
+                usersHaveChanged={() => {
+                  refreshMembersFromServer()
                 }}
-                usersHaveChanged={() => {console.log("NEED TO UPDATE USERS");refreshMembersFromServer(activeChannel?.type)}}
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}
                 setShowPinnedMessages={setShowPinnedMessages}
@@ -1109,7 +1034,11 @@ export default function Page () {
                 avatarUrl={'/avatars/avatar02.png'}
               />
             )}
-            <div className='absolute bottom-0 left-0 right-0'>
+            <div
+              className={`${
+                creatingNewMessage && 'hidden'
+              } absolute bottom-0 left-0 right-0`}
+            >
               <MessageInput
                 activeChannel={activeChannel}
                 replyInThread={false}

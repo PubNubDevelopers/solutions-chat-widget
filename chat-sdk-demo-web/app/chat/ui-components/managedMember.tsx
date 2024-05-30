@@ -4,20 +4,20 @@ import Avatar from './avatar'
 
 
 
-export default function ManagedMember({name, avatarUrl, removeAction, lastElement = false}) {
+export default function ManagedMember({userId, name, avatarUrl, present, removeAction, lastElement = false}) {
 
     return (
         <div className={`flex justify-between items-center px-4 py-3 ${!lastElement && "border-solid border-b border-navy200"}`}>
         <div className='flex flex-row items-center'>
-          <Avatar present={-1} avatarUrl={avatarUrl} />
+          <Avatar present={present} avatarUrl={avatarUrl} />
           <div className='flex pl-3 text-sm font-normal text-neutral-900'>
             {name}
           </div>
         </div>
-        {/*<div
+        <div
           className='flex flex-row items-center pr-4 cursor-pointer'
           onClick={() => {
-            removeAction()
+            removeAction(userId)
           }}
         >
           <Image
@@ -33,7 +33,7 @@ export default function ManagedMember({name, avatarUrl, removeAction, lastElemen
           >
             Remove
           </div>
-        </div>*/}
+        </div>
       </div>
 
         

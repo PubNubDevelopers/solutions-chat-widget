@@ -16,7 +16,7 @@ export default function UserMessage ({
     <div
       className={`${
         userMsgShown ? 'flex' : 'hidden'
-      } absolute flex-row justify-start left-5 bottom-5 p-4 rounded-lg shadow-lg bg-sky-100 w-2/6 z-40`}
+      } absolute flex-row justify-start left-5 bottom-5 p-4 rounded-lg shadow-lg ${type==ToastType.INFO && 'bg-statusIndicatorInfo100'} ${type==ToastType.CHECK && 'bg-statusIndicatorSuccess100'} ${type==ToastType.ERROR && 'bg-red-100'} w-2/6 z-40`}
     >
       <div className='flex place-self-start min-w-[24px]'>
         {(type === ToastType.INFO && (
@@ -47,7 +47,7 @@ export default function UserMessage ({
           />
         )}
       </div>
-      <div className='flex flex-col px-4 py-1'>
+      <div className='flex flex-col gap-1 px-4 py-1'>
         <div className='flex font-normal text-base text-neutral-900'>
           {title || "Please Note: "}
         </div>

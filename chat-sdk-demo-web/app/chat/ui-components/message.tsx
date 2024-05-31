@@ -38,21 +38,6 @@ export default function Message ({
   let messageHovered = false
   let actionsHovered = false
 
-  //const arrayOfEmojiReactions = reactions.slice(0, 18).map((emoji, index) => <MessageReaction emoji={emoji} count={index+1} key={index} />);
-  /*const arrayOfEmojiReactions = reactions
-    ? Object?.keys(reactions)
-        .slice(0, 18)
-        .map((emoji, index) => (
-          <MessageReaction
-            emoji={emoji}
-            messageTimetoken={timetoken}
-            count={reactions[emoji].length}
-            reactionClicked={reactionClicked}
-            key={index}
-          />
-        ))
-    : null*/
-
   const handleMessageMouseEnter = e => {
     messageHovered = true
     setActionsShown(true)

@@ -479,7 +479,7 @@ export default function Page () {
     }
   }, [chat, directChats])
 
-  /* Listen for  */
+  /* Listen for events using the Chat event mechanism*/
   useEffect(() => {
     if (!chat) return
     //  todo Handle received custom events, sent as a result of users joining or leaving channels I'm part of
@@ -508,46 +508,12 @@ export default function Page () {
             //  Somebody has added us to a new group chat or DM
             refreshMembersFromServer()
             break
-          /*case ChatEventTypes.KICK:
-            //  Somebody has instructed us to leave the chat.  In production, clients
-            //  would not be trusted to just say this to eachother, a Server would arbitrate this
-            const channelIdToLeave = evt.payload.body.channelAffected
-            console.log('being asked to leave ' + channelIdToLeave)
-            let arrayIndexOfChannel = -1
-            //  We could call chat.getChannel and channel.getMemberships(...).users but we
-            //  already have that information cached
-            for (var i = 0; i < privateGroups?.length; i++) {
-              console.log("Comparing " + privateGroups[i].id + " with " + channelIdToLeave)
-              if (privateGroups[i].id === channelIdToLeave) {
-                arrayIndexOfChannel = i
-                break
-              }
-            }
-            if (arrayIndexOfChannel > -1) {
-              const channelToLeave = privateGroups[arrayIndexOfChannel]
-              const usersToNotify = privateGroupsUsers[arrayIndexOfChannel]
-              channelToLeave.leave()
-              sendChatEvent(ChatEventTypes.LEAVE, usersToNotify, {
-                userLeaving: chat.currentUser.id
-              })
-              if (activeChannel.id === channelIdToLeave) {
-                setActiveChannel(publicChannels[0])
-                setActiveChannelGroupIndex(0)
-              }
-              refreshMembersFromServer()
-            } else {
-              console.log('Could not find cached channel and users')
-            }
 
-            break*/
           case ChatEventTypes.JOINED:
             //  Someone has joined one of the public channels
             refreshMembersFromServer()
             break
         }
-        //console.log('RECEIVED EVENT')
-        //console.log(evt.payload.action)
-        //console.log(evt.payload.custom)
       }
     })
 
@@ -562,7 +528,8 @@ export default function Page () {
   /* 
   Will refresh all of the users and channels associated with this user's memberships
   You could do this using the objects from the StreamUpdatesOn() callbacks, but 
-  this way is expedient for a proof of concept.  The Channel name updates use the StreamUpdatesOn() callback directly.
+  this way is expedient for a proof of concept.  The Channel name updates use the StreamUpdatesOn() 
+  callback directly.
   */
   const refreshMembersFromServer = useCallback(
     async (

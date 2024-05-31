@@ -96,8 +96,8 @@ export default function ProfileScreen ({
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events',
             ToastType.INFO
           )}>
-            {/* ToDo: Checkbox is currently disabled with no handlers */}
-            <input type='checkbox' defaultChecked={false} onChange={() => {}} />
+            {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
+            <div type='checkbox' defaultChecked={false} disabled={true} onChange={() => {}} />
           </div>
         </div>
         <div className='border border-navy600'></div>
@@ -112,11 +112,11 @@ export default function ProfileScreen ({
           <div className='h-6 relative inline-block' onClick={() => showUserMessage(
             "Demo Limitation",
             'Though supported by the Chat SDK, this demo does not support disabling read receipts',
-            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/reactions',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/read-receipts',
             ToastType.INFO
           )}>
-            {/* ToDo: Checkbox is currently disabled with no handlers */}
-            <input type='checkbox' defaultChecked={true} onChange={()=> {}}/>
+            {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
+            <div type='checkbox' className="before:bg-sky-600 after:translate-x-4" onChange={()=> {}}/>
           </div>
         </div>
 

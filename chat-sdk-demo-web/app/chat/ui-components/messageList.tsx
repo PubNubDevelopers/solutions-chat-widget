@@ -226,105 +226,12 @@ export default function MessageList ({
         }`}
         ref={messageListRef}
       >
-        {/*<Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          pinned={true}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Very short message.'
-        />
 
-        <Message
-          received={false}
-          avatarUrl='/avatars/avatar02.png'
-          isRead={true}
-          sender='Default Text'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Augue sit et aenean non tortor senectus.'
-        />
-
-        <Message
-          received={false}
-          avatarUrl='/avatars/avatar02.png'
-          isRead={false}
-          containsQuote={true}
-          sender='Default Text'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Augue sit et aenean non tortor senectus sed. Sagittis eget in ut magna semper urna felis velit cursus. Enim nunc leo quis volutpat dis.'
-        />
-
-        <Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />
-
-        <Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />
-
-        <Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          containsQuote={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />
-
-        <Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />
-
-        <Message
-          received={true}
-          avatarUrl='/avatars/avatar01.png'
-          isRead={true}
-          sender='Sarah Johannsen'
-          timetoken={'17179544908908795'}
-          messageActionHandler={(action, vars) =>
-            messageActionHandler(action, vars)
-          }
-          messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />*/}
-
+        {
+          messages && messages.length == 0 && (
+            <div className="flex flex-row items-center justify-center w-full h-screen text-xl">No messages in this chat yet</div>
+          )
+        }
         {messages.map((message, index) => {
           //seenUserId(message.userId)  //  dcc
           return (

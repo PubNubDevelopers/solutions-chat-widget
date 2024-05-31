@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
+import { ToastType } from '@/app/types'
 
 export default function Header ({
   setRoomSelectorVisible,
@@ -61,9 +62,9 @@ export default function Header ({
         <div
           className='cursor-pointer hover:bg-sky-900 hover:rounded-md'
           onClick={e =>
-            showUserMessage(null, 
+            showUserMessage("Please Note:", 
               'Although not supported by this demo, you use the Chat SDK to alert your users with built-in or custom events',
-              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events'
+              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.INFO
             )
           }
         >

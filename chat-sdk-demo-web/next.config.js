@@ -9,9 +9,7 @@ const nextConfig =  {
       remotePatterns: [
         {
           protocol: 'https',
-          hostname: 'chat-sdk-demo-web.netlify.app',
-          port: '',
-          pathname: '/avatars/**',
+          hostname: '**',
         },
       ],
     },

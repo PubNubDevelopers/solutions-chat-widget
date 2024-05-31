@@ -162,46 +162,11 @@ export default function NewMessageGroup ({
                 />
               ))}
 
-              {/*<Avatar
-                present={-1}
-                avatarUrl={'/avatars/avatar08.png'}
-                border={true}
-                width={36}
-                height={36}
-              />
-              <Avatar
-                present={-1}
-                avatarUrl={'/avatars/avatar09.png'}
-                border={true}
-                width={36}
-                height={36}
-              />
-              <Avatar
-                present={-1}
-                avatarUrl={'/avatars/avatar10.png'}
-                border={true}
-                width={36}
-                height={36}
-                          />*/}
+           
             </div>
             <div className='flex flex-row gap-2'>
               {newDraftGroupUsers?.length == 1
-                ? /*<div
-                  className='cursor-pointer'
-                  onClick={() => {
-                    console.log('Not used: edit the chat name before creation')
-                  }}
-                >
-                  <Image
-                    src='/icons/edit.svg'
-                    alt='Edit'
-                    className='invert'
-                    width={18}
-                    height={18}
-                    priority
-                  />
-                </div>*/
-                  'Please Choose some friends'
+                ? 'Please Choose some friends'
                 : newDraftGroupUsers?.length == 2
                 ? 'Draft Direct Message'
                 : 'Draft Private Group'}
@@ -236,26 +201,6 @@ export default function NewMessageGroup ({
                   />
                 ))}
 
-                {/*<NewMessageUserRow
-                  name='Jack Cooper'
-                  avatarUrl='/avatars/avatar06.png'
-                  present='1'
-                />
-                <NewMessageUserRow
-                  name='Jack Jones'
-                  avatarUrl='/avatars/avatar07.png'
-                  present='0'
-                />
-                <NewMessageUserRow
-                  name='Jack Wilson'
-                  avatarUrl='/avatars/avatar08.png'
-                  present='0'
-                />
-                <NewMessageUserRow
-                  name='Jacob Howard'
-                  avatarUrl='/avatars/avatar09.png'
-                  present='1'
-                          />*/}
               </div>
             </div>
           </div>
@@ -270,72 +215,6 @@ export default function NewMessageGroup ({
             />
           ))}
 
-          {/*<NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          />
-          <NewMessageUserPill
-            name='Darryn'
-            removePillAction={userId =>
-              console.log('ToDo: Remove Pill for user ' + userId)
-            }
-          /> */}
         </div>
       </div>
       <div

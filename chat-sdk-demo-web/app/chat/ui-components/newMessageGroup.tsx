@@ -1,18 +1,124 @@
 import { useState } from 'react'
 import { roboto } from '@/app/fonts'
+import { Chat, User } from '@pubnub/chat'
 import Avatar from './avatar'
 import Message from './message'
 import Image from 'next/image'
 import NewMessageUserRow from './newMessageUserRow'
 import NewMessageUserPill from './newMessageUserPill'
+import { ChatEventTypes, ToastType } from '@/app/types'
 
-export default function NewMessageGroup ({setCreatingNewMessage}) {
-  let groupMembers = 3
-
-  const [searchTerm, setSearchTerm] = useState("")
+export default function NewMessageGroup ({
+  chat,
+  setCreatingNewMessage,
+  showUserMessage,
+  sendChatEvent,
+  invokeRefresh
+}) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchResults, setSearchResults] = useState<User[]>([])
+  const [newDraftGroupUsers, setNewDraftGroupUsers] = useState<User[]>([
+    chat.currentUser
+  ])
+  const [creationInProgress, setCreationInProgress] = useState(false)
 
   function handleUserSearch (term: string) {
+    setSearchTerm(term)
     console.log(term)
+    if (!chat) return
+    chat
+      .getUsers({
+        limit: 10,
+        filter: `name LIKE "*${term}*" || id LIKE "*${term}*"`
+      }) //  Could also filter by Profile URL:  || profileUrl LIKE "*${term}*"
+      .then(userResults => {
+        setSearchResults(userResults.users)
+      })
+  }
+
+  function onSearchResultClicked (newUser: User) {
+    const alreadyPresent = newDraftGroupUsers.find(
+      user => user.id === newUser.id
+    )
+    if (alreadyPresent) {
+      showUserMessage(
+        'User Already Selected',
+        `${newUser.name} is already selected for this new group`,
+        '',
+        ToastType.ERROR
+      )
+    } else if (newDraftGroupUsers.length >= 10) {
+      showUserMessage(
+        'Demo Limitation',
+        'Though the Chat SDK supports groups of up to 100 members, this demo caps the maximum member count at 10',
+        'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/create#input-1',
+        ToastType.ERROR
+      )
+    } else {
+      setNewDraftGroupUsers(newDraftGroupUsers => [
+        ...newDraftGroupUsers,
+        newUser
+      ])
+      setSearchTerm('')
+    }
+  }
+
+  function onRemovePill (removingUserId) {
+    const filteredArray = newDraftGroupUsers.filter(
+      user => user.id !== removingUserId
+    )
+    console.log(filteredArray)
+    setNewDraftGroupUsers(filteredArray)
+    console.log('removing pill for user: ' + removingUserId)
+  }
+
+  async function createGroup () {
+    console.log('creating group')
+    setCreationInProgress(true)
+    //  Call createGroup or direct conversation, depending on which one it is.          //await chat.createGroupConversation({users: [other]})
+    //  Send joined events to all participants to let them know they are in a new group
+    //  Refresh all my membership arrays from the server
+    //  Set the new group as the active chat session
+
+    let desiredChannelId = ''
+    let createdChannel = null
+    if (newDraftGroupUsers.length == 2) {
+      //  Creating a 1:1 conversation
+      const otherUser = newDraftGroupUsers.find(
+        user => user.id !== chat.currentUser.id
+      )
+      const { channel } = await chat.createDirectConversation({
+        user: otherUser
+      }) //  Accepting defaults for channel ID and channel Data
+      desiredChannelId = channel.id
+      createdChannel = channel
+      await sendChatEvent(ChatEventTypes.INVITED, [otherUser], {
+        groupCreator: chat.currentUser.id,
+        channelId: channel.id,
+        channelType: channel.type
+      })
+    } else {
+      //  Creating a group conversation
+      const randomNewChannelName = 'Group ' + Math.floor(Math.random() * 1000)
+      const others = newDraftGroupUsers.filter(
+        user => user.id !== chat.currentUser.id
+      )
+      const { channel } = await chat.createGroupConversation({
+        users: others,
+        channelData: { name: randomNewChannelName }
+      })
+      desiredChannelId = channel.id
+      await sendChatEvent(ChatEventTypes.INVITED, others, {
+        groupCreator: chat.currentUser.id,
+        channelId: channel.id,
+        channelType: channel.type
+      })
+      createdChannel = channel
+    }
+    if (createdChannel) {
+      invokeRefresh(desiredChannelId, createdChannel['type'])
+    }
+    setCreatingNewMessage(false)
   }
 
   return (
@@ -22,15 +128,18 @@ export default function NewMessageGroup ({setCreatingNewMessage}) {
           <div
             className={`${roboto.className} flex flex-row items-center px-3 font-medium text-base`}
           >
-            <div className="cursor-pointer" onClick={(e) => setCreatingNewMessage(false)}>
-            <Image
-              src='/icons/west.svg'
-              alt='Send'
-              className='m-3'
-              width={24}
-              height={24}
-              priority
-            />
+            <div
+              className='cursor-pointer'
+              onClick={e => setCreatingNewMessage(false)}
+            >
+              <Image
+                src='/icons/west.svg'
+                alt='Send'
+                className='m-3'
+                width={24}
+                height={24}
+                priority
+              />
             </div>
             New Message / Group
           </div>
@@ -38,7 +147,22 @@ export default function NewMessageGroup ({setCreatingNewMessage}) {
             className={`${roboto.className} flex flex-row items-center justify-center grow gap-4 min-h-10 font-medium text-base text-[#101729]`}
           >
             <div className='flex flex-row -space-x-2.5'>
-              <Avatar
+              {newDraftGroupUsers?.map((user, index) => (
+                <Avatar
+                  key={index}
+                  present={-1}
+                  avatarUrl={
+                    user.profileUrl
+                      ? user.profileUrl
+                      : '/avatars/placeholder.png'
+                  }
+                  border={true}
+                  width={36}
+                  height={36}
+                />
+              ))}
+
+              {/*<Avatar
                 present={-1}
                 avatarUrl={'/avatars/avatar08.png'}
                 border={true}
@@ -58,14 +182,14 @@ export default function NewMessageGroup ({setCreatingNewMessage}) {
                 border={true}
                 width={36}
                 height={36}
-              />
+                          />*/}
             </div>
             <div className='flex flex-row gap-2'>
-              {groupMembers > 2 && (
-                <div
+              {newDraftGroupUsers?.length == 1
+                ? /*<div
                   className='cursor-pointer'
                   onClick={() => {
-                    console.log('ToDo: Change Chat Name')
+                    console.log('Not used: edit the chat name before creation')
                   }}
                 >
                   <Image
@@ -76,9 +200,11 @@ export default function NewMessageGroup ({setCreatingNewMessage}) {
                     height={18}
                     priority
                   />
-                </div>
-              )}
-              Jack Wilson
+                </div>*/
+                  'Please Choose some friends'
+                : newDraftGroupUsers?.length == 2
+                ? 'Draft Direct Message'
+                : 'Draft Private Group'}
             </div>
           </div>
         </div>
@@ -89,54 +215,160 @@ export default function NewMessageGroup ({setCreatingNewMessage}) {
             placeholder='Search by name'
             value={searchTerm}
             onChange={e => {
-              setSearchTerm(e.target.value)
+              handleUserSearch(e.target.value)
             }}
           />
         </div>
 
         {/* Search Results */}
-        {(searchTerm.length) > 0 && <div className="px-6 w-full">
-        <div className='relative px-6 w-full'>
-          <div className='flex flex-col absolute w-2/5 bg-white rounded-lg border border-neutral-100 shadow-lg left-[0px] top-[0px] z-10'>
-            {/* Search Results */}
-            <NewMessageUserRow
-              name='Jack Cooper'
-              avatarUrl='/avatars/avatar06.png'
-              present='1'
+        {searchTerm.length > 0 && (
+          <div className='px-6 w-full'>
+            <div className='relative px-6 w-full'>
+              <div className='flex flex-col absolute w-2/5 bg-white rounded-lg border border-neutral-100 shadow-lg left-[0px] top-[0px] z-10'>
+                {/* Search Results */}
+
+                {searchResults?.map((user, index) => (
+                  <NewMessageUserRow
+                    key={index}
+                    user={user}
+                    present={1}
+                    clickAction={user => onSearchResultClicked(user)}
+                  />
+                ))}
+
+                {/*<NewMessageUserRow
+                  name='Jack Cooper'
+                  avatarUrl='/avatars/avatar06.png'
+                  present='1'
+                />
+                <NewMessageUserRow
+                  name='Jack Jones'
+                  avatarUrl='/avatars/avatar07.png'
+                  present='0'
+                />
+                <NewMessageUserRow
+                  name='Jack Wilson'
+                  avatarUrl='/avatars/avatar08.png'
+                  present='0'
+                />
+                <NewMessageUserRow
+                  name='Jacob Howard'
+                  avatarUrl='/avatars/avatar09.png'
+                  present='1'
+                          />*/}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className='flex flex-wrap px-6 mb-2 w-full bg-white '>
+          {newDraftGroupUsers?.map((user, index) => (
+            <NewMessageUserPill
+              key={index}
+              user={user}
+              removePillAction={userId => onRemovePill(userId)}
             />
-            <NewMessageUserRow
-              name='Jack Jones'
-              avatarUrl='/avatars/avatar07.png'
-              present='0'
-            />
-            <NewMessageUserRow
-              name='Jack Wilson'
-              avatarUrl='/avatars/avatar08.png'
-              present='0'
-            />
-            <NewMessageUserRow
-              name='Jacob Howard'
-              avatarUrl='/avatars/avatar09.png'
-              present='1'
+          ))}
+
+          {/*<NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          />
+          <NewMessageUserPill
+            name='Darryn'
+            removePillAction={userId =>
+              console.log('ToDo: Remove Pill for user ' + userId)
+            }
+          /> */}
+        </div>
+      </div>
+      <div
+        className={`${
+          newDraftGroupUsers.length < 2 ? 'hidden' : 'flex'
+        } flex-row justify-end mt-3`}
+      >
+        <div
+          className={`${roboto.className} flex flex-row`}
+          onClick={e => createGroup()}
+        >
+          <div
+            className={`${
+              creationInProgress && 'hidden'
+            } flex justify-between items-center font-medium text-sm px-6 mx-2.5 h-10 cursor-pointer rounded-lg bg-pubnubbabyblue`}
+          >
+            Create
+          </div>
+          <div
+            className={`${
+              !creationInProgress ? 'hidden' : 'flex'
+            }  w-[40px] h-[40px] animate-spin mr-3`}
+          >
+            <Image
+              src='/icons/loading.png'
+              alt='Chat Icon'
+              className=''
+              width={40}
+              height={40}
+              priority
             />
           </div>
         </div>
-        </div>}
-
-        <div className='flex flex-wrap px-6 mb-2 w-full bg-white '>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-          <NewMessageUserPill name='Darryn' removePillAction={(userId) => console.log('ToDo: Remove Pill for user ' + userId)}/>
-        </div>
-
       </div>
     </div>
   )

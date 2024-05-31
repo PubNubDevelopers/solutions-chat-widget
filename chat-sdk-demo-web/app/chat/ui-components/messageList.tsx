@@ -40,17 +40,6 @@ export default function MessageList ({
       //  Connect wasn't being called with this applied
       setLoadedChannelId(activeChannel.id)
 
-      console.log('GROUP USERS')
-      console.log(groupUsers)
-
-      //  todo disconnect as needed
-
-      if (groupUsers) {
-        User.streamUpdatesOn(groupUsers, updatedUsers => {
-          usersHaveChanged()
-        })
-      }
-
       setMessages([])
       activeChannel.getHistory({ count: 20 }).then(historicalMessagesObj => {
         setMessages(messages => [...historicalMessagesObj.messages])
@@ -60,10 +49,22 @@ export default function MessageList ({
       })
     }
     return activeChannel.connect(message => {
-      console.log(message)
       setMessages(messages => [...messages, message])
     })
   }, [activeChannel, loadedChannelId])
+
+  useEffect(() => {
+    console.log('GROUP USERS')
+    console.log(groupUsers)
+    
+    //  todo disconnect as needed
+
+    if (groupUsers) {
+      return User.streamUpdatesOn(groupUsers, updatedUsers => {
+        usersHaveChanged()
+      })
+    }
+  }, [groupUsers])
 
   useEffect(() => {
     if (!messageListRef.current) return
@@ -314,7 +315,6 @@ export default function MessageList ({
 
         {messages.map((message, index) => {
           //seenUserId(message.userId)  //  dcc
-
           return (
             /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
 

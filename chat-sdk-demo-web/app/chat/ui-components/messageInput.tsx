@@ -7,7 +7,8 @@ export default function MessageInput ({
   activeChannel,
   replyInThread,
   quotedMessage,
-  setQuotedMessage = any => {}
+  setQuotedMessage = any => {},
+  creatingNewMessage=false
 }) {
   function handleMessageDraftChanged (draft) {}
 

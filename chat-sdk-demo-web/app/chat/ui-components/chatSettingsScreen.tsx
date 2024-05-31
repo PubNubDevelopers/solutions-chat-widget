@@ -65,13 +65,7 @@ export default function ChatSettingsScreen ({
         <div className='flex flex-col'>
           {/* Avatar(s) */}
           <div className='flex justify-center pb-6'>
-            {isDirectChat ? (
-              <Avatar
-                avatarUrl={'/avatars/avatar01.png'}
-                width={88}
-                height={88}
-              />
-            ) : (
+            
               <div className='flex flex-row -space-x-2.5'>
 
               {activeChannelUsers?.map((member, index) => (
@@ -101,7 +95,6 @@ export default function ChatSettingsScreen ({
                   height={88}
                           />*/}
               </div>
-            )}
           </div>
 
           {/* Chat members for 1:1 chats, or Chat name for Group chats */}
@@ -109,12 +102,11 @@ export default function ChatSettingsScreen ({
             <div className='flex flex-row justify-between items-center py-4 px-4'>
               <div className='flex flex-col'>
                 <div className='text-lg text-white'>Chat members</div>
-                <div className='text-lg text-white font-semibold'>
-                  Sarah Johannsen
-                </div>
-                <div className='text-lg text-white font-semibold'>
-                  Philip Soto
-                </div>
+                {activeChannelUsers?.map((member, index) => (
+                                <div className='text-lg text-white font-semibold'
+                                key={index}
+                              >{member.name}</div>
+                            ))}
               </div>
               {/*<div
               className={`${roboto.className} flex flex-row justify-between items-center font-medium text-sm px-6 mx-2.5 h-10 cursor-pointer rounded-lg bg-pubnubbabyblue`}
@@ -180,14 +172,14 @@ export default function ChatSettingsScreen ({
               onClick={e => buttonAction()}
             >
               <Image
-                src='/icons/delete.svg'
-                alt='Delete conversation'
+                src='/icons/logout.svg'
+                alt='Leave Conversation'
                 className='p-2'
                 width={36}
                 height={36}
                 priority
               />
-              Delete conversation
+              Leave this 1:1 chat
             </div>
           ) : (
             (activeChannel?.type !== 'public' /* To simplify the logic of the demo, do not allow to leave from public channels */) && <div

@@ -2,14 +2,14 @@ import Avatar from './avatar'
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
 
-export default function NewMessageUserPill({name, removePillAction}) {
+export default function NewMessageUserPill({user, removePillAction}) {
 
     return (
       <div className={`${roboto.className} flex flex-row text-base m-1 rounded-lg border px-2 py-1 border-neutral-300 bg-neutral-50 text-neutral-900`}>
       <div className="">
-        {name}
+        {user.name}
       </div>
-      <div className="cursor-pointer" onClick={() => removePillAction('userId')}>
+      <div className="cursor-pointer" onClick={() => removePillAction(user.id)}>
       <Image
           src='/icons/close.svg'
           alt='Remove'

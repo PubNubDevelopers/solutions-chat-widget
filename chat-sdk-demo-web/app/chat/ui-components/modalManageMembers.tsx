@@ -60,10 +60,10 @@ export default function ModalManageMembers ({
                   name={`${user.name}`}
                   avatarUrl={user.profileUrl}
                   present={1}
-                  removeAction={userId => {
+                  /*removeAction={userId => {
                     let arr: User[] = [user]
                     sendChatEvent(ChatEventTypes.KICK, arr, {kickedBy: currentUserId, channelAffected: activeChannel.id})
-                  }}
+                  }}*/
                   lastElement={index == activeChannelUsers?.length - 1}
                 />
               )

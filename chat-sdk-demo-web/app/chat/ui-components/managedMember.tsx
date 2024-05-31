@@ -4,7 +4,7 @@ import Avatar from './avatar'
 
 
 
-export default function ManagedMember({userId, name, avatarUrl, present, removeAction, lastElement = false}) {
+export default function ManagedMember({userId, name, avatarUrl, present, /*removeAction,*/ lastElement = false}) {
 
     return (
         <div className={`flex justify-between items-center px-4 py-3 ${!lastElement && "border-solid border-b border-navy200"}`}>
@@ -14,7 +14,7 @@ export default function ManagedMember({userId, name, avatarUrl, present, removeA
             {name}
           </div>
         </div>
-        <div
+        {/*<div
           className='flex flex-row items-center pr-4 cursor-pointer'
           onClick={() => {
             removeAction(userId)
@@ -32,8 +32,8 @@ export default function ManagedMember({userId, name, avatarUrl, present, removeA
             className={`${roboto.className} text-sm font-medium text-sky-800`}
           >
             Remove
-          </div>
         </div>
+        </div>*/}
       </div>
 
         

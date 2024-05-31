@@ -41,17 +41,20 @@ export default function MessageListThread ({ showThread, setShowThread }) {
           <Message
             received={true}
             inThread={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
             sender='Sarah Johannsen'
             timetoken={"17179544908908795"}
-            reactions={['🐕', '🐶']}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
           />
 
           <Message
             received={false}
             inThread={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={false}
             sender='Philip Soto'
@@ -62,6 +65,8 @@ export default function MessageListThread ({ showThread, setShowThread }) {
           <Message
             received={false}
             inThread={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar03.png'
             isRead={true}
             sender='Philip Soto'

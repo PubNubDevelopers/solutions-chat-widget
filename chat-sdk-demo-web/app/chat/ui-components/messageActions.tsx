@@ -1,26 +1,28 @@
 import Image from 'next/image'
 import ToolTip from './toolTip'
 import { useState } from 'react'
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
+//import data from '@emoji-mart/data'
+//import Picker from '@emoji-mart/react'
 
 export default function MessageActions ({
   received,
   actionsShown,
+  timetoken,
   messageActionsEnter,
   messageActionsLeave,
   replyInThreadClick,
   quoteMessageClick,
   pinMessageClick,
-  reactMessageClick,
-  copyMessageClick
+  //reactMessageClick,
+  copyMessageClick,
+  showEmojiPickerClick
 }) {
   const [emoteToolTip, setEmoteToolTip] = useState(false)
   const [quoteToolTip, setQuoteToolTip] = useState(false)
   const [pinToolTip, setPinToolTip] = useState(false)
   const [replyToolTip, setReplyToolTip] = useState(false)
   const [copyToolTip, setCopyToolTip] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  //const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   function copyClick (e) {
     copyMessageClick()
@@ -69,14 +71,15 @@ export default function MessageActions ({
   }
 
   function emoteClick (e) {
-    setShowEmojiPicker(true)
+    //setShowEmojiPicker(true)
+    showEmojiPickerClick({isShown: true, mouseX: e.clientX, mouseY: e.clientY, messageTimetoken: timetoken})
     //reactMessageClick()
   }
 
   function emojiSelected(data) {
     console.log(data)
-    setShowEmojiPicker(false)
-    reactMessageClick(data)
+    //setShowEmojiPicker(false)
+    //reactMessageClick(data)
   }
 
   function emoteEnter () {
@@ -92,13 +95,13 @@ export default function MessageActions ({
   }
   const handleMessageActionsMouseLeave = e => {
     messageActionsLeave()
-    setShowEmojiPicker(false)
+    //setShowEmojiPicker(false)
   }
 
   return (
     <div className={`${!received && 'relative self-start'}`}>
       <div
-        className={`absolute flex flex-row-reverse p-2 gap-1 w-[252px] z-10 rounded-sm shadow-lg bg-white ${
+        className={`absolute flex flex-row-reverse p-2 gap-1 w-[252px] z-10 rounded-sm shadow-lg bg-white mr-24 ${
           received ? 'right-[10px]' : 'left-[10px]'
         } ${received ? '-bottom-[50px]' : '-bottom-[35px]'} cursor-pointer ${
           !actionsShown && 'hidden'
@@ -201,13 +204,13 @@ export default function MessageActions ({
             tip='React to message'
           />
         </div>
-        {showEmojiPicker && <div
-          className={`absolute  ${
+        {/*showEmojiPicker && <div
+          className={`absolute ${
             received ? 'right-[250px]' : 'left-[60px]'
-          } -top-[50px]`}
+          } -top-[250px]`}
         >
-          <Picker data={data} onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}} />
-        </div>}
+          <Picker data={data} sheetRows={3} previewPosition={'none'} navPosition={'none'} searchPosition={'none'} maxFrequentRows={0} onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}} />
+        </div>*/}
       </div>
     </div>
   )

@@ -9,7 +9,8 @@ export enum MessageActionsTypes {
   QUOTE = "quote",
   PIN = "pin",
   REACT = "react",
-  COPY = "copy"
+  COPY = "copy",
+  SHOW_EMOJI = "show_emoji"
 }
 
 export enum ChatHeaderActionIcon {

@@ -45,6 +45,7 @@ export default function MessageListPinned ({
           <Message
             received={true}
             inPinned={true}
+            messages={null}
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
             sender='Sarah Johannsen is a very long name'
@@ -56,6 +57,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
@@ -66,6 +69,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
@@ -76,6 +81,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
@@ -86,6 +93,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
@@ -96,6 +105,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey'
@@ -106,6 +117,8 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
+            messages={null}
+            reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
             sender='Mikey 222'

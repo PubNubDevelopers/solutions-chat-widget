@@ -26,6 +26,8 @@ import ChatSettingsScreen from './ui-components/chatSettingsScreen'
 import ModalChangeName from './ui-components/modalChangeName'
 import ModalManageMembers from './ui-components/modalManageMembers'
 import searchImg from '@/public/icons/search.svg'
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
 import { testData } from './data/user-data'
 import {
   ChatNameModals,
@@ -42,6 +44,9 @@ export default function Page () {
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
   const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState("")
+
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
   const [publicExpanded, setPublicExpanded] = useState(true)
@@ -97,6 +102,13 @@ export default function Page () {
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
   const [activeChannelGroupIndex, setActiveChannelGroupIndex] = useState(-1)
+
+  async function emojiSelected(data)
+  {
+    const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
+    message?.toggleReaction(data.native)
+    setShowEmojiPicker(false)
+  }
 
   /* Bootstrap the application if it is run in an empty keyset */
   async function keysetInit (chat) {
@@ -685,6 +697,11 @@ export default function Page () {
       case MessageActionsTypes.COPY:
         showUserMessage('Copied', `${data.text}`, '', ToastType.CHECK)
         break
+      case MessageActionsTypes.SHOW_EMOJI:
+        setShowEmojiMessageTimetoken(data.messageTimetoken)
+        //  Avoid interference from the logic that hides the picker when you click outside it
+        setTimeout(function() {setShowEmojiPicker(data.isShown)}, 50);
+      break;
     }
   }
 
@@ -881,6 +898,19 @@ export default function Page () {
           closeUserMessage()
         }}
       />
+      <div className={`${!showEmojiPicker && "hidden"} absolute left-0 bottom-0 z-50 bg-white`}>
+        <Picker
+          data={data}
+          sheetRows={3}
+          previewPosition={'none'}
+          navPosition={'none'}
+          searchPosition={'none'}
+          maxFrequentRows={
+            0
+          } onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}}
+        />
+
+      </div>
       <div
         id='chat-main'
         className={`flex flex-row min-h-screen h-screen overscroll-none  ${

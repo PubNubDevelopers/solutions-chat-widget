@@ -8,33 +8,50 @@ import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
 import { MessageActionsTypes } from '@/app/types'
 import ToolTip from './toolTip'
-import { TimetokenUtils } from '@pubnub/chat'
+import { Channel, TimetokenUtils } from '@pubnub/chat'
 
 export default function Message ({
   received,
+  reactions,
   inThread = false,
-  inPinned= false,
+  inPinned = false,
   avatarUrl,
   isRead,
   showReadIndicator = true,
   containsQuote = false,
   sender,
   messageText,
-  timetoken = "17179544908908795",
+  timetoken = '17179544908908795', //  todo make this '' when I get rid of my test messages
   messageActionHandler = (a, b) => {},
   pinned = false,
   unpinMessageHandler = () => {
     console.log('ToDo: Unpin Message')
   },
-  reactions = ['']
+  messages,
+  //setMessages
+  //activeChannel
+  //reactions = ['']
 }) {
   const [showToolTip, setShowToolTip] = useState(false)
   const [actionsShown, setActionsShown] = useState(false)
-  const [userReadableDate, setUserReadableDate] = useState("")
+  const [userReadableDate, setUserReadableDate] = useState('')
   let messageHovered = false
   let actionsHovered = false
 
-  const arrayOfEmojiReactions = reactions.slice(0, 18).map((emoji, index) => <MessageReaction emoji={emoji} count={index+1} key={index} />);
+  //const arrayOfEmojiReactions = reactions.slice(0, 18).map((emoji, index) => <MessageReaction emoji={emoji} count={index+1} key={index} />);
+  /*const arrayOfEmojiReactions = reactions
+    ? Object?.keys(reactions)
+        .slice(0, 18)
+        .map((emoji, index) => (
+          <MessageReaction
+            emoji={emoji}
+            messageTimetoken={timetoken}
+            count={reactions[emoji].length}
+            reactionClicked={reactionClicked}
+            key={index}
+          />
+        ))
+    : null*/
 
   const handleMessageMouseEnter = e => {
     messageHovered = true
@@ -66,8 +83,19 @@ export default function Message ({
     }
   }
 
-  function copyMessageText(messageText) {
+  function copyMessageText (messageText) {
     navigator.clipboard.writeText(messageText)
+  }
+
+  async function reactionClicked (emoji, timetoken) {
+    const message = messages.find(message => message.timetoken === timetoken)
+    //    const message = await activeChannel?.getMessage(timetoken)
+    console.log(message)
+    console.log(message.content.text)
+    console.log(emoji)
+    await message?.toggleReaction(emoji)
+    //setMessages(messages => [...messages])
+    console.log('click')
   }
 
   useEffect(() => {
@@ -85,18 +113,14 @@ export default function Message ({
       'Nov',
       'Dec'
     ]
-    const days = [
-      'Sun',
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thu',
-      'Fri',
-      'Sat'
-    ]
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     //const temp = days[dateTime?.getDay()]
     const date = TimetokenUtils.timetokenToDate(timetoken)
-    const datetime = `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${(date.getHours() + "").padStart(2, '0')}:${(date.getMinutes() + "").padStart(2, '0')}`
+    const datetime = `${days[date.getDay()]} ${date.getDate()} ${
+      months[date.getMonth()]
+    } ${(date.getHours() + '').padStart(2, '0')}:${(
+      date.getMinutes() + ''
+    ).padStart(2, '0')}`
 
     setUserReadableDate(datetime)
     //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
@@ -111,7 +135,12 @@ export default function Message ({
       >
         {received && !inThread && !inPinned && (
           <div className='min-w-11'>
-            {!inThread && <Avatar present={-1} avatarUrl={avatarUrl ? avatarUrl : '/avatars/placeholder.png'} />}
+            {!inThread && (
+              <Avatar
+                present={-1}
+                avatarUrl={avatarUrl ? avatarUrl : '/avatars/placeholder.png'}
+              />
+            )}
           </div>
         )}
 
@@ -165,7 +194,9 @@ export default function Message ({
                 <div className='absolute right-[10px] top-[10px]'>
                   <div className='relative'>
                     <ToolTip
-                      className={`${showToolTip ? 'block' : 'hidden'} bottom-[0px]`}
+                      className={`${
+                        showToolTip ? 'block' : 'hidden'
+                      } bottom-[0px]`}
                       tip='Unpin'
                       messageActionsTip={false}
                     />
@@ -205,14 +236,28 @@ export default function Message ({
                 priority
               />
             )}
-            <div className="absolute right-[10px] -bottom-[18px] flex flex-row items-center select-none">
-            {arrayOfEmojiReactions}
+            <div className='absolute right-[10px] -bottom-[18px] flex flex-row items-center select-none'>
+              {/*arrayOfEmojiReactions*/}
+              {reactions
+                ? Object?.keys(reactions)
+                    .slice(0, 18)
+                    .map((emoji, index) => (
+                      <MessageReaction
+                        emoji={emoji}
+                        messageTimetoken={timetoken}
+                        count={reactions[emoji].length}
+                        reactionClicked={reactionClicked}
+                        key={index}
+                      />
+                    ))
+                : ''}
             </div>
             {/* actions go here for received */}
             {received && !inThread && !inPinned && (
               <MessageActions
                 received={received}
                 actionsShown={actionsShown}
+                timetoken={timetoken}
                 messageActionsEnter={() => handleMessageActionsEnter()}
                 messageActionsLeave={() => handleMessageActionsLeave()}
                 replyInThreadClick={() =>
@@ -227,12 +272,14 @@ export default function Message ({
                 pinMessageClick={() => {
                   messageActionHandler(MessageActionsTypes.PIN, '')
                 }}
-                reactMessageClick={(data) => {
-                  messageActionHandler(MessageActionsTypes.REACT, data)
+                showEmojiPickerClick={data => {
+                  messageActionHandler(MessageActionsTypes.SHOW_EMOJI, data)
                 }}
                 copyMessageClick={() => {
                   copyMessageText(messageText)
-                  messageActionHandler(MessageActionsTypes.COPY, {text: messageText})
+                  messageActionHandler(MessageActionsTypes.COPY, {
+                    text: messageText
+                  })
                 }}
               />
             )}
@@ -242,6 +289,7 @@ export default function Message ({
             <MessageActions
               received={received}
               actionsShown={actionsShown}
+              timetoken={timetoken}
               messageActionsEnter={() => handleMessageActionsEnter()}
               messageActionsLeave={() => handleMessageActionsLeave()}
               replyInThreadClick={() =>
@@ -256,12 +304,14 @@ export default function Message ({
               pinMessageClick={() => {
                 messageActionHandler(MessageActionsTypes.PIN, '')
               }}
-              reactMessageClick={(data) => {
-                messageActionHandler(MessageActionsTypes.REACT, data)
+              showEmojiPickerClick={data => {
+                messageActionHandler(MessageActionsTypes.SHOW_EMOJI, data)
               }}
               copyMessageClick={() => {
                 copyMessageText(messageText)
-                messageActionHandler(MessageActionsTypes.COPY, {text: messageText})
+                messageActionHandler(MessageActionsTypes.COPY, {
+                  text: messageText
+                })
               }}
             />
           )}

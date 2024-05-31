@@ -54,9 +54,14 @@ export default function MessageList ({
   }, [activeChannel, loadedChannelId])
 
   useEffect(() => {
+    if (!messages || messages.length == 0) return
+    return pnMessage.streamUpdatesOn(messages, setMessages)
+  }, [messages])
+
+  useEffect(() => {
     console.log('GROUP USERS')
     console.log(groupUsers)
-    
+
     //  todo disconnect as needed
 
     if (groupUsers) {
@@ -68,7 +73,23 @@ export default function MessageList ({
 
   useEffect(() => {
     if (!messageListRef.current) return
-    messageListRef.current.scrollTop = messageListRef.current.scrollHeight
+    console.log(messageListRef.current.scrollHeight - messageListRef.current.scrollTop)
+    console.log(messageListRef.current.scrollTop)
+    if (
+      messageListRef.current.scrollTop != 0 && messageListRef.current.scrollHeight - messageListRef.current.scrollTop >
+      1000
+    ){
+
+      console.log('NOT scrolling')
+      return //  We aren't scrolled to the bottom
+    }
+    console.log('scrolling')
+    setTimeout(() => {
+      if (messageListRef.current)
+        {
+          messageListRef.current.scrollTop = messageListRef.current?.scrollHeight
+        }
+    }, 10)  //  Some weird timing issue
   }, [messages])
 
   const renderMessagePart = useCallback(
@@ -128,7 +149,13 @@ export default function MessageList ({
                   />
                 ))}
               </div>
-              1:1 between {groupUsers?.map((member, index) => `${member.name}${groupUsers.length - 1 != index ? ' and ' : ''}`)}
+              1:1 between{' '}
+              {groupUsers?.map(
+                (member, index) =>
+                  `${member.name}${
+                    groupUsers.length - 1 != index ? ' and ' : ''
+                  }`
+              )}
             </div>
           )}
           {activeChannel.type == 'group' && (
@@ -194,12 +221,12 @@ export default function MessageList ({
       {/* This section hard-codes the bottom of the message list to accommodate the height of the message input Div, whose height will vary depending on whether there is a quoted message displayed or not */}
       <div
         id='chats-bubbles'
-        className={`flex flex-col overflow-y-auto overscroll-none pb-6 ${
+        className={`flex flex-col overflow-y-auto pb-8 ${
           quotedMessage ? 'mb-[234px]' : 'mb-[178px]'
         }`}
         ref={messageListRef}
       >
-        <Message
+        {/*<Message
           received={true}
           avatarUrl='/avatars/avatar01.png'
           isRead={true}
@@ -209,7 +236,6 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          reactions={['😆', '😗', '😋']}
           messageText='Very short message.'
         />
 
@@ -235,7 +261,6 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          reactions={['😆', '😗', '😋']}
           messageText='Augue sit et aenean non tortor senectus sed. Sagittis eget in ut magna semper urna felis velit cursus. Enim nunc leo quis volutpat dis.'
         />
 
@@ -248,7 +273,6 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          reactions={['🐕', '🐶']}
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />
 
@@ -261,18 +285,6 @@ export default function MessageList ({
           messageActionHandler={(action, vars) =>
             messageActionHandler(action, vars)
           }
-          reactions={[
-            '🐕',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶',
-            '🐶'
-          ]}
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />
 
@@ -311,7 +323,7 @@ export default function MessageList ({
             messageActionHandler(action, vars)
           }
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-        />
+        />*/}
 
         {messages.map((message, index) => {
           //seenUserId(message.userId)  //  dcc
@@ -321,6 +333,7 @@ export default function MessageList ({
             <Message
               key={index}
               received={currentUser.id !== message.userId}
+              reactions={message.reactions}
               avatarUrl={
                 message.userId === currentUser.id
                   ? currentUser.profileUrl
@@ -340,6 +353,9 @@ export default function MessageList ({
                 messageActionHandler(action, vars)
               }
               messageText={message.content.text}
+              //activeChannel={activeChannel}
+              messages={messages}
+              //setMessages={setMessages}
             />
           )
         })}

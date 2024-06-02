@@ -68,6 +68,7 @@ export default function Page () {
 
   const [name, setName] = useState('')
   const [profileUrl, setProfileUrl] = useState('')
+  const [typingData, setTypingData] = useState<string[]>([])
 
   const [userMsg, setUserMsg] = useState({
     message: 'Message Text.  Message Text.  ',
@@ -324,20 +325,14 @@ export default function Page () {
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
-        typingTimeout: 2000,
+        typingTimeout: 5000,
         storeUserActivityTimestamps: true,
         storeUserActivityInterval: 60000
       })
 
-      console.log('1')
       setChat(chat)
-      console.log('2')
 
       if (!chat.currentUser.profileUrl) {
-        //  This is the first time this user has logged in, generate them a random name and profile image
-        //  todo
-        console.log('3')
-
         const randomProfileUrl = Math.floor(
           Math.random() * testData.avatars.length
         )
@@ -348,8 +343,6 @@ export default function Page () {
         setName('' + userId)
         setProfileUrl(testData.avatars[randomProfileUrl])
       } else {
-        console.log('4')
-
         setName('' + chat.currentUser.name)
         setProfileUrl(chat.currentUser.profileUrl)
       }
@@ -374,7 +367,6 @@ export default function Page () {
           }
         })
 
-      console.log('7')
       //  Initialization for private groups and direct messages
       //updateChannelMembershipsForPublic(chat)
       //updateChannelMembershipsForGroups(chat)
@@ -395,6 +387,7 @@ export default function Page () {
 
   useEffect(() => {
     //  Connect to the direct chats whenever they change so we can keep a track of unread messages
+    //  Called once everything is initialized
     if (!chat) return
     if (!publicChannels) return
     if (!directChats) return
@@ -481,6 +474,18 @@ export default function Page () {
     }
   }, [chat, publicChannels, directChats, activeChannel, privateGroups])
 
+  //  Invoked whenever the active channel changes
+  useEffect(() => {
+    if (!activeChannel) return
+    if (activeChannel.type == 'public') return
+    return activeChannel.getTyping(value => {
+      const findMe = value.indexOf(chat.currentUser.id)
+      if (findMe > -1)
+        value.splice(findMe, 1)
+      setTypingData(value)
+    })
+  }, [activeChannel])
+
   useEffect(() => {
     //  This use effect is only called once after the local user cache has been initialized
     if (chat && publicChannelsUsers?.length > 0 && initOnce == 0) {
@@ -491,6 +496,7 @@ export default function Page () {
         sendChatEvent(ChatEventTypes.JOINED, publicChannelsUsers[0], {
           userId: chat.currentUser.id
         })
+        updateUnreadMessagesCounts() //  Update the unread message counts whenever the channel changes
       } else {
         console.log('Error: Public Channels was undefined at launch')
       }
@@ -1408,12 +1414,26 @@ export default function Page () {
                 setShowThread={setShowThread}
               />
             )}
-            {!quotedMessage && typingUsers && (
-              <TypingIndicator
-                text={typingUsers}
-                avatarUrl={'/avatars/avatar02.png'}
+            {
+              !quotedMessage && typingData && <TypingIndicator
+                typers={typingData}
+                users={
+                  activeChannel?.type == 'group' && privateGroups
+                    ? privateGroupsUsers[
+                        privateGroups.findIndex(
+                          group => group.id == activeChannel?.id
+                        )
+                      ]
+                    : activeChannel?.type == 'direct' && directChats
+                    ? directChatsUsers[
+                        directChats.findIndex(
+                          dmChannel => dmChannel.id == activeChannel?.id
+                        )
+                      ]
+                    : []
+                }
               />
-            )}
+            }
             <div
               className={`${
                 creatingNewMessage && 'hidden'

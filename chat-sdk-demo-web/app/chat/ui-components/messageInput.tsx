@@ -20,6 +20,16 @@ export default function MessageInput ({
     setText("")
   }
 
+  async function handleTyping(e)
+  {
+    if (activeChannel.type !== 'public')
+      {
+        activeChannel.startTyping()
+      }
+    setText(e.target.value)
+    //handleMessageDraftChanged(e.target.value)
+  }
+
   return (
     <div
       className={`flex flex-col w-full items-center border border-navy200 select-none ${
@@ -49,10 +59,7 @@ export default function MessageInput ({
           } ml-6 px-6 text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500`}
           placeholder='Type message'
           value={text}
-          onChange={e => {
-            setText(e.target.value)
-            //handleMessageDraftChanged(e.target.value)
-          }}
+          onChange={e => {handleTyping(e)}}
         /></form>
         {!replyInThread && (
           <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md' onClick={(e) => handleSend(e)}>

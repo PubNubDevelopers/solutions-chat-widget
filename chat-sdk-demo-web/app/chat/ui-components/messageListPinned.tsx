@@ -1,7 +1,6 @@
 import Message from './message'
 import { roboto } from '@/app/fonts'
 import Image from 'next/image'
-import MessageInput from './messageInput'
 
 export default function MessageListPinned ({
   showPinnedMessages,

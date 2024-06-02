@@ -45,7 +45,9 @@ export default function MessageListPinned ({
           <Message
             received={true}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
             sender='Sarah Johannsen is a very long name'
@@ -57,7 +59,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
@@ -69,7 +73,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
@@ -81,7 +87,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
@@ -93,7 +101,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
@@ -105,7 +115,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}
@@ -117,7 +129,9 @@ export default function MessageListPinned ({
           <Message
             received={false}
             inPinned={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={true}

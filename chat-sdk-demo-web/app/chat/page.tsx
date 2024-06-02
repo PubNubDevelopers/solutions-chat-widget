@@ -35,7 +35,8 @@ import {
   CustomQuotedMessage,
   ChatHeaderActionIcon,
   ToastType,
-  ChatEventTypes
+  ChatEventTypes,
+  UnreadMessagesOnChannel
 } from '@/app/types'
 
 export default function Page () {
@@ -45,8 +46,7 @@ export default function Page () {
   const [chat, setChat] = useState<Chat | null>(null)
   const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState("")
-
+  const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState('')
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
   const [publicExpanded, setPublicExpanded] = useState(true)
@@ -98,13 +98,15 @@ export default function Page () {
   const [publicChannelsUsers, setPublicChannelsUsers] = useState<User[][]>([])
   const [privateGroupsUsers, setPrivateGroupsUsers] = useState<User[][]>([])
   const [directChatsUsers, setDirectChatsUsers] = useState<User[][]>([])
+  const [unreadMessages, setUnreadMessages] = useState<
+  UnreadMessagesOnChannel[]
+  >([])
 
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
   const [activeChannelGroupIndex, setActiveChannelGroupIndex] = useState(-1)
 
-  async function emojiSelected(data)
-  {
+  async function emojiSelected (data) {
     const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
     message?.toggleReaction(data.native)
     setShowEmojiPicker(false)
@@ -241,17 +243,14 @@ export default function Page () {
     desiredChannelId = ''
   ) {
     if (!chat) return
-    console.log('1')
     chat.currentUser
       .getMemberships({ sort: { updated: 'desc' } })
       .then(async membershipResponse => {
-        console.log('2')
         const currentMemberOfTheseDirectChannels =
           membershipResponse.memberships
             .map(m => m.channel)
             .filter(c => c.type === 'direct')
         //  Look for the desired channel ID
-        console.log('3')
         for (var i = 0; i < currentMemberOfTheseDirectChannels.length; i++) {
           if (currentMemberOfTheseDirectChannels[i].id === desiredChannelId) {
             //  We have found the channel we want to focus
@@ -276,12 +275,10 @@ export default function Page () {
           indexDirects < currentMemberOfTheseDirectChannels.length;
           indexDirects++
         ) {
-          //currentMemberOfTheseDirectChannels.forEach(channel => {
           var tempIndex = indexDirects
           const response = await currentMemberOfTheseDirectChannels[
             indexDirects
           ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
-          //.then(function (response) {
 
           if (response.members) {
             //  response contains the most recent 100 members
@@ -293,6 +290,21 @@ export default function Page () {
         }
         setDirectChatsUsers(tempDirectUsers)
       })
+  }
+
+  function updateUnreadMessagesCounts () {
+    chat?.getUnreadMessagesCounts({}).then(result => {
+      let unreadMessagesOnChannel: UnreadMessagesOnChannel[] = []
+      result.forEach((element, index) => {
+        let newUnreadMessage: UnreadMessagesOnChannel = {
+          channel: element.channel,
+          count: element.count
+        }
+        unreadMessagesOnChannel.push(newUnreadMessage)
+      })
+      console.log(unreadMessagesOnChannel)
+      setUnreadMessages(unreadMessagesOnChannel)
+    })
   }
 
   /* Initialization logic */
@@ -358,9 +370,7 @@ export default function Page () {
               //  Join each of the public channels
               channelsResponse.channels.forEach(async channel => {
                 await channel.join(message => {
-                  //  todo populate unread messages pane with messages if required (think there is an API to get unread messages on a channel)
-                  console.log(message.content.text)
-                  //  todo send a message to everyone else in this public channel that I have joined (they can then update their channel users)
+                  //  We have a message listener elsewhere for consistency with private and direct chats
                 })
               })
               //setActiveChannel(channelsResponse.channels[0])
@@ -388,20 +398,78 @@ export default function Page () {
     //updateChannelMembershipsForDirects()
   }, [userId, setChat, searchParams, router])
 
-  /*
   useEffect(() => {
-    if (
-      chat &&
-      publicChannels?.length > 0 &&
-      publicChannelsUsers?.length > 0 &&
-      !activeChannel
-    ) {
-      console.log('Setting active channel on init')
-      setActiveChannelGroupIndex(0)
-      setActiveChannel(publicChannels[0])
+    //  Connect to the direct chats whenever they change so we can keep a track of unread messages
+    if (!chat) return
+    if (!publicChannels) return
+    if (!directChats) return
+    if (!privateGroups) return
+    if (!activeChannel) return
+
+    //  todo check ActiveGroupIndex is correct here
+
+    function updateUnreadMessagesCounts () {
+      chat?.getUnreadMessagesCounts({}).then(result => {
+        console.log(result)
+        let unreadMessagesOnChannel: UnreadMessagesOnChannel[] = []
+        result.forEach((element, index) => {
+          let newUnreadMessage: UnreadMessagesOnChannel = {
+            channel: element.channel,
+            count: element.count
+          }
+          unreadMessagesOnChannel.push(newUnreadMessage)
+        })
+        console.log(unreadMessagesOnChannel)
+        setUnreadMessages(unreadMessagesOnChannel)
+      })
     }
-  }, [activeChannel, chat, publicChannels, publicChannelsUsers])
-*/
+
+    var publicHandlers: (() => void)[] = []
+    publicChannels.forEach((channel, index) => {
+      const disconnectHandler = channel.connect(message => {
+        console.log('MESSAGE AT TOP LEVEL PUBLIC: ' + message.content.text)
+        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+          updateUnreadMessagesCounts()
+        }
+      })
+      publicHandlers.push(disconnectHandler)
+    })
+    var directHandlers: (() => void)[] = []
+    directChats.forEach((channel, index) => {
+      const disconnectHandler = channel.connect(message => {
+        console.log('MESSAGE AT TOP LEVEL DIRECT')
+        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+          updateUnreadMessagesCounts()
+        }
+      })
+      directHandlers.push(disconnectHandler)
+    })
+    var privateHandlers: (() => void)[] = []
+    privateGroups.forEach((channel, index) => {
+      const disconnectHandler = channel.connect(message => {
+        console.log('MESSAGE AT TOP LEVEL: Private Groups')
+        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+          updateUnreadMessagesCounts()
+        }
+      })
+      privateHandlers.push(disconnectHandler)
+    })
+
+    console.log(activeChannel)
+    updateUnreadMessagesCounts() //  Update the unread message counts whenever the channel changes
+
+    return () => {
+      publicHandlers.forEach(handler => {
+        handler()
+      })
+      directHandlers.forEach(handler => {
+        handler()
+      })
+      privateHandlers.forEach(handler => {
+        handler()
+      })
+    }
+  }, [chat, publicChannels, directChats, activeChannel, privateGroups])
 
   useEffect(() => {
     //  This use effect is only called once after the local user cache has been initialized
@@ -421,6 +489,7 @@ export default function Page () {
   }, [chat, publicChannelsUsers, initOnce])
 
   useEffect(() => {
+    //  Get updates on the current user's name and profile URL
     if (!chat) return
     console.log('streaming updates current user: ' + chat.currentUser.id)
     return chat.currentUser.streamUpdates(updatedUser => {
@@ -482,7 +551,6 @@ export default function Page () {
   /* Listen for events using the Chat event mechanism*/
   useEffect(() => {
     if (!chat) return
-    //  todo Handle received custom events, sent as a result of users joining or leaving channels I'm part of
     const removeCustomListener = chat.listenForEvents({
       channel: chat.currentUser.id,
       type: 'custom',
@@ -667,8 +735,10 @@ export default function Page () {
       case MessageActionsTypes.SHOW_EMOJI:
         setShowEmojiMessageTimetoken(data.messageTimetoken)
         //  Avoid interference from the logic that hides the picker when you click outside it
-        setTimeout(function() {setShowEmojiPicker(data.isShown)}, 50);
-      break;
+        setTimeout(function () {
+          setShowEmojiPicker(data.isShown)
+        }, 50)
+        break
     }
   }
 
@@ -865,18 +935,25 @@ export default function Page () {
           closeUserMessage()
         }}
       />
-      <div className={`${!showEmojiPicker && "hidden"} absolute left-0 bottom-0 z-50 bg-white`}>
+      <div
+        className={`${
+          !showEmojiPicker && 'hidden'
+        } absolute left-0 bottom-0 z-50 bg-white`}
+      >
         <Picker
           data={data}
           sheetRows={3}
           previewPosition={'none'}
           navPosition={'none'}
           searchPosition={'none'}
-          maxFrequentRows={
-            0
-          } onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}}
+          maxFrequentRows={0}
+          onEmojiSelect={data => {
+            emojiSelected(data)
+          }}
+          onClickOutside={() => {
+            setShowEmojiPicker(false)
+          }}
         />
-
       </div>
       <div
         id='chat-main'
@@ -912,24 +989,176 @@ export default function Page () {
             />
           </div>
 
-          <ChatMenuHeader
-            text='UNREAD'
-            actionIcon={ChatHeaderActionIcon.MARK_READ}
-            expanded={unreadExpanded}
-            expandCollapse={() => {
-              setUnreadExpanded(!unreadExpanded)
-            }}
-            action={() => {
-              showUserMessage(
-                'Please Note:',
-                'Mark all as Read - not yet implemented',
-                'https://www.pubnub.com'
-              )
-            }}
-          />
+          {unreadMessages && unreadMessages.length > 0 && (
+            <ChatMenuHeader
+              text='UNREAD'
+              actionIcon={ChatHeaderActionIcon.MARK_READ}
+              expanded={unreadExpanded}
+              expandCollapse={() => {
+                setUnreadExpanded(!unreadExpanded)
+              }}
+              action={async () => {
+                const markedAsRead = await chat.markAllMessagesAsRead()
+                updateUnreadMessagesCounts()
+
+                //console.log(markedAsRead)
+                showUserMessage(
+                  'Success:',
+                  'All messsages have been marked as read, and sent receipts are updated accordingly',
+                  'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/unread#mark-messages-as-read-all-channels',
+                  ToastType.CHECK
+                )
+              }}
+            />
+          )}
           {unreadExpanded && (
             <div>
-              <ChatMenuItem
+              {unreadMessages?.map(
+                (unreadMessage, index) =>
+                  unreadMessage.channel.id !== activeChannel?.id && (
+                    <ChatMenuItem
+                      key={index}
+                      avatarUrl={
+                        unreadMessage.channel.type === 'group'
+                          ? chat?.currentUser.profileUrl
+                            ? chat?.currentUser.profileUrl
+                            : '/avatars/placeholder.png'
+                          : unreadMessage.channel.type == 'public'
+                          ? unreadMessage.channel.custom?.profileUrl
+                            ? unreadMessage.channel.custom?.profileUrl
+                            : '/avatars/placeholder.png'
+                          : (unreadMessage.channel.type == 'direct' && directChats)
+                          ? directChatsUsers[
+                              directChats.findIndex(
+                                dmChannel =>
+                                  dmChannel.id == unreadMessage.channel.id
+                              )
+                            ]?.find(user => user.id !== chat.currentUser.id)
+                              ?.profileUrl
+                            ? directChatsUsers[
+                                directChats.findIndex(
+                                  dmChannel =>
+                                    dmChannel.id == unreadMessage.channel.id
+                                )
+                              ]?.find(user => user.id !== chat.currentUser.id)
+                                ?.profileUrl
+                            : '/avatars/placeholder.png'
+                          : '/avatars/placeholder.png'
+                      }
+                      avatarBubblePrecedent={
+                        (unreadMessage.channel.type === 'group' && privateGroups)
+                          ? privateGroupsUsers[
+                              privateGroups.findIndex(
+                                group => group.id == unreadMessage.channel.id
+                              )
+                            ]?.map(user => user.id !== chat.currentUser.id)
+                            ? `+${
+                                privateGroupsUsers[
+                                  privateGroups.findIndex(
+                                    group =>
+                                      group.id == unreadMessage.channel.id
+                                  )
+                                ]?.map(user => user.id !== chat.currentUser.id)
+                                  .length - 1
+                              }`
+                            : ''
+                          : ''
+                      }
+                      text={(unreadMessage.channel.type === 'direct' && directChats) ? (directChatsUsers[
+                        directChats.findIndex(
+                          dmChannel =>
+                            dmChannel.id == unreadMessage.channel.id
+                        )
+                      ]?.find(user => user.id !== chat.currentUser.id)
+                        ?.name) : unreadMessage.channel.name}
+                      present={-1}
+                      count={'' + unreadMessage.count}
+                      markAsRead={true}
+                      markAsReadAction={async e => {
+                        e.stopPropagation()
+                        if (unreadMessage.channel.type === 'public' && publicChannelsMemberships && publicChannels) {
+                          const index = publicChannelsMemberships.findIndex(
+                            membership =>
+                              membership.channel.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            const lastMessage = await publicChannels[
+                              index
+                            ]?.getHistory({ count: 1 })
+                            if (lastMessage && lastMessage.messages) {
+                              console.log(lastMessage)
+                              await publicChannelsMemberships[
+                                index
+                              ].setLastReadMessage(lastMessage.messages[0])
+                              updateUnreadMessagesCounts()
+                            }
+                          }
+                        } else if (unreadMessage.channel.type === 'group' && privateGroupsMemberships && privateGroups) {
+                          const index = privateGroupsMemberships.findIndex(
+                            membership =>
+                              membership.channel.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            const lastMessage = await privateGroups[
+                              index
+                            ]?.getHistory({ count: 1 })
+                            if (lastMessage && lastMessage.messages) {
+                              await privateGroupsMemberships[
+                                index
+                              ].setLastReadMessage(lastMessage.messages[0])
+                              updateUnreadMessagesCounts()
+                            }
+                          }
+                        } else if (unreadMessage.channel.type === 'direct' && directChatsMemberships && directChats) {
+                          const index = directChatsMemberships.findIndex(
+                            membership =>
+                              membership.channel.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            const lastMessage = await directChats[
+                              index
+                            ]?.getHistory({ count: 1 })
+                            if (lastMessage && lastMessage.messages) {
+                              await directChatsMemberships[
+                                index
+                              ].setLastReadMessage(lastMessage.messages[0])
+                              updateUnreadMessagesCounts()
+                            }
+                          }
+                        }
+                      }}
+                      setActiveChannel={() => {
+                        if (unreadMessage.channel.type === 'public' && publicChannels) {
+                          const index = publicChannels.findIndex(
+                            channel => channel.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            setActiveChannel(publicChannels[index])
+                            setActiveChannelGroupIndex(index)
+                          }
+                        } else if (unreadMessage.channel.type === 'group' && privateGroups) {
+                          const index = privateGroups.findIndex(
+                            group => group.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            setActiveChannel(privateGroups[index])
+                            setActiveChannelGroupIndex(index)
+                          }
+                        } else if (unreadMessage.channel.type === 'direct' && directChats) {
+                          const index = directChats.findIndex(
+                            dmChannel =>
+                              dmChannel.id == unreadMessage.channel.id
+                          )
+                          if (index > -1) {
+                            setActiveChannel(directChats[index])
+                            setActiveChannelGroupIndex(index)
+                          }
+                        }
+                      }}
+                    ></ChatMenuItem>
+                  )
+              )}
+              {/*<ChatMenuItem
                 avatarUrl='/avatars/avatar01.png'
                 text='Label 01'
                 present={1}
@@ -971,11 +1200,14 @@ export default function Page () {
                     ''
                   )
                 }}
-              />
+              />*/}
             </div>
           )}
 
-          <div className='w-full border border-navy200 mt-4'></div>
+          {unreadMessages && unreadMessages.length > 0 && (
+            <div className='w-full border border-navy200 mt-4'></div>
+          )}
+
           <ChatMenuHeader
             text='PUBLIC CHANNELS'
             expanded={publicExpanded}
@@ -1053,24 +1285,6 @@ export default function Page () {
                   }}
                 />
               ))}
-              {/*<ChatMenuItem
-                avatarUrl='/avatars/avatar04.png'
-                text='Label 04'
-                present={1}
-                avatarBubblePrecedent='+2'
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar05.png'
-                text='Label 05'
-                present={0}
-                avatarBubblePrecedent='+5'
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar06.png'
-                text='Label 06'
-                present={1}
-                avatarBubblePrecedent='+1'
-          />*/}
             </div>
           )}
 
@@ -1110,41 +1324,6 @@ export default function Page () {
                   }}
                 />
               ))}
-              {/*<ChatMenuItem
-                avatarUrl='/avatars/avatar07.png'
-                text='Label 07'
-                present={1}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar08.png'
-                text='Label 08'
-                present={0}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar09.png'
-                text='Label 09'
-                present={1}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar08.png'
-                text='Label 08'
-                present={0}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar09.png'
-                text='Label 09'
-                present={1}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar08.png'
-                text='Label 08'
-                present={0}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar09.png'
-                text='Label 09'
-                present={1}
-          />*/}
             </div>
           )}
         </div>
@@ -1187,6 +1366,9 @@ export default function Page () {
                 }
                 usersHaveChanged={() => {
                   refreshMembersFromServer()
+                }}
+                updateUnreadMessagesCounts={() => {
+                  updateUnreadMessagesCounts()
                 }}
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}

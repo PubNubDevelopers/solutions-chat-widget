@@ -1,7 +1,7 @@
 import Avatar from './avatar'
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
@@ -17,6 +17,7 @@ export default function Message ({
   inPinned = false,
   avatarUrl,
   isRead,
+  readReceipts,
   showReadIndicator = true,
   containsQuote = false,
   sender,
@@ -27,7 +28,8 @@ export default function Message ({
   unpinMessageHandler = () => {
     console.log('ToDo: Unpin Message')
   },
-  messages,
+  message,
+  currentUserId
   //setMessages
   //activeChannel
   //reactions = ['']
@@ -73,7 +75,7 @@ export default function Message ({
   }
 
   async function reactionClicked (emoji, timetoken) {
-    const message = messages.find(message => message.timetoken === timetoken)
+    //const message = messages.find(message => message.timetoken === timetoken)
     //    const message = await activeChannel?.getMessage(timetoken)
     console.log(message)
     console.log(message.content.text)
@@ -110,6 +112,28 @@ export default function Message ({
     setUserReadableDate(datetime)
     //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
   }, [timetoken, userReadableDate])
+
+  //  Originally I was not writing the 'lastTimetoken' for messages I was sending myself, however 
+  //  that caused the Chat SDK's notion of an unread message count inconsistent, so I am removing
+  //  readReceipts I set myself in this useCallback
+  const determineReadStatus = useCallback((timetoken, readReceipts) => {
+    if (!readReceipts) return ''
+    let returnVal = false
+    for (var i = 0; i < Object.keys(readReceipts).length; i++)
+      {
+        const receipt = Object.keys(readReceipts)[i]
+        const findMe = readReceipts[receipt].indexOf(currentUserId)
+        if (findMe > -1)
+          {
+            readReceipts[receipt].splice(findMe, 1);
+          }
+        if (readReceipts[receipt].length > 0)
+          {
+            return receipt >= timetoken
+          }
+      }
+    return false
+  }, [])
 
   return (
     <div className='flex flex-col w-full'>
@@ -213,7 +237,7 @@ export default function Message ({
             </div>
             {!received && showReadIndicator && (
               <Image
-                src={`${isRead ? '/icons/read.svg' : '/icons/sent.svg'}`}
+                src={`${determineReadStatus(timetoken, readReceipts) ? '/icons/read.svg' : '/icons/sent.svg'}`}
                 alt='Read'
                 className='absolute right-[10px] bottom-[14px]'
                 width={21}

@@ -265,3 +265,64 @@
             }
 
             break*/
+
+
+            //  Private Groups
+
+              {/*<ChatMenuItem
+                avatarUrl='/avatars/avatar04.png'
+                text='Label 04'
+                present={1}
+                avatarBubblePrecedent='+2'
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar05.png'
+                text='Label 05'
+                present={0}
+                avatarBubblePrecedent='+5'
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar06.png'
+                text='Label 06'
+                present={1}
+                avatarBubblePrecedent='+1'
+          />*/}
+
+          //  DMs
+
+
+              {/*<ChatMenuItem
+                avatarUrl='/avatars/avatar07.png'
+                text='Label 07'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar08.png'
+                text='Label 08'
+                present={0}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar09.png'
+                text='Label 09'
+                present={1}
+          />*/}

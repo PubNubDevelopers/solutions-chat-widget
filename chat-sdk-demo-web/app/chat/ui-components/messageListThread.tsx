@@ -41,7 +41,9 @@ export default function MessageListThread ({ showThread, setShowThread }) {
           <Message
             received={true}
             inThread={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar01.png'
             isRead={true}
@@ -53,7 +55,9 @@ export default function MessageListThread ({ showThread, setShowThread }) {
           <Message
             received={false}
             inThread={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar02.png'
             isRead={false}
@@ -65,7 +69,9 @@ export default function MessageListThread ({ showThread, setShowThread }) {
           <Message
             received={false}
             inThread={true}
-            messages={null}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
             reactions={null}
             avatarUrl='/avatars/avatar03.png'
             isRead={true}

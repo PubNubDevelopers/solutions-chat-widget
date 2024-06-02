@@ -10,6 +10,7 @@ import {
   Channel,
   User,
   Message as pnMessage,
+  Membership,
   MixedTextTypedElement,
   TimetokenUtils
 } from '@pubnub/chat'
@@ -20,6 +21,7 @@ export default function MessageList ({
   groupUsers,
   messageActionHandler = (action, vars) => {},
   usersHaveChanged,
+  updateUnreadMessagesCounts,
   setChatSettingsScreenVisible,
   quotedMessage,
   setShowPinnedMessages,
@@ -28,32 +30,94 @@ export default function MessageList ({
   const MAX_AVATARS_SHOWN = 9
   const [loadedChannelId, setLoadedChannelId] = useState('')
   const [messages, setMessages] = useState<pnMessage[]>([])
+  const [currentMembership, setCurrentMembership] = useState<Membership>()
+  const [readReceipts, setReadReceipts] = useState()
   const [pinnedMessage, setPinnedMessage] = useState<pnMessage | null>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
 
+  function uniqueById (items) {
+    const set = new Set()
+    return items.filter(item => {
+      const isDuplicate = set.has(item.timetoken)
+      set.add(item.timetoken)
+      return !isDuplicate
+    })
+  }
+
   useEffect(() => {
+    //  UseEffect to handle initial configuration of the Message List including reading the historical messages
     console.log(
-      'ACTIVE CHANNEL CHANGED from MESSAGE LIST: ' + activeChannel?.id
+      'ACTIVE CHANNEL CHANGED from MESSAGE LIST 1: ' + activeChannel?.id
     )
     if (!activeChannel) return
-    if (activeChannel.id !== loadedChannelId) {
-      //  Connect wasn't being called with this applied
-      setLoadedChannelId(activeChannel.id)
-
+    if (activeChannel.id == loadedChannelId) return
+    async function initMessageList () {
       setMessages([])
-      activeChannel.getHistory({ count: 20 }).then(historicalMessagesObj => {
-        setMessages(messages => [...historicalMessagesObj.messages])
+      setLoadedChannelId(activeChannel.id)
+      const result = await currentUser.getMemberships() //  Some issue with filtering on memberships by channel ID, will raise.  I should be able to filter on channel.id == currentChannel.id
+      var localCurrentMembership
+      for (var i = 0; i < result?.memberships.length; i++) {
+        if (result.memberships[i].channel.id == activeChannel.id) {
+          localCurrentMembership = result.memberships[i]
+          setCurrentMembership(localCurrentMembership)
+        }
+      }
+
+      //setMessages([])
+      activeChannel.getHistory({ count: 20 }).then(async historicalMessagesObj => {
+        //  Run through the historical messages and set the most recently received one (that we were not the sender of) as read
+        console.log(historicalMessagesObj.messages)
+        if (historicalMessagesObj.messages) {
+          for (var i = historicalMessagesObj.messages.length - 1; i >= 0; i--) {
+            console.log(historicalMessagesObj.messages[i].userId)
+            //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
+              console.log('setting last read token to ' + historicalMessagesObj.messages[i].timetoken)
+              console.log(localCurrentMembership)
+              await localCurrentMembership?.setLastReadMessageTimetoken(
+                historicalMessagesObj.messages[i].timetoken
+              )
+              updateUnreadMessagesCounts()
+              break
+            //}
+          }
+        }
+        setMessages(messages => {
+          return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
+        })
       })
-      activeChannel.getPinnedMessage().then(message => {
+      await activeChannel.getPinnedMessage().then(message => {
         setPinnedMessage(message)
       })
     }
-    return activeChannel.connect(message => {
-      setMessages(messages => [...messages, message])
-    })
-  }, [activeChannel, loadedChannelId])
+    initMessageList()
+  }, [activeChannel, currentUser, loadedChannelId])
 
   useEffect(() => {
+    //  UseEffect to stream Read Receipts
+    if (!activeChannel) return
+    if (activeChannel.type == 'public') return //  Read receipts are not supported on public channels
+
+    activeChannel.streamReadReceipts(receipts => {
+      setReadReceipts(receipts)
+    })
+  }, [activeChannel])
+
+  useEffect(() => {
+    //  UseEffect to receive new messages sent on the channel
+    if (!activeChannel) return
+
+    return activeChannel.connect(message => {
+      //if (message.userId !== currentUser.id) {
+        currentMembership?.setLastReadMessageTimetoken(message.timetoken)
+      //}
+      setMessages(messages => {
+        return uniqueById([...messages, message])  //  Avoid race condition where message was being added twice when the channel was launched with historical messages
+      })
+    })
+  }, [activeChannel, currentMembership, currentUser.id])
+
+  useEffect(() => {
+    //  UseEffect to receive updates to messages such as reactions.  This does NOT include new messages being received on the channel (which is handled by the connect elsewhere)
     if (!messages || messages.length == 0) return
     return pnMessage.streamUpdatesOn(messages, setMessages)
   }, [messages])
@@ -61,8 +125,6 @@ export default function MessageList ({
   useEffect(() => {
     console.log('GROUP USERS')
     console.log(groupUsers)
-
-    //  todo disconnect as needed
 
     if (groupUsers) {
       return User.streamUpdatesOn(groupUsers, updatedUsers => {
@@ -73,23 +135,18 @@ export default function MessageList ({
 
   useEffect(() => {
     if (!messageListRef.current) return
-    console.log(messageListRef.current.scrollHeight - messageListRef.current.scrollTop)
-    console.log(messageListRef.current.scrollTop)
     if (
-      messageListRef.current.scrollTop != 0 && messageListRef.current.scrollHeight - messageListRef.current.scrollTop >
-      1000
-    ){
-
-      console.log('NOT scrolling')
+      messageListRef.current.scrollTop != 0 &&
+      messageListRef.current.scrollHeight - messageListRef.current.scrollTop >
+        1000
+    ) {
       return //  We aren't scrolled to the bottom
     }
-    console.log('scrolling')
     setTimeout(() => {
-      if (messageListRef.current)
-        {
-          messageListRef.current.scrollTop = messageListRef.current?.scrollHeight
-        }
-    }, 10)  //  Some weird timing issue
+      if (messageListRef.current) {
+        messageListRef.current.scrollTop = messageListRef.current?.scrollHeight
+      }
+    }, 10) //  Some weird timing issue
   }, [messages])
 
   const renderMessagePart = useCallback(
@@ -117,7 +174,7 @@ export default function MessageList ({
   )
 
   if (!activeChannel)
-    return <div className='flex flex-col max-h-screen'>...</div>
+    return <div className='flex flex-col max-h-screen'>Loading...</div>
 
   return (
     <div className='flex flex-col max-h-screen'>
@@ -226,19 +283,18 @@ export default function MessageList ({
         }`}
         ref={messageListRef}
       >
-
-        {
-          messages && messages.length == 0 && (
-            <div className="flex flex-row items-center justify-center w-full h-screen text-xl">No messages in this chat yet</div>
-          )
-        }
+        {messages && messages.length == 0 && (
+          <div className='flex flex-row items-center justify-center w-full h-screen text-xl'>
+            No messages in this chat yet
+          </div>
+        )}
         {messages.map((message, index) => {
           //seenUserId(message.userId)  //  dcc
           return (
             /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
 
             <Message
-              key={index}
+              key={message.timetoken}
               received={currentUser.id !== message.userId}
               reactions={message.reactions}
               avatarUrl={
@@ -247,8 +303,16 @@ export default function MessageList ({
                   : groupUsers?.find(user => user.id === message.userId)
                       ?.profileUrl
               }
-              isRead={false} //  todo - read receipts
-              showReadIndicator={false} //  todo - probably a better way to convey this information when I implement receipts (setting false since this is a public channel)
+              isRead={
+                //  The message will be assumed read anyone (other than ourselves) has read it
+                readReceipts &&
+                message.timetoken <=
+                  Object.keys(readReceipts).sort().reverse()[0]
+                  ? true
+                  : false
+              }
+              readReceipts={readReceipts}
+              showReadIndicator={activeChannel.type !== 'public'}
               sender={
                 message.userId === currentUser.id
                   ? currentUser.name
@@ -261,7 +325,8 @@ export default function MessageList ({
               }
               messageText={message.content.text}
               //activeChannel={activeChannel}
-              messages={messages}
+              message={message}
+              currentUserId={currentUser.id}
               //setMessages={setMessages}
             />
           )

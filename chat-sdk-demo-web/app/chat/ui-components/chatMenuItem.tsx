@@ -11,7 +11,7 @@ export default function ChatMenuItem ({
   avatarBubblePrecedent = '',
   count = '',
   markAsRead = false,
-  markAsReadAction = () => {},
+  markAsReadAction = (e) => {},
   setActiveChannel = () => {},
 }) {
 
@@ -25,7 +25,7 @@ export default function ChatMenuItem ({
 }
 
   return (
-    <div className='flex flex-col cursor-pointer' onClick={() => setActiveChannel()}>
+    <div className='flex flex-col cursor-pointer' onClick={() => {setActiveChannel()}}>
       <div className='flex flex-row justify-between items-center w-full pl-4'>
         <div className='flex flex-row py-2 gap-3 h-12 text-sm items-center text-neutral900'>
           <Avatar
@@ -38,7 +38,7 @@ export default function ChatMenuItem ({
         <div className='flex flex-row items-center'>
           <UnreadIndicator count={count} />
           {markAsRead && (
-            <div className={`cursor-pointer w-4 h-4 m-3 fill-current ${showToolTip ? "text-sky-700" : "text-sky-900"}`} onClick={() => markAsReadAction()} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
+            <div className={`cursor-pointer w-4 h-4 m-3 fill-current ${showToolTip ? "text-sky-700" : "text-sky-900"}`} onClick={(e) => markAsReadAction(e)} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}
             >
                 <div className="relative">
                     <ToolTip className={`${showToolTip ? 'block' : 'hidden'}  bottom-[0px]`} tip="Read" messageActionsTip={false}/>

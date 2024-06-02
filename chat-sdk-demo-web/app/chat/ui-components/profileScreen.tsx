@@ -97,7 +97,7 @@ export default function ProfileScreen ({
             ToastType.INFO
           )}>
             {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-            <div type='checkbox' defaultChecked={false} disabled={true} onChange={() => {}} />
+            <input type='checkbox' defaultChecked={false} disabled={true} onChange={() => {}} />
           </div>
         </div>
         <div className='border border-navy600'></div>
@@ -116,7 +116,7 @@ export default function ProfileScreen ({
             ToastType.INFO
           )}>
             {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-            <div type='checkbox' className="before:bg-sky-600 after:translate-x-4" onChange={()=> {}}/>
+            <input type='checkbox' className="before:bg-sky-600 after:translate-x-4" onChange={()=> {}}/>
           </div>
         </div>
 

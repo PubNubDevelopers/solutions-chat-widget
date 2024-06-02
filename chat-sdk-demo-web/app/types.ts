@@ -1,3 +1,5 @@
+import { Channel } from '@pubnub/chat'
+
 export enum ChatNameModals {
     UNDEFINED ="undefined",
     USER = "user",
@@ -22,6 +24,11 @@ export enum ChatHeaderActionIcon {
 export interface CustomQuotedMessage {
   sender: string;
   message: string;
+}
+
+export interface UnreadMessagesOnChannel {
+  channel: Channel,
+  count: number
 }
 
 export enum ToastType {

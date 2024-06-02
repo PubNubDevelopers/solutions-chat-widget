@@ -161,7 +161,7 @@ export default function ChatSettingsScreen ({
             'Though supported by the Chat SDK, this demo does not yet support custom events or notifications',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.INFO)}}>
               {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-              <div type='checkbox' defaultChecked={false} disabled={true} />
+              <input type='checkbox' defaultChecked={false} disabled={true} />
             </div>
           </div>
           <div className='border border-navy600'></div>

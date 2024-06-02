@@ -211,6 +211,7 @@ export default function NewMessageGroup ({
             <NewMessageUserPill
               key={index}
               user={user}
+              isMe={user.id == chat.currentUser.id}
               removePillAction={userId => onRemovePill(userId)}
             />
           ))}

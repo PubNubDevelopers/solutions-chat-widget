@@ -99,12 +99,11 @@ export default function Page () {
   const [privateGroupsUsers, setPrivateGroupsUsers] = useState<User[][]>([])
   const [directChatsUsers, setDirectChatsUsers] = useState<User[][]>([])
   const [unreadMessages, setUnreadMessages] = useState<
-  UnreadMessagesOnChannel[]
+    UnreadMessagesOnChannel[]
   >([])
 
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
-  const [activeChannelGroupIndex, setActiveChannelGroupIndex] = useState(-1)
 
   async function emojiSelected (data) {
     const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
@@ -204,7 +203,6 @@ export default function Page () {
                 currentMemberOfTheseGroupChannels[i].id
             )
             setActiveChannel(currentMemberOfTheseGroupChannels[i])
-            setActiveChannelGroupIndex(i)
           }
         }
 
@@ -259,7 +257,6 @@ export default function Page () {
                 currentMemberOfTheseDirectChannels[i].id
             )
             setActiveChannel(currentMemberOfTheseDirectChannels[i])
-            setActiveChannelGroupIndex(i)
           }
         }
         setDirectChats(currentMemberOfTheseDirectChannels)
@@ -373,8 +370,6 @@ export default function Page () {
                   //  We have a message listener elsewhere for consistency with private and direct chats
                 })
               })
-              //setActiveChannel(channelsResponse.channels[0])
-              //setActiveChannelGroupIndex(0)
             }
           }
         })
@@ -428,7 +423,12 @@ export default function Page () {
     publicChannels.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
         console.log('MESSAGE AT TOP LEVEL PUBLIC: ' + message.content.text)
-        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+        if (
+          !(
+            message.userId == chat.currentUser.id ||
+            message.channelId == activeChannel.id
+          )
+        ) {
           updateUnreadMessagesCounts()
         }
       })
@@ -438,7 +438,12 @@ export default function Page () {
     directChats.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
         console.log('MESSAGE AT TOP LEVEL DIRECT')
-        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+        if (
+          !(
+            message.userId == chat.currentUser.id ||
+            message.channelId == activeChannel.id
+          )
+        ) {
           updateUnreadMessagesCounts()
         }
       })
@@ -448,7 +453,12 @@ export default function Page () {
     privateGroups.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
         console.log('MESSAGE AT TOP LEVEL: Private Groups')
-        if (!(message.userId == chat.currentUser.id || message.channelId == activeChannel.id)) {
+        if (
+          !(
+            message.userId == chat.currentUser.id ||
+            message.channelId == activeChannel.id
+          )
+        ) {
           updateUnreadMessagesCounts()
         }
       })
@@ -478,7 +488,6 @@ export default function Page () {
       console.log('Notifying others that I am on the public channels')
       if (publicChannels) {
         setActiveChannel(publicChannels[0])
-        setActiveChannelGroupIndex(0)
         sendChatEvent(ChatEventTypes.JOINED, publicChannelsUsers[0], {
           userId: chat.currentUser.id
         })
@@ -566,7 +575,6 @@ export default function Page () {
               if (activeChannel?.id === evt.payload.body.channelId) {
                 if (publicChannels) {
                   setActiveChannel(publicChannels[0])
-                  setActiveChannelGroupIndex(0)
                 }
               }
             }
@@ -821,19 +829,41 @@ export default function Page () {
         isDirectChat={activeChannel?.type == 'direct'}
         activeChannel={activeChannel}
         activeChannelUsers={
-          activeChannel?.type == 'group' && activeChannelGroupIndex > -1
-            ? privateGroupsUsers[activeChannelGroupIndex]
-            : activeChannel?.type == 'direct' && activeChannelGroupIndex > -1
-            ? directChatsUsers[activeChannelGroupIndex]
-            : publicChannelsUsers[activeChannelGroupIndex]
+          activeChannel?.type == 'group' && privateGroups
+            ? privateGroupsUsers[
+                privateGroups.findIndex(group => group.id == activeChannel?.id)
+              ]
+            : activeChannel?.type == 'direct' && directChats
+            ? directChatsUsers[
+                directChats.findIndex(
+                  dmChannel => dmChannel.id == activeChannel?.id
+                )
+              ]
+            : publicChannels
+            ? publicChannelsUsers[
+                publicChannels.findIndex(
+                  channel => channel.id == activeChannel?.id
+                )
+              ]
+            : []
         }
         buttonAction={async () => {
           if (activeChannel && publicChannels) {
             sendChatEvent(
               ChatEventTypes.LEAVE,
-              activeChannel.type == 'group'
-                ? privateGroupsUsers[activeChannelGroupIndex]
-                : directChatsUsers[activeChannelGroupIndex],
+              activeChannel.type == 'group' && privateGroups
+                ? privateGroupsUsers[
+                    privateGroups.findIndex(
+                      group => group.id == activeChannel?.id
+                    )
+                  ]
+                : activeChannel.type == 'direct' && directChats
+                ? directChatsUsers[
+                    directChats.findIndex(
+                      dmChannel => dmChannel.id == activeChannel?.id
+                    )
+                  ]
+                : [],
               {
                 userLeaving: chat.currentUser.id,
                 isDirectChat: activeChannel.type != 'group',
@@ -883,11 +913,23 @@ export default function Page () {
       />
       <ModalManageMembers
         activeChannelUsers={
-          activeChannel?.type == 'group' && activeChannelGroupIndex > -1
-            ? privateGroupsUsers[activeChannelGroupIndex]
-            : activeChannel?.type == 'direct' && activeChannelGroupIndex > -1
-            ? directChatsUsers[activeChannelGroupIndex]
-            : publicChannelsUsers[activeChannelGroupIndex]
+          activeChannel?.type == 'group' && privateGroups
+            ? privateGroupsUsers[
+                privateGroups.findIndex(group => group.id == activeChannel?.id)
+              ]
+            : activeChannel?.type == 'direct' && directChats
+            ? directChatsUsers[
+                directChats.findIndex(
+                  dmChannel => dmChannel.id == activeChannel?.id
+                )
+              ]
+            : activeChannel?.type == 'public' && publicChannels
+            ? publicChannelsUsers[
+                publicChannels.findIndex(
+                  channel => channel.id == activeChannel?.id
+                )
+              ]
+            : []
         }
         currentUserId={chat.currentUser.id}
         activeChannel={activeChannel}
@@ -1027,7 +1069,8 @@ export default function Page () {
                           ? unreadMessage.channel.custom?.profileUrl
                             ? unreadMessage.channel.custom?.profileUrl
                             : '/avatars/placeholder.png'
-                          : (unreadMessage.channel.type == 'direct' && directChats)
+                          : unreadMessage.channel.type == 'direct' &&
+                            directChats
                           ? directChatsUsers[
                               directChats.findIndex(
                                 dmChannel =>
@@ -1046,7 +1089,7 @@ export default function Page () {
                           : '/avatars/placeholder.png'
                       }
                       avatarBubblePrecedent={
-                        (unreadMessage.channel.type === 'group' && privateGroups)
+                        unreadMessage.channel.type === 'group' && privateGroups
                           ? privateGroupsUsers[
                               privateGroups.findIndex(
                                 group => group.id == unreadMessage.channel.id
@@ -1064,19 +1107,27 @@ export default function Page () {
                             : ''
                           : ''
                       }
-                      text={(unreadMessage.channel.type === 'direct' && directChats) ? (directChatsUsers[
-                        directChats.findIndex(
-                          dmChannel =>
-                            dmChannel.id == unreadMessage.channel.id
-                        )
-                      ]?.find(user => user.id !== chat.currentUser.id)
-                        ?.name) : unreadMessage.channel.name}
+                      text={
+                        unreadMessage.channel.type === 'direct' && directChats
+                          ? directChatsUsers[
+                              directChats.findIndex(
+                                dmChannel =>
+                                  dmChannel.id == unreadMessage.channel.id
+                              )
+                            ]?.find(user => user.id !== chat.currentUser.id)
+                              ?.name
+                          : unreadMessage.channel.name
+                      }
                       present={-1}
                       count={'' + unreadMessage.count}
                       markAsRead={true}
                       markAsReadAction={async e => {
                         e.stopPropagation()
-                        if (unreadMessage.channel.type === 'public' && publicChannelsMemberships && publicChannels) {
+                        if (
+                          unreadMessage.channel.type === 'public' &&
+                          publicChannelsMemberships &&
+                          publicChannels
+                        ) {
                           const index = publicChannelsMemberships.findIndex(
                             membership =>
                               membership.channel.id == unreadMessage.channel.id
@@ -1093,7 +1144,11 @@ export default function Page () {
                               updateUnreadMessagesCounts()
                             }
                           }
-                        } else if (unreadMessage.channel.type === 'group' && privateGroupsMemberships && privateGroups) {
+                        } else if (
+                          unreadMessage.channel.type === 'group' &&
+                          privateGroupsMemberships &&
+                          privateGroups
+                        ) {
                           const index = privateGroupsMemberships.findIndex(
                             membership =>
                               membership.channel.id == unreadMessage.channel.id
@@ -1109,7 +1164,11 @@ export default function Page () {
                               updateUnreadMessagesCounts()
                             }
                           }
-                        } else if (unreadMessage.channel.type === 'direct' && directChatsMemberships && directChats) {
+                        } else if (
+                          unreadMessage.channel.type === 'direct' &&
+                          directChatsMemberships &&
+                          directChats
+                        ) {
                           const index = directChatsMemberships.findIndex(
                             membership =>
                               membership.channel.id == unreadMessage.channel.id
@@ -1128,79 +1187,42 @@ export default function Page () {
                         }
                       }}
                       setActiveChannel={() => {
-                        if (unreadMessage.channel.type === 'public' && publicChannels) {
+                        if (
+                          unreadMessage.channel.type === 'public' &&
+                          publicChannels
+                        ) {
                           const index = publicChannels.findIndex(
                             channel => channel.id == unreadMessage.channel.id
                           )
                           if (index > -1) {
                             setActiveChannel(publicChannels[index])
-                            setActiveChannelGroupIndex(index)
                           }
-                        } else if (unreadMessage.channel.type === 'group' && privateGroups) {
+                        } else if (
+                          unreadMessage.channel.type === 'group' &&
+                          privateGroups
+                        ) {
                           const index = privateGroups.findIndex(
                             group => group.id == unreadMessage.channel.id
                           )
                           if (index > -1) {
                             setActiveChannel(privateGroups[index])
-                            setActiveChannelGroupIndex(index)
                           }
-                        } else if (unreadMessage.channel.type === 'direct' && directChats) {
+                        } else if (
+                          unreadMessage.channel.type === 'direct' &&
+                          directChats
+                        ) {
                           const index = directChats.findIndex(
                             dmChannel =>
                               dmChannel.id == unreadMessage.channel.id
                           )
                           if (index > -1) {
                             setActiveChannel(directChats[index])
-                            setActiveChannelGroupIndex(index)
                           }
                         }
                       }}
                     ></ChatMenuItem>
                   )
               )}
-              {/*<ChatMenuItem
-                avatarUrl='/avatars/avatar01.png'
-                text='Label 01'
-                present={1}
-                count='5'
-                markAsRead={true}
-                markAsReadAction={() => {
-                  showUserMessage(
-                    'Please Note:',
-                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
-                    ''
-                  )
-                }}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar02.png'
-                text='Label 02'
-                present={0}
-                count='10'
-                markAsRead={true}
-                markAsReadAction={() => {
-                  showUserMessage(
-                    'Please Note:',
-                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
-                    ''
-                  )
-                }}
-              />
-              <ChatMenuItem
-                avatarUrl='/avatars/avatar03.png'
-                text='Label 03'
-                present={1}
-                avatarBubblePrecedent='+5'
-                count=''
-                markAsRead={true}
-                markAsReadAction={() => {
-                  showUserMessage(
-                    'Please Note:',
-                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
-                    ''
-                  )
-                }}
-              />*/}
             </div>
           )}
 
@@ -1231,7 +1253,6 @@ export default function Page () {
                   present={-1}
                   setActiveChannel={() => {
                     setActiveChannel(publicChannels[index])
-                    setActiveChannelGroupIndex(index)
                   }}
                 ></ChatMenuItem>
               ))}
@@ -1281,7 +1302,6 @@ export default function Page () {
                   }
                   setActiveChannel={() => {
                     setActiveChannel(privateGroups[index])
-                    setActiveChannelGroupIndex(index)
                   }}
                 />
               ))}
@@ -1320,7 +1340,6 @@ export default function Page () {
                   present={1}
                   setActiveChannel={() => {
                     setActiveChannel(directChats[index])
-                    setActiveChannelGroupIndex(index)
                   }}
                 />
               ))}
@@ -1354,12 +1373,25 @@ export default function Page () {
                 currentUser={chat.currentUser}
                 //users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers .  todo can I reuse what I'm doing for private groups and dms?
                 groupUsers={
-                  activeChannel?.type == 'group' && activeChannelGroupIndex > -1
-                    ? privateGroupsUsers[activeChannelGroupIndex]
-                    : activeChannel?.type == 'direct' &&
-                      activeChannelGroupIndex > -1
-                    ? directChatsUsers[activeChannelGroupIndex]
-                    : publicChannelsUsers[activeChannelGroupIndex]
+                  activeChannel?.type == 'group' && privateGroups
+                    ? privateGroupsUsers[
+                        privateGroups.findIndex(
+                          group => group.id == activeChannel?.id
+                        )
+                      ]
+                    : activeChannel?.type == 'direct' && directChats
+                    ? directChatsUsers[
+                        directChats.findIndex(
+                          dmChannel => dmChannel.id == activeChannel?.id
+                        )
+                      ]
+                    : publicChannels
+                    ? publicChannelsUsers[
+                        publicChannels.findIndex(
+                          channel => channel.id == activeChannel?.id
+                        )
+                      ]
+                    : []
                 }
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)

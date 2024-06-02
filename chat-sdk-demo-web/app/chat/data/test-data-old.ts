@@ -257,7 +257,6 @@
               })
               if (activeChannel.id === channelIdToLeave) {
                 setActiveChannel(publicChannels[0])
-                setActiveChannelGroupIndex(0)
               }
               refreshMembersFromServer()
             } else {
@@ -326,3 +325,49 @@
                 text='Label 09'
                 present={1}
           />*/}
+
+          //  Unread Users
+
+              {/*<ChatMenuItem
+                avatarUrl='/avatars/avatar01.png'
+                text='Label 01'
+                present={1}
+                count='5'
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    'Please Note:',
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar02.png'
+                text='Label 02'
+                present={0}
+                count='10'
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    'Please Note:',
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
+              />
+              <ChatMenuItem
+                avatarUrl='/avatars/avatar03.png'
+                text='Label 03'
+                present={1}
+                avatarBubblePrecedent='+5'
+                count=''
+                markAsRead={true}
+                markAsReadAction={() => {
+                  showUserMessage(
+                    'Please Note:',
+                    'Work in progress: Though supported by the Chat SDK, this demo does not yet support marking messages as read',
+                    ''
+                  )
+                }}
+              />*/}

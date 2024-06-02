@@ -64,27 +64,36 @@ export default function MessageList ({
       }
 
       //setMessages([])
-      activeChannel.getHistory({ count: 20 }).then(async historicalMessagesObj => {
-        //  Run through the historical messages and set the most recently received one (that we were not the sender of) as read
-        console.log(historicalMessagesObj.messages)
-        if (historicalMessagesObj.messages) {
-          for (var i = historicalMessagesObj.messages.length - 1; i >= 0; i--) {
-            console.log(historicalMessagesObj.messages[i].userId)
-            //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
-              console.log('setting last read token to ' + historicalMessagesObj.messages[i].timetoken)
+      activeChannel
+        .getHistory({ count: 20 })
+        .then(async historicalMessagesObj => {
+          //  Run through the historical messages and set the most recently received one (that we were not the sender of) as read
+          console.log(historicalMessagesObj.messages)
+          if (historicalMessagesObj.messages) {
+            for (
+              var i = historicalMessagesObj.messages.length - 1;
+              i >= 0;
+              i--
+            ) {
+              console.log(historicalMessagesObj.messages[i].userId)
+              //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
+              console.log(
+                'setting last read token to ' +
+                  historicalMessagesObj.messages[i].timetoken
+              )
               console.log(localCurrentMembership)
               await localCurrentMembership?.setLastReadMessageTimetoken(
                 historicalMessagesObj.messages[i].timetoken
               )
               updateUnreadMessagesCounts()
               break
-            //}
+              //}
+            }
           }
-        }
-        setMessages(messages => {
-          return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
+          setMessages(messages => {
+            return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
+          })
         })
-      })
       await activeChannel.getPinnedMessage().then(message => {
         setPinnedMessage(message)
       })
@@ -108,10 +117,10 @@ export default function MessageList ({
 
     return activeChannel.connect(message => {
       //if (message.userId !== currentUser.id) {
-        currentMembership?.setLastReadMessageTimetoken(message.timetoken)
+      currentMembership?.setLastReadMessageTimetoken(message.timetoken)
       //}
       setMessages(messages => {
-        return uniqueById([...messages, message])  //  Avoid race condition where message was being added twice when the channel was launched with historical messages
+        return uniqueById([...messages, message]) //  Avoid race condition where message was being added twice when the channel was launched with historical messages
       })
     })
   }, [activeChannel, currentMembership, currentUser.id])
@@ -126,7 +135,7 @@ export default function MessageList ({
     console.log('GROUP USERS')
     console.log(groupUsers)
 
-    if (groupUsers) {
+    if (groupUsers && groupUsers.length > 0) {
       return User.streamUpdatesOn(groupUsers, updatedUsers => {
         usersHaveChanged()
       })
@@ -174,7 +183,31 @@ export default function MessageList ({
   )
 
   if (!activeChannel)
-    return <div className='flex flex-col max-h-screen'>Loading...</div>
+    return (
+      <div className='flex flex-col max-h-screen h-screen justify-center items-center w-full'>
+        <div className='max-w-96 max-h-96 '>
+          <Image
+            src='/chat.svg'
+            alt='Chat Icon'
+            className=''
+            width={200}
+            height={200}
+            priority
+          />
+        </div>
+        <div className='flex mb-5 animate-spin'>
+          <Image
+            src='/icons/loading.png'
+            alt='Chat Icon'
+            className=''
+            width={50}
+            height={50}
+            priority
+          />
+        </div>
+        <div className='text-2xl'>Loading...</div>
+      </div>
+    )
 
   return (
     <div className='flex flex-col max-h-screen'>

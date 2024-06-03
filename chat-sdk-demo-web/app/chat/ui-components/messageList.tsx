@@ -24,7 +24,10 @@ export default function MessageList ({
   updateUnreadMessagesCounts,
   setChatSettingsScreenVisible,
   quotedMessage,
+  quotedMessageSender,
   setShowPinnedMessages,
+  activeChannelPinnedMessage,
+  setActiveChannelPinnedMessage,
   setShowThread
 }) {
   const MAX_AVATARS_SHOWN = 9
@@ -32,7 +35,7 @@ export default function MessageList ({
   const [messages, setMessages] = useState<pnMessage[]>([])
   const [currentMembership, setCurrentMembership] = useState<Membership>()
   const [readReceipts, setReadReceipts] = useState()
-  const [pinnedMessage, setPinnedMessage] = useState<pnMessage | null>(null)
+  const [pinnedMessageTimetoken, setPinnedMessageTimetoken] = useState('')  //  Keep track of if someone else has updated the pinned message
   const messageListRef = useRef<HTMLDivElement>(null)
 
   function uniqueById (items) {
@@ -94,9 +97,6 @@ export default function MessageList ({
             return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
           })
         })
-      await activeChannel.getPinnedMessage().then(message => {
-        setPinnedMessage(message)
-      })
     }
     initMessageList()
   }, [activeChannel, currentUser, loadedChannelId])
@@ -109,7 +109,42 @@ export default function MessageList ({
     activeChannel.streamReadReceipts(receipts => {
       setReadReceipts(receipts)
     })
+
   }, [activeChannel])
+
+  useEffect(() => {
+    console.log("ACTIVE CHANNEL CHANGED.")
+    activeChannel?.streamUpdates(async (channelUpdate) => {
+      console.log('STREAMMMMM')
+      const pinnedMessageTimetoken = channelUpdate.custom.pinnedMessageTimetoken
+      if (!pinnedMessageTimetoken)
+        {
+          //  Message was unpinned
+          setActiveChannelPinnedMessage(null)
+        }
+        else
+        {
+          channelUpdate.getMessage(pinnedMessageTimetoken).then((message) => {
+            setActiveChannelPinnedMessage(message)
+          })
+        }
+
+    })
+  }, [activeChannel])
+
+
+
+//  useEffect(() => {
+//    if (!activeChannel) return
+//    if (!pinnedMessageTimetoken) return
+//    console.log('USE EFFECT PINNED MESSAGE')
+//    console.log(activeChannel.id)
+//    activeChannel.getPinnedMessage().then(pinnedMessage => {
+//      console.log('PINNED MESSAGE')
+//      console.log(pinnedMessage)
+//      setPinnedMessage(pinnedMessage)
+//    })
+//  }, [activeChannel, pinnedMessageTimetoken])
 
   useEffect(() => {
     //  UseEffect to receive new messages sent on the channel
@@ -134,7 +169,7 @@ export default function MessageList ({
   useEffect(() => {
     console.log('GROUP USERS')
     console.log(groupUsers)
-    console.log("END END")
+    console.log('END END')
 
     if (groupUsers && groupUsers.length > 0) {
       return User.streamUpdatesOn(groupUsers, updatedUsers => {
@@ -161,16 +196,16 @@ export default function MessageList ({
 
   const renderMessagePart = useCallback(
     (messagePart: MixedTextTypedElement) => {
-      if (messagePart.type === 'text') {
+      if (messagePart?.type === 'text') {
         return messagePart.content.text
       }
-      if (messagePart.type === 'plainLink') {
+      if (messagePart?.type === 'plainLink') {
         return <a href={messagePart.content.link}>{messagePart.content.link}</a>
       }
-      if (messagePart.type === 'textLink') {
+      if (messagePart?.type === 'textLink') {
         return <a href={messagePart.content.link}>{messagePart.content.text}</a>
       }
-      if (messagePart.type === 'mention') {
+      if (messagePart?.type === 'mention') {
         return (
           <a href={`https://pubnub.com/${messagePart.content.id}`}>
             {messagePart.content.name}
@@ -236,7 +271,9 @@ export default function MessageList ({
                   <Avatar
                     key={index}
                     avatarUrl={member.profileUrl}
-                    present={member.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
+                    present={
+                      member.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE
+                    }
                   />
                 ))}
               </div>
@@ -258,7 +295,11 @@ export default function MessageList ({
                       <Avatar
                         key={index}
                         avatarUrl={member.profileUrl}
-                        present={member.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
+                        present={
+                          member.active
+                            ? PresenceIcon.ONLINE
+                            : PresenceIcon.OFFLINE
+                        }
                       />
                     )
                 )}
@@ -316,55 +357,79 @@ export default function MessageList ({
         }`}
         ref={messageListRef}
       >
+
+
         {messages && messages.length == 0 && (
-          <div className='flex flex-row items-center justify-center w-full h-screen text-xl'>
+          <div className='flex flex-row items-center justify-center w-full h-screen text-xl select-none'>
             No messages in this chat yet
           </div>
         )}
-        {messages.map((message, index) => {
-          //seenUserId(message.userId)  //  dcc
-          return (
-            /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
+        {/* Show the pinned message first if there is one */}
+        {activeChannelPinnedMessage && <Message
+              key={activeChannelPinnedMessage.timetoken}
+              received={currentUser.id !== activeChannelPinnedMessage.userId}
+              avatarUrl={
+                activeChannelPinnedMessage.userId === currentUser.id
+                  ? currentUser.profileUrl
+                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)
+                      ?.profileUrl
+              }
+              isOnline={
+                activeChannelPinnedMessage.userId === currentUser.id
+                  ? currentUser.active
+                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)?.active
+              }
+              readReceipts={readReceipts}
+              quotedMessageSender={activeChannelPinnedMessage.quotedMessage && ( activeChannelPinnedMessage.quotedMessage.userId === currentUser.id
+                ? currentUser.name
+                : groupUsers?.find(user => user.id === activeChannelPinnedMessage.quotedMessage.userId)?.name)}
+              showReadIndicator={activeChannel.type !== 'public'}
+              sender={
+                activeChannelPinnedMessage.userId === currentUser.id
+                  ? currentUser.name
+                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)?.name
+              }
+              pinned={true}
+              messageActionHandler={(action, vars) =>
+                messageActionHandler(action, vars)
+              }
+              message={activeChannelPinnedMessage}
+              currentUserId={currentUser.id}
+            />}
 
+        {messages.map((message, index) => {
+          return (
             <Message
               key={message.timetoken}
               received={currentUser.id !== message.userId}
-              reactions={message.reactions}
               avatarUrl={
                 message.userId === currentUser.id
                   ? currentUser.profileUrl
                   : groupUsers?.find(user => user.id === message.userId)
                       ?.profileUrl
               }
-              isOnline={message.userId === currentUser.id
-                ? currentUser.active
-                : groupUsers?.find(user => user.id === message.userId)
-                    ?.active}
-              isRead={
-                //  The message will be assumed read anyone (other than ourselves) has read it
-                readReceipts &&
-                message.timetoken <=
-                  Object.keys(readReceipts).sort().reverse()[0]
-                  ? true
-                  : false
+              isOnline={
+                message.userId === currentUser.id
+                  ? currentUser.active
+                  : groupUsers?.find(user => user.id === message.userId)?.active
               }
               readReceipts={readReceipts}
+              //quotedMessage={message.quotedMessage}
+              quotedMessageSender={message.quotedMessage && ( message.quotedMessage.userId === currentUser.id
+                ? currentUser.name
+                : groupUsers?.find(user => user.id === message.quotedMessage.userId)?.name)}
               showReadIndicator={activeChannel.type !== 'public'}
               sender={
                 message.userId === currentUser.id
                   ? currentUser.name
                   : groupUsers?.find(user => user.id === message.userId)?.name
               }
-              timetoken={message.timetoken}
-              pinned={pinnedMessage?.timetoken === message.timetoken} //  todo - message pinning
+              pinned={false} //  todo - message pinning
               messageActionHandler={(action, vars) =>
                 messageActionHandler(action, vars)
               }
-              messageText={message.content.text}
-              //activeChannel={activeChannel}
               message={message}
               currentUserId={currentUser.id}
-              //setMessages={setMessages}
             />
           )
         })}

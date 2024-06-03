@@ -41,7 +41,7 @@ export default function MessageListPinned ({
           className={`flex flex-col grow border border-navy-200 overflow-y-auto overscroll-none overflow-hidden pb-[84px]`}
         >
           {/* PINNED MESSAGE BUBBLES */}
-          <Message
+          {/*<Message
             received={true}
             inPinned={true}
             message={null}
@@ -137,7 +137,7 @@ export default function MessageListPinned ({
             sender='Mikey 222'
             timetoken={"17179544908908795"}
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
-          />
+      />*/}
         </div>
       </div>
     </div>

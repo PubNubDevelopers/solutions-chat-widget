@@ -4,7 +4,14 @@ import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useContext, useCallback, useRef } from 'react'
 import { loadEnvConfig } from '@next/env'
-import { Channel, Chat, Membership, User, ThreadChannel, Message as pnMessage } from '@pubnub/chat'
+import {
+  Channel,
+  Chat,
+  Membership,
+  User,
+  ThreadChannel,
+  Message as pnMessage
+} from '@pubnub/chat'
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
 import Header from './ui-components/header'
@@ -32,7 +39,7 @@ import { testData } from './data/user-data'
 import {
   ChatNameModals,
   MessageActionsTypes,
-  CustomQuotedMessage,
+  //CustomQuotedMessage,
   ChatHeaderActionIcon,
   ToastType,
   ChatEventTypes,
@@ -83,8 +90,8 @@ export default function Page () {
     useState<ReturnType<typeof setTimeout>>()
   const [initOnce, setInitOnce] = useState(0)
 
-  const [quotedMessage, setQuotedMessage] =
-    useState<CustomQuotedMessage | null>(null)
+  const [quotedMessage, setQuotedMessage] = useState<pnMessage | null>(null)
+  const [quotedMessageSender, setQuotedMessageSender] = useState('')
   const [typingUsers, setTypingUsers] = useState<String | null>(null)
 
   //  State of the channels I'm a member of (left hand pane)
@@ -106,6 +113,7 @@ export default function Page () {
 
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
+  const [activeChannelPinnedMessage, setActiveChannelPinnedMessage] = useState<pnMessage | null>(null)
   const [activeThreadChannel, setActiveThreadChannel] =
     useState<ThreadChannel | null>(null)
   const [activeThreadMessage, setActiveThreadMessage] =
@@ -483,6 +491,17 @@ export default function Page () {
   useEffect(() => {
     if (!chat) return
     if (!activeChannel) return
+
+    //  Set the pinned message for the active channel, this returns an updated channel ID so retrieve based on the server-channel
+    chat.getChannel(activeChannel.id).then((localActiveChannel) => {
+      console.log('INIT: ' + localActiveChannel)
+      localActiveChannel.getPinnedMessage().then((localActiveChannelPinnedMessage) => {
+        console.log('INIT2: ' + localActiveChannelPinnedMessage?.content.text)
+        setActiveChannelPinnedMessage(localActiveChannelPinnedMessage)
+      })
+    })
+
+    //  Only register typing indicators for non-public channels
     if (activeChannel.type == 'public') return
     return activeChannel.getTyping(value => {
       const findMe = value.indexOf(chat.currentUser.id)
@@ -719,21 +738,79 @@ export default function Page () {
         //await chat.createGroupConversation({users: [other]})
         //break;
         //  todo end test code
-
-        let newQuotedMessage: CustomQuotedMessage = {
-          message: 'This is a quoted message. ',
-          sender: 'Sarah Johannsen'
-        }
-        setQuotedMessage(newQuotedMessage)
+        console.log(data)
+        setQuotedMessage(data)
+        chat.getUser(data.userId).then(user => {
+          console.log('found user: ' + user.name)
+          setQuotedMessageSender(user.name)
+        })
         break
       case MessageActionsTypes.PIN:
-        setShowThread(false)
-        setShowPinnedMessages(true)
-        showUserMessage(
-          'Please Note:',
-          'Work in progress: Though supported by the Chat SDK, this demo does not yet support pinning messages',
-          ''
-        )
+        let localActiveChannel = await chat.getChannel(activeChannel.id)
+        console.log('local active channel: ' + localActiveChannel.id)
+        const localActiveChannelPinnedMessage = await localActiveChannel.getPinnedMessage()
+        console.log('currently pinned message: ' + localActiveChannelPinnedMessage?.text)
+        //  Check whether we need to unpin an existing message first
+        if (localActiveChannelPinnedMessage)
+          {
+            console.log('Unpinning message')
+            localActiveChannel = await localActiveChannel.unpinMessage()
+            //setActiveChannelPinnedMessage(null)
+          }
+        else
+        {
+          console.log('there was no message, so did not unpin anything')
+        }
+        //  Channel now has no pinned message.  Pin the requested message if it is different from
+        //  the one we just unpinned
+        if (localActiveChannelPinnedMessage?.timetoken != data.timetoken)
+          {
+            console.log('pinning message: ' + data.text)
+            localActiveChannel = await localActiveChannel.pinMessage(data)
+            //setActiveChannelPinnedMessage(data)
+            showUserMessage(
+              'Message Pinned:',
+              'The Message has been pinned to the top of ' + activeChannel.name,
+              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
+              ToastType.CHECK)
+          }
+          
+/*
+        
+        console.log('CURRENTLY PINNED MESSAGE 100: ' + pinnedMessage100?.text)
+        
+      
+        const currentPinnedMessage = await activeChannel.getPinnedMessage()
+        console.log('CURRENTLY PINNED MESSAGE: ' + currentPinnedMessage?.text)
+        if (currentPinnedMessage) {
+          console.log('UNPINNING MESSAGE')
+          activeChannel.unpinMessage().then(async channel => {
+            console.log ("MESSAGE UNPINNED FROM " + channel.id)
+            setActiveChannel(channel)
+            const currentPinnedMessage2 = await channel.getPinnedMessage()
+            console.log('CURRENTLY PINNED MESSAGE 2: ' + currentPinnedMessage2?.text)
+            })
+
+        }
+        if (currentPinnedMessage?.timetoken != data.timetoken) {
+          //   Only pin if this is a new message
+          console.log('PINNING MESSAGE')
+          const justPinnedMessage = await activeChannel.pinMessage(data)
+          const shouldBePinned = await activeChannel.getPinnedMessage()
+          //setPinnedMessageTimetoken(data.timetoken)
+          console.log(shouldBePinned)
+          console.log(justPinnedMessage)
+
+
+          )
+        } else {
+          //setPinnedMessageTimetoken('0')
+        }
+          */
+        console.log("FINISHED PINNING LOGIC")
+        //await activeChannel.pinMessage(data)
+        //setShowThread(false)
+        //setShowPinnedMessages(true)
         break
       case MessageActionsTypes.REACT:
         showUserMessage(
@@ -801,7 +878,7 @@ export default function Page () {
               priority
             />
           </div>
-          <div className='text-2xl'>{loadMessage}</div>
+          <div className='text-2xl select-none'>{loadMessage}</div>
         </div>
       </main>
     )
@@ -1192,6 +1269,7 @@ export default function Page () {
                         }
                       }}
                       setActiveChannel={() => {
+                        setActiveChannelPinnedMessage(null)
                         if (
                           unreadMessage.channel.type === 'public' &&
                           publicChannels
@@ -1257,6 +1335,7 @@ export default function Page () {
                   text={publicChannel.name}
                   present={PresenceIcon.NOT_SHOWN}
                   setActiveChannel={() => {
+                    setActiveChannelPinnedMessage(null)
                     setActiveChannel(publicChannels[index])
                   }}
                 ></ChatMenuItem>
@@ -1296,6 +1375,7 @@ export default function Page () {
                       : ''
                   }
                   setActiveChannel={() => {
+                    setActiveChannelPinnedMessage(null)
                     setActiveChannel(privateGroups[index])
                   }}
                 />
@@ -1332,10 +1412,15 @@ export default function Page () {
                       user => user.id !== chat.currentUser.id
                     )?.name
                   }
-                  present={directChatsUsers[index]?.find(
-                    user => user.id !== chat.currentUser.id
-                  )?.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
+                  present={
+                    directChatsUsers[index]?.find(
+                      user => user.id !== chat.currentUser.id
+                    )?.active
+                      ? PresenceIcon.ONLINE
+                      : PresenceIcon.OFFLINE
+                  }
                   setActiveChannel={() => {
+                    setActiveChannelPinnedMessage(null)
                     setActiveChannel(directChats[index])
                   }}
                 />
@@ -1402,29 +1487,34 @@ export default function Page () {
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}
                 setShowPinnedMessages={setShowPinnedMessages}
+                activeChannelPinnedMessage={activeChannelPinnedMessage}
+                setActiveChannelPinnedMessage={setActiveChannelPinnedMessage}
                 setShowThread={setShowThread}
               />
             )}
-            {!quotedMessage && typingData && (
-              <TypingIndicator
-                typers={typingData}
-                users={
-                  activeChannel?.type == 'group' && privateGroups
-                    ? privateGroupsUsers[
-                        privateGroups.findIndex(
-                          group => group.id == activeChannel?.id
-                        )
-                      ]
-                    : activeChannel?.type == 'direct' && directChats
-                    ? directChatsUsers[
-                        directChats.findIndex(
-                          dmChannel => dmChannel.id == activeChannel?.id
-                        )
-                      ]
-                    : []
-                }
-              />
-            )}
+            {!quotedMessage &&
+              typingData &&
+              typingData.length > 0 &&
+              activeChannel?.type !== 'public' && (
+                <TypingIndicator
+                  typers={typingData}
+                  users={
+                    activeChannel?.type == 'group' && privateGroups
+                      ? privateGroupsUsers[
+                          privateGroups.findIndex(
+                            group => group.id == activeChannel?.id
+                          )
+                        ]
+                      : activeChannel?.type == 'direct' && directChats
+                      ? directChatsUsers[
+                          directChats.findIndex(
+                            dmChannel => dmChannel.id == activeChannel?.id
+                          )
+                        ]
+                      : []
+                  }
+                />
+              )}
             <div
               className={`${
                 creatingNewMessage && 'hidden'
@@ -1434,6 +1524,7 @@ export default function Page () {
                 activeChannel={activeChannel}
                 replyInThread={false}
                 quotedMessage={quotedMessage}
+                quotedMessageSender={quotedMessageSender}
                 setQuotedMessage={setQuotedMessage}
                 creatingNewMessage={creatingNewMessage}
                 showUserMessage={showUserMessage}

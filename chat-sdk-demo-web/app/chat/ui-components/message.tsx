@@ -12,17 +12,18 @@ import { Channel, TimetokenUtils } from '@pubnub/chat'
 
 export default function Message ({
   received,
-  reactions,
+  //reactions,
   inThread = false,
   inPinned = false,
   avatarUrl,
-  isRead,
+  //isRead,
   readReceipts,
   showReadIndicator = true,
-  containsQuote = false,
+  //containsQuote = false,
+  //quotedMessage = null,
+  quotedMessageSender = '',
   sender,
-  messageText,
-  timetoken = '17179544908908795', //  todo make this '' when I get rid of my test messages
+  //messageText,
   messageActionHandler = (a, b) => {},
   pinned = false,
   unpinMessageHandler = () => {
@@ -37,7 +38,7 @@ export default function Message ({
 }) {
   const [showToolTip, setShowToolTip] = useState(false)
   const [actionsShown, setActionsShown] = useState(false)
-  const [userReadableDate, setUserReadableDate] = useState('')
+  //const [userReadableDate, setUserReadableDate] = useState('')
   let messageHovered = false
   let actionsHovered = false
 
@@ -78,15 +79,12 @@ export default function Message ({
   async function reactionClicked (emoji, timetoken) {
     //const message = messages.find(message => message.timetoken === timetoken)
     //    const message = await activeChannel?.getMessage(timetoken)
-    console.log(message)
-    console.log(message.content.text)
-    console.log(emoji)
     await message?.toggleReaction(emoji)
     //setMessages(messages => [...messages])
     console.log('click')
   }
 
-  useEffect(() => {
+  const determineUserReadableDate = useCallback((timetoken) => {
     const months = [
       'Jan',
       'Feb',
@@ -102,7 +100,6 @@ export default function Message ({
       'Dec'
     ]
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    //const temp = days[dateTime?.getDay()]
     const date = TimetokenUtils.timetokenToDate(timetoken)
     const datetime = `${days[date.getDay()]} ${date.getDate()} ${
       months[date.getMonth()]
@@ -110,9 +107,10 @@ export default function Message ({
       date.getMinutes() + ''
     ).padStart(2, '0')}`
 
-    setUserReadableDate(datetime)
+    //setUserReadableDate(datetime)
+    return datetime
     //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
-  }, [timetoken, userReadableDate])
+  })
 
   //  Originally I was not writing the 'lastTimetoken' for messages I was sending myself, however 
   //  that caused the Chat SDK's notion of an unread message count inconsistent, so I am removing
@@ -135,6 +133,7 @@ export default function Message ({
       }
     return false
   }, [])
+
 
   return (
     <div className='flex flex-col w-full'>
@@ -162,6 +161,7 @@ export default function Message ({
                 : 'justify-end'
             }`}
           >
+        {pinned && !received && <div className="flex justify-start grow select-none"><PinnedMessagePill /></div>}
             {(inThread || inPinned || received) && (
               <div
                 className={`${roboto.className} text-sm font-normal flex text-neutral-600`}
@@ -174,7 +174,7 @@ export default function Message ({
             <div
               className={`${roboto.className} text-sm font-normal flex text-neutral-600`}
             >
-              {userReadableDate}
+              {determineUserReadableDate(message.timetoken)}
             </div>
           </div>
 
@@ -223,22 +223,21 @@ export default function Message ({
               </div>
             )}
             <div className='flex flex-col w-full'>
-              {containsQuote && (
+              {message.quotedMessage && (
                 <QuotedMessage
-                  quotedMessage={{
-                    sender: 'Sarah Johannsen',
-                    message:
-                      'Augue sit et aenean non tortor senectus sed. Sagittis eget in ut magna semper urna felis velit cursus. Enim nunc leo quis volutpat dis.'
-                  }}
+                  originalMessage={message}
+                  originalMessageReceived={received}
+                  quotedMessage={message.quotedMessage}
+                  quotedMessageSender={quotedMessageSender}
                   setQuotedMessage={null}
                   displayedWithMesageInput={false}
                 />
               )}
-              {messageText}
+              {message.content.text}
             </div>
             {!received && showReadIndicator && (
               <Image
-                src={`${determineReadStatus(timetoken, readReceipts) ? '/icons/read.svg' : '/icons/sent.svg'}`}
+                src={`${determineReadStatus(message.timetoken, readReceipts) ? '/icons/read.svg' : '/icons/sent.svg'}`}
                 alt='Read'
                 className='absolute right-[10px] bottom-[14px]'
                 width={21}
@@ -248,14 +247,14 @@ export default function Message ({
             )}
             <div className='absolute right-[10px] -bottom-[18px] flex flex-row items-center select-none'>
               {/*arrayOfEmojiReactions*/}
-              {reactions
-                ? Object?.keys(reactions)
+              {message.reactions
+                ? Object?.keys(message.reactions)
                     .slice(0, 18)
                     .map((emoji, index) => (
                       <MessageReaction
                         emoji={emoji}
-                        messageTimetoken={timetoken}
-                        count={reactions[emoji].length}
+                        messageTimetoken={message.timetoken}
+                        count={message.reactions[emoji].length}
                         reactionClicked={reactionClicked}
                         key={index}
                       />
@@ -267,7 +266,8 @@ export default function Message ({
               <MessageActions
                 received={received}
                 actionsShown={actionsShown}
-                timetoken={timetoken}
+                timetoken={message.timetoken}
+                isPinned={pinned}
                 messageActionsEnter={() => handleMessageActionsEnter()}
                 messageActionsLeave={() => handleMessageActionsLeave()}
                 replyInThreadClick={() =>
@@ -277,18 +277,18 @@ export default function Message ({
                   )
                 }
                 quoteMessageClick={() =>
-                  messageActionHandler(MessageActionsTypes.QUOTE, '')
+                  messageActionHandler(MessageActionsTypes.QUOTE, message)
                 }
                 pinMessageClick={() => {
-                  messageActionHandler(MessageActionsTypes.PIN, '')
+                  messageActionHandler(MessageActionsTypes.PIN, message)
                 }}
                 showEmojiPickerClick={data => {
                   messageActionHandler(MessageActionsTypes.SHOW_EMOJI, data)
                 }}
                 copyMessageClick={() => {
-                  copyMessageText(messageText)
+                  copyMessageText(message.content.text)
                   messageActionHandler(MessageActionsTypes.COPY, {
-                    text: messageText
+                    text: message.content.text
                   })
                 }}
               />
@@ -299,7 +299,8 @@ export default function Message ({
             <MessageActions
               received={received}
               actionsShown={actionsShown}
-              timetoken={timetoken}
+              timetoken={message.timetoken}
+              isPinned={pinned}
               messageActionsEnter={() => handleMessageActionsEnter()}
               messageActionsLeave={() => handleMessageActionsLeave()}
               replyInThreadClick={() =>
@@ -309,18 +310,18 @@ export default function Message ({
                 )
               }
               quoteMessageClick={() =>
-                messageActionHandler(MessageActionsTypes.QUOTE, '')
+                messageActionHandler(MessageActionsTypes.QUOTE, message)
               }
               pinMessageClick={() => {
-                messageActionHandler(MessageActionsTypes.PIN, '')
+                messageActionHandler(MessageActionsTypes.PIN, message)
               }}
               showEmojiPickerClick={data => {
                 messageActionHandler(MessageActionsTypes.SHOW_EMOJI, data)
               }}
               copyMessageClick={() => {
-                copyMessageText(messageText)
+                copyMessageText(message.content.text)
                 messageActionHandler(MessageActionsTypes.COPY, {
-                  text: messageText
+                  text: message.content.text
                 })
               }}
             />

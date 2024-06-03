@@ -8,6 +8,7 @@ export default function MessageActions ({
   received,
   actionsShown,
   timetoken,
+  isPinned,
   messageActionsEnter,
   messageActionsLeave,
   replyInThreadClick,
@@ -163,7 +164,7 @@ export default function MessageActions ({
           />
           <ToolTip
             className={`${pinToolTip ? 'block' : 'hidden'}`}
-            tip='Pin message'
+            tip={`${isPinned ? "Unpin message" : "Pin message"}`}
           />
         </div>
         <div

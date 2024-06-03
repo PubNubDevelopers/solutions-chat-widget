@@ -21,10 +21,10 @@ export enum ChatHeaderActionIcon {
   NONE = 2
 }
 
-export interface CustomQuotedMessage {
-  sender: string;
-  message: string;
-}
+//export interface CustomQuotedMessage {
+//  sender: string;
+//  message: string;
+//}
 
 export interface UnreadMessagesOnChannel {
   channel: Channel,

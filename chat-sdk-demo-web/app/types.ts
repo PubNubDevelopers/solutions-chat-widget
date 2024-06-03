@@ -37,6 +37,12 @@ export enum ToastType {
   ERROR = 2
 }
 
+export enum PresenceIcon {
+  NOT_SHOWN = -1,
+  OFFLINE = 0,
+  ONLINE = 1
+}
+
 export enum ChatEventTypes {
   LEAVE = 0,  //  Notify other members of a group that you are leaving that group
   INVITED = 1,//  Notify the recipient(s) that they are now part of a new group chat or DM.

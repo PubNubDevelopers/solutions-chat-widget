@@ -3,7 +3,7 @@ import Avatar from './avatar'
 import Message from './message'
 import UnreadIndicator from './unreadIndicator'
 import Image from 'next/image'
-import { CustomQuotedMessage } from '@/app/types'
+import { CustomQuotedMessage, PresenceIcon } from '@/app/types'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
@@ -134,6 +134,7 @@ export default function MessageList ({
   useEffect(() => {
     console.log('GROUP USERS')
     console.log(groupUsers)
+    console.log("END END")
 
     if (groupUsers && groupUsers.length > 0) {
       return User.streamUpdatesOn(groupUsers, updatedUsers => {
@@ -221,7 +222,7 @@ export default function MessageList ({
           {activeChannel.type == 'public' && (
             <div className='flex flex-row justify-center items-center gap-3'>
               <Avatar
-                present={-1}
+                present={PresenceIcon.NOT_SHOWN}
                 avatarUrl={activeChannel.custom.profileUrl}
               />
               {activeChannel.name}{' '}
@@ -235,7 +236,7 @@ export default function MessageList ({
                   <Avatar
                     key={index}
                     avatarUrl={member.profileUrl}
-                    present={1}
+                    present={member.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
                   />
                 ))}
               </div>
@@ -257,12 +258,11 @@ export default function MessageList ({
                       <Avatar
                         key={index}
                         avatarUrl={member.profileUrl}
-                        present={1}
+                        present={member.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
                       />
                     )
                 )}
               </div>
-              {/*<Avatar present={1} avatarUrl={'/avatars/avatar01.png'} />*/}
               {activeChannel.name} (Private Group)
             </div>
           )}
@@ -336,6 +336,10 @@ export default function MessageList ({
                   : groupUsers?.find(user => user.id === message.userId)
                       ?.profileUrl
               }
+              isOnline={message.userId === currentUser.id
+                ? currentUser.active
+                : groupUsers?.find(user => user.id === message.userId)
+                    ?.active}
               isRead={
                 //  The message will be assumed read anyone (other than ourselves) has read it
                 readReceipts &&

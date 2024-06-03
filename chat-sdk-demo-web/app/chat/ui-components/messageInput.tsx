@@ -2,13 +2,16 @@ import Image from 'next/image'
 import { CustomQuotedMessage } from '@/app/types'
 import QuotedMessage from './quotedMessage'
 import { useState, useEffect } from 'react'
+import {ToastType} from '@/app/types'
 
 export default function MessageInput ({
   activeChannel,
   replyInThread,
   quotedMessage,
   setQuotedMessage = any => {},
-  creatingNewMessage=false
+  creatingNewMessage=false,
+  showUserMessage=(a, b, c, d) => {},
+  plusAction =() => {}
 }) {
   function handleMessageDraftChanged (draft) {}
 
@@ -16,8 +19,19 @@ export default function MessageInput ({
   async function handleSend(event: React.SyntheticEvent) {
     event.preventDefault()
     if (!text || !activeChannel) return
-    await activeChannel.sendText(text, {storeInHistory: true})
-    setText("")
+    if (replyInThread)
+      {
+        //  This demo only supports text replies in the thread UI
+        await activeChannel.sendText(text, {storeInHistory: true})
+        setText("")
+          }
+          else
+          {
+            //  ToDo support message draft in non-threaded channels
+            await activeChannel.sendText(text, {storeInHistory: true})
+            setText("")
+        
+          }
   }
 
   async function handleTyping(e)
@@ -28,6 +42,26 @@ export default function MessageInput ({
       }
     setText(e.target.value)
     //handleMessageDraftChanged(e.target.value)
+  }
+
+  async function addAttachment()
+  {
+    showUserMessage(
+      "Demo Limitation",
+      'Though supported by the Chat SDK, this demo does not support adding attachments to messages',
+      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/files',
+      ToastType.INFO
+    )
+  }
+
+  async function addEmoji()
+  {
+    showUserMessage(
+      "Demo Limitation",
+      'You can send any Unicode data through the Chat SDK, the emoji window just isn`t implemented in this demo yet',
+      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/send-receive',
+      ToastType.INFO
+    )    
   }
 
   return (
@@ -74,7 +108,7 @@ export default function MessageInput ({
           </div>
         )}
         {!replyInThread && (
-          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
+          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md' onClick={() => {addEmoji()}}>
             <Image
               src='/icons/smile.svg'
               alt='Smile'
@@ -86,7 +120,7 @@ export default function MessageInput ({
           </div>
         )}
         {!replyInThread && (
-          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
+          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md' onClick={() => {addAttachment()}}>
             <Image
               src='/icons/attachment.svg'
               alt='Attachment'
@@ -98,7 +132,7 @@ export default function MessageInput ({
           </div>
         )}
         {replyInThread && (
-          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md'>
+          <div className='cursor-pointer hover:bg-neutral-100 hover:rounded-md' onClick={(e) => handleSend(e)}>
             <Image
               src='/icons/plus.svg'
               alt='Plus'

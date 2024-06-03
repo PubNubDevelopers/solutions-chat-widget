@@ -371,3 +371,100 @@
                   )
                 }}
               />*/}
+
+  //  Threaded messages
+
+  /*<Message
+            received={true}
+            inThread={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar01.png'
+            isRead={true}
+            sender='Sarah Johannsen'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
+          />
+
+          <Message
+            received={false}
+            inThread={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={false}
+            sender='Philip Soto'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
+          />
+
+          <Message
+            received={false}
+            inThread={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar03.png'
+            isRead={true}
+            sender='Philip Soto'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo '
+          />*/
+
+  //  Managed Members
+
+  /*<ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+      <ManagedMember name="Leslie Alexander" avatarUrl="/avatars/avatar12.png" removeAction={() => {console.log("ToDo: Remove Member")}} lastElement={true}/>*/
+
+  //  Chat Settings Screen
+
+                  /*<Avatar
+                  avatarUrl={'/avatars/avatar01.png'}
+                  width={88}
+                  height={88}
+                />
+
+                <Avatar
+                  avatarUrl={'/avatars/avatar02.png'}
+                  width={88}
+                  height={88}
+                />
+
+                <Avatar
+                  avatarUrl={'/avatars/avatar03.png'}
+                  width={88}
+                  height={88}
+                          />*/
+
+//  Global groups
+
+              /*<ChatMenuItem
+                avatarUrl='/group/globe1.svg'
+                text='General Chat'
+                present={-1}
+              />
+              <ChatMenuItem
+                avatarUrl='/group/globe2.svg'
+                text='Work Chat'
+                present={-1}
+          />*/

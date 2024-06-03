@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useContext, useCallback, useRef } from 'react'
 import { loadEnvConfig } from '@next/env'
-import { Channel, Chat, Membership, User } from '@pubnub/chat'
+import { Channel, Chat, Membership, User, ThreadChannel, Message as pnMessage } from '@pubnub/chat'
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
 import Header from './ui-components/header'
@@ -36,7 +36,8 @@ import {
   ChatHeaderActionIcon,
   ToastType,
   ChatEventTypes,
-  UnreadMessagesOnChannel
+  UnreadMessagesOnChannel,
+  PresenceIcon
 } from '@/app/types'
 
 export default function Page () {
@@ -105,6 +106,10 @@ export default function Page () {
 
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
+  const [activeThreadChannel, setActiveThreadChannel] =
+    useState<ThreadChannel | null>(null)
+  const [activeThreadMessage, setActiveThreadMessage] =
+    useState<pnMessage | null>(null)
 
   async function emojiSelected (data) {
     const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
@@ -476,15 +481,15 @@ export default function Page () {
 
   //  Invoked whenever the active channel changes
   useEffect(() => {
+    if (!chat) return
     if (!activeChannel) return
     if (activeChannel.type == 'public') return
     return activeChannel.getTyping(value => {
       const findMe = value.indexOf(chat.currentUser.id)
-      if (findMe > -1)
-        value.splice(findMe, 1)
+      if (findMe > -1) value.splice(findMe, 1)
       setTypingData(value)
     })
-  }, [activeChannel])
+  }, [chat, activeChannel])
 
   useEffect(() => {
     //  This use effect is only called once after the local user cache has been initialized
@@ -691,28 +696,22 @@ export default function Page () {
   async function messageActionHandler (action, data) {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
-        //  todo this is test code
-
-        //console.log("Sending custom event")
-        //await chat.emitEvent({
-        //  channel: 'test-darryn-2', //  Sending to other test user
-        //  type: 'custom',
-        //  method: "publish",
-        //  payload: {
-        //    action: "Event Action",   //  Both of these are received
-        //    custom: "Some custom data"  //  Both of these are received
-        //  },
-        //})
-        //break;
-        //  todo end test code
-
         setShowThread(true)
         setShowPinnedMessages(false)
-        showUserMessage(
-          'Please Note:',
-          'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
-          ''
-        )
+        //showUserMessage(
+        //  'Please Note:',
+        //  'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
+        //  ''
+        //)
+        //  The data parameter is the message we are to reply to
+        console.log(data)
+        if (!data.hasThread) {
+          setActiveThreadChannel(await data.createThread())
+        } else {
+          setActiveThreadChannel(await data.getThread())
+        }
+        setActiveThreadMessage(data)
+
         break
       case MessageActionsTypes.QUOTE:
         //  todo this is test code
@@ -1124,7 +1123,7 @@ export default function Page () {
                               ?.name
                           : unreadMessage.channel.name
                       }
-                      present={-1}
+                      present={PresenceIcon.NOT_SHOWN}
                       count={'' + unreadMessage.count}
                       markAsRead={true}
                       markAsReadAction={async e => {
@@ -1256,22 +1255,12 @@ export default function Page () {
                       : '/avatars/placeholder.png'
                   }
                   text={publicChannel.name}
-                  present={-1}
+                  present={PresenceIcon.NOT_SHOWN}
                   setActiveChannel={() => {
                     setActiveChannel(publicChannels[index])
                   }}
                 ></ChatMenuItem>
               ))}
-              {/*<ChatMenuItem
-                avatarUrl='/group/globe1.svg'
-                text='General Chat'
-                present={-1}
-              />
-              <ChatMenuItem
-                avatarUrl='/group/globe2.svg'
-                text='Work Chat'
-                present={-1}
-          />*/}
             </div>
           )}
 
@@ -1294,7 +1283,7 @@ export default function Page () {
                       : '/avatars/placeholder.png'
                   }
                   text={privateGroup.name}
-                  present={-1}
+                  present={PresenceIcon.NOT_SHOWN}
                   avatarBubblePrecedent={
                     privateGroupsUsers[index]?.map(
                       user => user.id !== chat.currentUser.id
@@ -1343,7 +1332,9 @@ export default function Page () {
                       user => user.id !== chat.currentUser.id
                     )?.name
                   }
-                  present={1}
+                  present={directChatsUsers[index]?.find(
+                    user => user.id !== chat.currentUser.id
+                  )?.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
                   setActiveChannel={() => {
                     setActiveChannel(directChats[index])
                   }}
@@ -1414,8 +1405,8 @@ export default function Page () {
                 setShowThread={setShowThread}
               />
             )}
-            {
-              !quotedMessage && typingData && <TypingIndicator
+            {!quotedMessage && typingData && (
+              <TypingIndicator
                 typers={typingData}
                 users={
                   activeChannel?.type == 'group' && privateGroups
@@ -1433,7 +1424,7 @@ export default function Page () {
                     : []
                 }
               />
-            }
+            )}
             <div
               className={`${
                 creatingNewMessage && 'hidden'
@@ -1445,13 +1436,38 @@ export default function Page () {
                 quotedMessage={quotedMessage}
                 setQuotedMessage={setQuotedMessage}
                 creatingNewMessage={creatingNewMessage}
+                showUserMessage={showUserMessage}
               />
             </div>
           </div>
         </div>
         <MessageListThread
-          showThread={showThread}
+          showThread={showThread && !creatingNewMessage}
           setShowThread={setShowThread}
+          activeThreadChannel={activeThreadChannel}
+          activeThreadMessage={activeThreadMessage}
+          currentUser={chat.currentUser}
+          groupUsers={
+            activeChannel?.type == 'group' && privateGroups
+              ? privateGroupsUsers[
+                  privateGroups.findIndex(
+                    group => group.id == activeChannel?.id
+                  )
+                ]
+              : activeChannel?.type == 'direct' && directChats
+              ? directChatsUsers[
+                  directChats.findIndex(
+                    dmChannel => dmChannel.id == activeChannel?.id
+                  )
+                ]
+              : publicChannels
+              ? publicChannelsUsers[
+                  publicChannels.findIndex(
+                    channel => channel.id == activeChannel?.id
+                  )
+                ]
+              : []
+          }
         />
         <MessageListPinned
           showPinnedMessages={showPinnedMessages}

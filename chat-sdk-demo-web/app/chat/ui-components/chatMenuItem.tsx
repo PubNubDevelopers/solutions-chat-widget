@@ -7,7 +7,7 @@ import ToolTip from './toolTip'
 export default function ChatMenuItem ({
   avatarUrl,
   text,
-  present = -1,
+  present,
   avatarBubblePrecedent = '',
   count = '',
   markAsRead = false,

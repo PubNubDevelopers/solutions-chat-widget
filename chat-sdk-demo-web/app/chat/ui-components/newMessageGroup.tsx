@@ -6,7 +6,7 @@ import Message from './message'
 import Image from 'next/image'
 import NewMessageUserRow from './newMessageUserRow'
 import NewMessageUserPill from './newMessageUserPill'
-import { ChatEventTypes, ToastType } from '@/app/types'
+import { ChatEventTypes, ToastType, PresenceIcon } from '@/app/types'
 
 export default function NewMessageGroup ({
   chat,
@@ -150,7 +150,7 @@ export default function NewMessageGroup ({
               {newDraftGroupUsers?.map((user, index) => (
                 <Avatar
                   key={index}
-                  present={-1}
+                  present={PresenceIcon.NOT_SHOWN}
                   avatarUrl={
                     user.profileUrl
                       ? user.profileUrl
@@ -196,7 +196,7 @@ export default function NewMessageGroup ({
                   <NewMessageUserRow
                     key={index}
                     user={user}
-                    present={1}
+                    present={user.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
                     clickAction={user => onSearchResultClicked(user)}
                   />
                 ))}

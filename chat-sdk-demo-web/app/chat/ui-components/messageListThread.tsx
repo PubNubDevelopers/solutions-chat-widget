@@ -2,8 +2,71 @@ import Message from './message'
 import { roboto } from '@/app/fonts'
 import Image from 'next/image'
 import MessageInput from './messageInput'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Channel,
+  User,
+  Message as pnMessage,
+  Membership,
+  MixedTextTypedElement,
+  TimetokenUtils
+} from '@pubnub/chat'
 
-export default function MessageListThread ({ showThread, setShowThread }) {
+export default function MessageListThread ({
+  showThread,
+  setShowThread,
+  activeThreadChannel,
+  activeThreadMessage,
+  currentUser,
+  groupUsers
+}) {
+  const [messages, setMessages] = useState<pnMessage[]>([])
+  const messageListRef = useRef<HTMLDivElement>(null)
+
+  function uniqueById (items) {
+    const set = new Set()
+    return items.filter(item => {
+      const isDuplicate = set.has(item.timetoken)
+      set.add(item.timetoken)
+      return !isDuplicate
+    })
+  }
+
+  useEffect(() => {
+    //  UseEffect to handle initial configuration of the thread, including loading historical messages
+    if (!activeThreadMessage) return
+    if (!activeThreadChannel) return
+    async function initThreadMessages () {
+      setMessages([])
+      activeThreadChannel
+        .getHistory({ count: 20 })
+        .then(historicalMessagesObj => {
+          setMessages(messages => {
+            return uniqueById([...historicalMessagesObj.messages])
+          })
+        })
+    }
+    initThreadMessages()
+  }, [activeThreadChannel, activeThreadMessage])
+
+  useEffect(() => {
+    //  UseEffect to receive new messages sent to the thread
+    if (!activeThreadMessage) return
+    if (!activeThreadChannel) return
+    return activeThreadChannel.connect(message => {
+      setMessages(messages => {
+        return uniqueById([...messages, message])
+      })
+    })
+  }, [activeThreadChannel, activeThreadMessage])
+
+  useEffect(() => {
+    if (!messageListRef.current) return
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current?.scrollHeight
+    }
+  }, [messages])
+
   return (
     <div className='relative'>
       <div
@@ -36,56 +99,82 @@ export default function MessageListThread ({ showThread, setShowThread }) {
         </div>
         <div
           className={`flex flex-col border border-navy-200 h-screen overflow-y-auto pb-6 mb-[178px]`}
+          ref={messageListRef}
         >
+          {/* ORIGINAL MESSAGE */}
+          {activeThreadMessage && (
+            <Message
+              key={activeThreadMessage.timetoken}
+              received={currentUser.id !== activeThreadMessage.userId}
+              inThread={true}
+              reactions={null}
+              avatarUrl={
+                activeThreadMessage.userId === currentUser.id
+                  ? currentUser.profileUrl
+                  : groupUsers?.find(
+                      user => user.id === activeThreadMessage.userId
+                    )?.profileUrl
+              }
+              isRead={false}
+              readReceipts={null}
+              showReadIndicator={false}
+              sender={
+                activeThreadMessage.userId === activeThreadMessage.id
+                  ? currentUser.name
+                  : groupUsers?.find(
+                      user => user.id === activeThreadMessage.userId
+                    )?.name
+              }
+              timetoken={activeThreadMessage.timetoken}
+              pinned={false} //  Chat SDK supports pinning messages in threads, but this demo does not
+              messageActionHandler={() => {}}
+              messageText={activeThreadMessage.content.text}
+              message={activeThreadMessage}
+              currentUserId={currentUser.id}
+            />
+          )}
           {/* THREAD BUBBLES */}
-          <Message
-            received={true}
-            inThread={true}
-            message={null}
-            readReceipts={null}
-            currentUserId={'123'}
-            reactions={null}
-            avatarUrl='/avatars/avatar01.png'
-            isRead={true}
-            sender='Sarah Johannsen'
-            timetoken={"17179544908908795"}
-            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-          />
+          {messages.map((message, index) => {
+            //seenUserId(message.userId)  //  dcc
+            return (
+              /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
 
-          <Message
-            received={false}
-            inThread={true}
-            message={null}
-            readReceipts={null}
-            currentUserId={'123'}
-            reactions={null}
-            avatarUrl='/avatars/avatar02.png'
-            isRead={false}
-            sender='Philip Soto'
-            timetoken={"17179544908908795"}
-            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
-          />
-
-          <Message
-            received={false}
-            inThread={true}
-            message={null}
-            readReceipts={null}
-            currentUserId={'123'}
-            reactions={null}
-            avatarUrl='/avatars/avatar03.png'
-            isRead={true}
-            sender='Philip Soto'
-            timetoken={"17179544908908795"}
-            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo '
-          />
+              <Message
+                key={message.timetoken}
+                received={currentUser.id !== message.userId}
+                inThread={true}
+                reactions={null}
+                avatarUrl={
+                  message.userId === currentUser.id
+                    ? currentUser.profileUrl
+                    : groupUsers?.find(user => user.id === message.userId)
+                        ?.profileUrl
+                }
+                isRead={false}
+                readReceipts={null}
+                showReadIndicator={false}
+                sender={
+                  message.userId === currentUser.id
+                    ? currentUser.name
+                    : groupUsers?.find(user => user.id === message.userId)?.name
+                }
+                timetoken={message.timetoken}
+                pinned={false}
+                messageActionHandler={() => {}}
+                messageText={message.content.text}
+                message={message}
+                currentUserId={currentUser.id}
+              />
+            )
+          })}
         </div>
 
         <div className='absolute bottom-0 left-0 right-0'>
           <MessageInput
-            activeChannel={'CHANGE ME'}
+            activeChannel={activeThreadChannel}
             replyInThread={true}
             quotedMessage={null}
+            creatingNewMessage={false}
           />
         </div>
       </div>

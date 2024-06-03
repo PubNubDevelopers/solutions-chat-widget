@@ -1,4 +1,7 @@
 import Avatar from './avatar'
+import {
+  PresenceIcon
+} from '@/app/types'
 
 export default function TypingIndicator ({
   typers,
@@ -13,7 +16,7 @@ export default function TypingIndicator ({
             {typers.map((typer, index) => (
               <Avatar
                 key={index}
-                present={-1}
+                present={users[users.findIndex(user => user.id == typer)]?.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
                 border={true}
                 avatarUrl={users[users.findIndex(user => user.id == typer)]?.profileUrl}
               />

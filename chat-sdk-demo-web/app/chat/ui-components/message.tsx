@@ -6,7 +6,7 @@ import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
-import { MessageActionsTypes } from '@/app/types'
+import { MessageActionsTypes, PresenceIcon } from '@/app/types'
 import ToolTip from './toolTip'
 import { Channel, TimetokenUtils } from '@pubnub/chat'
 
@@ -29,7 +29,8 @@ export default function Message ({
     console.log('ToDo: Unpin Message')
   },
   message,
-  currentUserId
+  currentUserId,
+  isOnline = -1
   //setMessages
   //activeChannel
   //reactions = ['']
@@ -140,13 +141,13 @@ export default function Message ({
       <div
         className={`flex flex-row ${inThread ? '' : 'w-5/6'} my-4 ${
           inThread ? 'mx-6' : 'mx-8'
-        } ${!received && 'self-end'}`}
+        } ${!received && !inThread && 'self-end'}`}
       >
         {received && !inThread && !inPinned && (
           <div className='min-w-11'>
             {!inThread && (
               <Avatar
-                present={-1}
+                present={isOnline}
                 avatarUrl={avatarUrl ? avatarUrl : '/avatars/placeholder.png'}
               />
             )}
@@ -272,7 +273,7 @@ export default function Message ({
                 replyInThreadClick={() =>
                   messageActionHandler(
                     MessageActionsTypes.REPLY_IN_THREAD,
-                    'messageId'
+                    message
                   )
                 }
                 quoteMessageClick={() =>
@@ -304,7 +305,7 @@ export default function Message ({
               replyInThreadClick={() =>
                 messageActionHandler(
                   MessageActionsTypes.REPLY_IN_THREAD,
-                  'messageId'
+                  message
                 )
               }
               quoteMessageClick={() =>

@@ -77,23 +77,7 @@ export default function ChatSettingsScreen ({
                               />
                             ))}
 
-                {/*<Avatar
-                  avatarUrl={'/avatars/avatar01.png'}
-                  width={88}
-                  height={88}
-                />
 
-                <Avatar
-                  avatarUrl={'/avatars/avatar02.png'}
-                  width={88}
-                  height={88}
-                />
-
-                <Avatar
-                  avatarUrl={'/avatars/avatar03.png'}
-                  width={88}
-                  height={88}
-                          />*/}
               </div>
           </div>
 

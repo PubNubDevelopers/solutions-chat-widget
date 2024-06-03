@@ -16,7 +16,7 @@ export default function MessageInput ({
   setShowEmojiPicker = any => {},
   setEmojiPickerTargetsInput = any => {},
   selectedEmoji = '',
-  setSelectedEmoji = (a) => {}
+  setSelectedEmoji = a => {}
 }) {
   const [text, setText] = useState('') //  todo Will be replaced by message draft
   const [newMessageDraft, setNewMessageDraft] = useState<MessageDraft>()
@@ -33,12 +33,15 @@ export default function MessageInput ({
     } else {
       //  ToDo support message draft in non-threaded channels
       //await activeChannel.sendText(text, { storeInHistory: true })
-      if (quotedMessage)
-        {
-          newMessageDraft.addQuote(quotedMessage)
-        }
+      if (quotedMessage) {
+        newMessageDraft.addQuote(quotedMessage)
+      }
       await newMessageDraft.send({ storeInHistory: true })
-      setNewMessageDraft(activeChannel?.createMessageDraft({isTypingIndicatorTriggered: (activeChannel.type !== 'public')}))
+      setNewMessageDraft(
+        activeChannel?.createMessageDraft({
+          isTypingIndicatorTriggered: activeChannel.type !== 'public'
+        })
+      )
       setQuotedMessage(false)
       setText('')
     }
@@ -69,8 +72,12 @@ export default function MessageInput ({
 
   useEffect(() => {
     if (!activeChannel) return
-    console.log("MESSAGE LIST INIT")
-    setNewMessageDraft(activeChannel.createMessageDraft({isTypingIndicatorTriggered: (activeChannel.type !== 'public')}))
+    console.log('MESSAGE LIST INIT')
+    setNewMessageDraft(
+      activeChannel.createMessageDraft({
+        isTypingIndicatorTriggered: activeChannel.type !== 'public'
+      })
+    )
   }, [activeChannel])
 
   useEffect(() => {

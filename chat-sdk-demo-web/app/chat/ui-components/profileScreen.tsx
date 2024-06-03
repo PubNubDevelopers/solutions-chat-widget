@@ -91,13 +91,13 @@ export default function ProfileScreen ({
             </div>
           </div>
           <div className='h-6 relative inline-block' onClick={() => showUserMessage(
-            "Demo Limitation",
+            "Demo Limitation:",
             'Although not supported by this demo, you use the Chat SDK to alert your users with built-in or custom events',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events',
             ToastType.INFO
           )}>
             {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-            <input type='checkbox' defaultChecked={false} disabled={true} onChange={() => {}} />
+            <input type='checkbox' defaultValue={false} onChange={(e) => {console.log(e.target.checked = false)}} />
           </div>
         </div>
         <div className='border border-navy600'></div>
@@ -110,7 +110,7 @@ export default function ProfileScreen ({
             </div>
           </div>
           <div className='h-6 relative inline-block' onClick={() => showUserMessage(
-            "Demo Limitation",
+            "Demo Limitation:",
             'Though supported by the Chat SDK, this demo does not support disabling read receipts',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/read-receipts',
             ToastType.INFO

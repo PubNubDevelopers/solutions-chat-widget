@@ -62,7 +62,7 @@ export default function Header ({
         <div
           className='cursor-pointer hover:bg-sky-900 hover:rounded-md'
           onClick={e =>
-            showUserMessage("Please Note:", 
+            showUserMessage("Demo Limitation:", 
               'Although not supported by this demo, you use the Chat SDK to alert your users with built-in or custom events',
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.INFO
             )

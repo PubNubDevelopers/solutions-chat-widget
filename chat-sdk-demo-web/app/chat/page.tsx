@@ -52,13 +52,11 @@ export default function Page () {
   const router = useRouter()
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
+  const [searchChannels, setSearchChannels] = useState('')
   const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState('')
-  const [
-    emojiPickerTargetsInput,
-    setEmojiPickerTargetsInput
-  ] = useState(false)
+  const [emojiPickerTargetsInput, setEmojiPickerTargetsInput] = useState(false)
   const [selectedEmoji, setSelectedEmoji] = useState('')
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
@@ -506,7 +504,8 @@ export default function Page () {
     //  Set the pinned message for the active channel, this returns an updated channel ID so retrieve based on the server-channel
     chat.getChannel(activeChannel.id).then(localActiveChannel => {
       console.log('INIT: ' + localActiveChannel)
-      localActiveChannel?.getPinnedMessage()
+      localActiveChannel
+        ?.getPinnedMessage()
         .then(localActiveChannelPinnedMessage => {
           console.log('INIT2: ' + localActiveChannelPinnedMessage?.content.text)
           setActiveChannelPinnedMessage(localActiveChannelPinnedMessage)
@@ -635,10 +634,36 @@ export default function Page () {
       }
     })
 
+    const removeModerationListener = chat.listenForEvents({
+      channel: chat.currentUser.id,
+      type: 'moderation',
+      callback: async evt => {
+        let moderationMessage = ''
+        let notificationSeverity: ToastType = ToastType.INFO
+        if (evt.payload.restriction == 'muted') {
+          moderationMessage = `You have been MUTED by the administrator`
+          notificationSeverity = ToastType.ERROR
+        } else if (evt.payload.restriction == 'banned') {
+          moderationMessage = `You have been BANNED by the administrator for the following reason: ${evt.payload.reason}`
+          notificationSeverity = ToastType.ERROR
+        } else if (evt.payload.restriction == 'lifted') {
+          moderationMessage = `Your previous restrictions have been LIFTED by the administrator`
+          notificationSeverity = ToastType.CHECK
+        }
+        showUserMessage(
+          'Moderation Event:',
+          moderationMessage,
+          'https://www.pubnub.com/how-to/monitor-and-moderate-conversations-with-bizops-workspace/',
+          notificationSeverity
+        )
+      }
+    })
+
     //  todo other listeners go here
 
     return () => {
       removeCustomListener()
+      removeModerationListener()
       //  todo remove other listeners
     }
   }, [chat])
@@ -695,6 +720,7 @@ export default function Page () {
   }, [chat, activeChannel /*, getActiveChannelMembers*/])
 
   function handleChatSearch (term: string) {
+    setSearchChannels(term)
     console.log(term)
   }
 
@@ -753,46 +779,44 @@ export default function Page () {
         console.log(data)
         setQuotedMessage(data)
         chat?.getUser(data.userId).then(user => {
-          if (user && user.name)
-            {
-              console.log('found user: ' + user.name)
-              setQuotedMessageSender(user.name)
-            }
+          if (user && user.name) {
+            console.log('found user: ' + user.name)
+            setQuotedMessageSender(user.name)
+          }
         })
         break
       case MessageActionsTypes.PIN:
-        if (activeChannel)
-          {
-            let localActiveChannel = await chat?.getChannel(activeChannel?.id)
-            console.log('local active channel: ' + localActiveChannel?.id)
-            const localActiveChannelPinnedMessage =
-              await localActiveChannel?.getPinnedMessage()
-            console.log(
-              'currently pinned message: ' + localActiveChannelPinnedMessage?.text
+        if (activeChannel) {
+          let localActiveChannel = await chat?.getChannel(activeChannel?.id)
+          console.log('local active channel: ' + localActiveChannel?.id)
+          const localActiveChannelPinnedMessage =
+            await localActiveChannel?.getPinnedMessage()
+          console.log(
+            'currently pinned message: ' + localActiveChannelPinnedMessage?.text
+          )
+          //  Check whether we need to unpin an existing message first
+          if (localActiveChannelPinnedMessage) {
+            console.log('Unpinning message')
+            localActiveChannel = await localActiveChannel?.unpinMessage()
+            //setActiveChannelPinnedMessage(null)
+          } else {
+            console.log('there was no message, so did not unpin anything')
+          }
+          //  Channel now has no pinned message.  Pin the requested message if it is different from
+          //  the one we just unpinned
+          if (localActiveChannelPinnedMessage?.timetoken != data.timetoken) {
+            console.log('pinning message: ' + data.text)
+            localActiveChannel = await localActiveChannel?.pinMessage(data)
+            //setActiveChannelPinnedMessage(data)
+            showUserMessage(
+              'Message Pinned:',
+              'The Message has been pinned to the top of ' + activeChannel.name,
+              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
+              ToastType.CHECK
             )
-            //  Check whether we need to unpin an existing message first
-            if (localActiveChannelPinnedMessage) {
-              console.log('Unpinning message')
-              localActiveChannel = await localActiveChannel?.unpinMessage()
-              //setActiveChannelPinnedMessage(null)
-            } else {
-              console.log('there was no message, so did not unpin anything')
-            }
-            //  Channel now has no pinned message.  Pin the requested message if it is different from
-            //  the one we just unpinned
-            if (localActiveChannelPinnedMessage?.timetoken != data.timetoken) {
-              console.log('pinning message: ' + data.text)
-              localActiveChannel = await localActiveChannel?.pinMessage(data)
-              //setActiveChannelPinnedMessage(data)
-              showUserMessage(
-                'Message Pinned:',
-                'The Message has been pinned to the top of ' + activeChannel.name,
-                'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
-                ToastType.CHECK
-              )
-            }
-    
-            /*
+          }
+
+          /*
             
             console.log('CURRENTLY PINNED MESSAGE 100: ' + pinnedMessage100?.text)
             
@@ -824,11 +848,11 @@ export default function Page () {
               //setPinnedMessageTimetoken('0')
             }
               */
-            console.log('FINISHED PINNING LOGIC')
-            //await activeChannel.pinMessage(data)
-            //setShowThread(false)
-            //setShowPinnedMessages(true)
-          }
+          console.log('FINISHED PINNING LOGIC')
+          //await activeChannel.pinMessage(data)
+          //setShowThread(false)
+          //setShowPinnedMessages(true)
+        }
 
         break
       case MessageActionsTypes.REACT:
@@ -1117,6 +1141,7 @@ export default function Page () {
           <div id='chats-search' className='relative px-4 mt-5'>
             <input
               id='chats-search-input'
+              value={searchChannels}
               className='flex w-full rounded-md bg-navy50 border  border-neutral-400 py-[9px] pl-9 px-[13px] text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500'
               placeholder='Search'
               onChange={e => {
@@ -1159,7 +1184,17 @@ export default function Page () {
             <div>
               {unreadMessages?.map(
                 (unreadMessage, index) =>
-                  unreadMessage.channel.id !== activeChannel?.id && (
+                  unreadMessage.channel.id !== activeChannel?.id &&
+                  (unreadMessage.channel.type === 'direct' && directChats
+                    ? directChatsUsers[
+                        directChats.findIndex(
+                          dmChannel => dmChannel.id == unreadMessage.channel.id
+                        )
+                      ]?.find(user => user.id !== chat.currentUser.id)?.name
+                    : unreadMessage.channel.name
+                  )
+                    .toLowerCase()
+                    .indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
                       key={index}
                       avatarUrl={
@@ -1344,22 +1379,27 @@ export default function Page () {
           />
           {publicExpanded && (
             <div>
-              {publicChannels?.map((publicChannel, index) => (
-                <ChatMenuItem
-                  key={index}
-                  avatarUrl={
-                    publicChannel.custom.profileUrl
-                      ? publicChannel.custom.profileUrl
-                      : '/avatars/placeholder.png'
-                  }
-                  text={publicChannel.name}
-                  present={PresenceIcon.NOT_SHOWN}
-                  setActiveChannel={() => {
-                    setActiveChannelPinnedMessage(null)
-                    setActiveChannel(publicChannels[index])
-                  }}
-                ></ChatMenuItem>
-              ))}
+              {publicChannels?.map(
+                (publicChannel, index) =>
+                  publicChannel.name
+                    .toLowerCase()
+                    .indexOf(searchChannels.toLowerCase()) > -1 && (
+                    <ChatMenuItem
+                      key={index}
+                      avatarUrl={
+                        publicChannel.custom.profileUrl
+                          ? publicChannel.custom.profileUrl
+                          : '/avatars/placeholder.png'
+                      }
+                      text={publicChannel.name}
+                      present={PresenceIcon.NOT_SHOWN}
+                      setActiveChannel={() => {
+                        setActiveChannelPinnedMessage(null)
+                        setActiveChannel(publicChannels[index])
+                      }}
+                    ></ChatMenuItem>
+                  )
+              )}
             </div>
           )}
 
@@ -1373,33 +1413,38 @@ export default function Page () {
           />
           {groupsExpanded && (
             <div>
-              {privateGroups?.map((privateGroup, index) => (
-                <ChatMenuItem
-                  key={index}
-                  avatarUrl={
-                    chat?.currentUser.profileUrl
-                      ? chat?.currentUser.profileUrl
-                      : '/avatars/placeholder.png'
-                  }
-                  text={privateGroup.name}
-                  present={PresenceIcon.NOT_SHOWN}
-                  avatarBubblePrecedent={
-                    privateGroupsUsers[index]?.map(
-                      user => user.id !== chat.currentUser.id
-                    )
-                      ? `+${
-                          privateGroupsUsers[index]?.map(
-                            user => user.id !== chat.currentUser.id
-                          ).length - 1
-                        }`
-                      : ''
-                  }
-                  setActiveChannel={() => {
-                    setActiveChannelPinnedMessage(null)
-                    setActiveChannel(privateGroups[index])
-                  }}
-                />
-              ))}
+              {privateGroups?.map(
+                (privateGroup, index) =>
+                  privateGroup.name
+                    .toLowerCase()
+                    .indexOf(searchChannels.toLowerCase()) > -1 && (
+                    <ChatMenuItem
+                      key={index}
+                      avatarUrl={
+                        chat?.currentUser.profileUrl
+                          ? chat?.currentUser.profileUrl
+                          : '/avatars/placeholder.png'
+                      }
+                      text={privateGroup.name}
+                      present={PresenceIcon.NOT_SHOWN}
+                      avatarBubblePrecedent={
+                        privateGroupsUsers[index]?.map(
+                          user => user.id !== chat.currentUser.id
+                        )
+                          ? `+${
+                              privateGroupsUsers[index]?.map(
+                                user => user.id !== chat.currentUser.id
+                              ).length - 1
+                            }`
+                          : ''
+                      }
+                      setActiveChannel={() => {
+                        setActiveChannelPinnedMessage(null)
+                        setActiveChannel(privateGroups[index])
+                      }}
+                    />
+                  )
+              )}
             </div>
           )}
 
@@ -1415,36 +1460,42 @@ export default function Page () {
           />
           {directMessagesExpanded && (
             <div>
-              {directChats?.map((directChat, index) => (
-                <ChatMenuItem
-                  key={index}
-                  avatarUrl={
-                    directChatsUsers[index]?.find(
-                      user => user.id !== chat.currentUser.id
-                    )?.profileUrl
-                      ? directChatsUsers[index]?.find(
+              {directChats?.map(
+                (directChat, index) =>
+                  directChatsUsers[index]
+                    ?.find(user => user.id !== chat.currentUser.id)
+                    ?.name.toLowerCase()
+                    .indexOf(searchChannels.toLowerCase()) > -1 && (
+                    <ChatMenuItem
+                      key={index}
+                      avatarUrl={
+                        directChatsUsers[index]?.find(
                           user => user.id !== chat.currentUser.id
                         )?.profileUrl
-                      : '/avatars/placeholder.png'
-                  }
-                  text={
-                    directChatsUsers[index]?.find(
-                      user => user.id !== chat.currentUser.id
-                    )?.name
-                  }
-                  present={
-                    directChatsUsers[index]?.find(
-                      user => user.id !== chat.currentUser.id
-                    )?.active
-                      ? PresenceIcon.ONLINE
-                      : PresenceIcon.OFFLINE
-                  }
-                  setActiveChannel={() => {
-                    setActiveChannelPinnedMessage(null)
-                    setActiveChannel(directChats[index])
-                  }}
-                />
-              ))}
+                          ? directChatsUsers[index]?.find(
+                              user => user.id !== chat.currentUser.id
+                            )?.profileUrl
+                          : '/avatars/placeholder.png'
+                      }
+                      text={
+                        directChatsUsers[index]?.find(
+                          user => user.id !== chat.currentUser.id
+                        )?.name
+                      }
+                      present={
+                        directChatsUsers[index]?.find(
+                          user => user.id !== chat.currentUser.id
+                        )?.active
+                          ? PresenceIcon.ONLINE
+                          : PresenceIcon.OFFLINE
+                      }
+                      setActiveChannel={() => {
+                        setActiveChannelPinnedMessage(null)
+                        setActiveChannel(directChats[index])
+                      }}
+                    />
+                  )
+              )}
             </div>
           )}
         </div>
@@ -1552,12 +1603,12 @@ export default function Page () {
                 setEmojiPickerTargetsInput={() =>
                   setEmojiPickerTargetsInput(true)
                 }
-                setShowEmojiPicker={() =>
-                  {console.log('showing picker')
+                setShowEmojiPicker={() => {
+                  console.log('showing picker')
                   setTimeout(function () {
                     setShowEmojiPicker(!showEmojiPicker)
-                  }, 50)}
-                }
+                  }, 50)
+                }}
                 selectedEmoji={selectedEmoji}
                 setSelectedEmoji={setSelectedEmoji}
               />

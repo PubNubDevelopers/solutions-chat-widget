@@ -141,11 +141,11 @@ export default function ChatSettingsScreen ({
                 Get notified about new messages and mentions from chats
               </div>
             </div>
-            <div className='h-6 relative inline-block' onClick={() => {showUserMessage('Work in Progress:',
+            <div className='h-6 relative inline-block' onClick={() => {showUserMessage('Demo Limitation:',
             'Though supported by the Chat SDK, this demo does not yet support custom events or notifications',
             'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.INFO)}}>
               {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-              <input type='checkbox' defaultChecked={false} disabled={true} />
+              <input type='checkbox' defaultValue={false} onChange={(e) => {console.log(e.target.checked = false)}} />
             </div>
           </div>
           <div className='border border-navy600'></div>

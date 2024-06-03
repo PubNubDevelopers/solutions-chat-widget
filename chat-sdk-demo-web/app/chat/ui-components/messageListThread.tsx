@@ -107,7 +107,6 @@ export default function MessageListThread ({
               key={activeThreadMessage.timetoken}
               received={currentUser.id !== activeThreadMessage.userId}
               inThread={true}
-              reactions={null}
               avatarUrl={
                 activeThreadMessage.userId === currentUser.id
                   ? currentUser.profileUrl
@@ -115,7 +114,6 @@ export default function MessageListThread ({
                       user => user.id === activeThreadMessage.userId
                     )?.profileUrl
               }
-              isRead={false}
               readReceipts={null}
               showReadIndicator={false}
               sender={
@@ -125,10 +123,8 @@ export default function MessageListThread ({
                       user => user.id === activeThreadMessage.userId
                     )?.name
               }
-              timetoken={activeThreadMessage.timetoken}
               pinned={false} //  Chat SDK supports pinning messages in threads, but this demo does not
               messageActionHandler={() => {}}
-              messageText={activeThreadMessage.content.text}
               message={activeThreadMessage}
               currentUserId={currentUser.id}
             />
@@ -143,14 +139,12 @@ export default function MessageListThread ({
                 key={message.timetoken}
                 received={currentUser.id !== message.userId}
                 inThread={true}
-                reactions={null}
                 avatarUrl={
                   message.userId === currentUser.id
                     ? currentUser.profileUrl
                     : groupUsers?.find(user => user.id === message.userId)
                         ?.profileUrl
                 }
-                isRead={false}
                 readReceipts={null}
                 showReadIndicator={false}
                 sender={
@@ -158,10 +152,8 @@ export default function MessageListThread ({
                     ? currentUser.name
                     : groupUsers?.find(user => user.id === message.userId)?.name
                 }
-                timetoken={message.timetoken}
                 pinned={false}
                 messageActionHandler={() => {}}
-                messageText={message.content.text}
                 message={message}
                 currentUserId={currentUser.id}
               />
@@ -174,6 +166,7 @@ export default function MessageListThread ({
             activeChannel={activeThreadChannel}
             replyInThread={true}
             quotedMessage={null}
+            quotedMessageSender={''}
             creatingNewMessage={false}
           />
         </div>

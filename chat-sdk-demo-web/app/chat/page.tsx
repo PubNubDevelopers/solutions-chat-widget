@@ -55,6 +55,11 @@ export default function Page () {
   const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState('')
+  const [
+    emojiPickerTargetsInput,
+    setEmojiPickerTargetsInput
+  ] = useState(false)
+  const [selectedEmoji, setSelectedEmoji] = useState('')
 
   const [unreadExpanded, setUnreadExpanded] = useState(true)
   const [publicExpanded, setPublicExpanded] = useState(true)
@@ -113,15 +118,21 @@ export default function Page () {
 
   //  State of the currently active Channel
   const [activeChannel, setActiveChannel] = useState<Channel | null>(null)
-  const [activeChannelPinnedMessage, setActiveChannelPinnedMessage] = useState<pnMessage | null>(null)
+  const [activeChannelPinnedMessage, setActiveChannelPinnedMessage] =
+    useState<pnMessage | null>(null)
   const [activeThreadChannel, setActiveThreadChannel] =
     useState<ThreadChannel | null>(null)
   const [activeThreadMessage, setActiveThreadMessage] =
     useState<pnMessage | null>(null)
 
   async function emojiSelected (data) {
-    const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
-    message?.toggleReaction(data.native)
+    if (emojiPickerTargetsInput) {
+      setSelectedEmoji(data.native)
+    } else {
+      //  Selected emoji is intended for a message reaction
+      const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
+      message?.toggleReaction(data.native)
+    }
     setShowEmojiPicker(false)
   }
 
@@ -493,12 +504,13 @@ export default function Page () {
     if (!activeChannel) return
 
     //  Set the pinned message for the active channel, this returns an updated channel ID so retrieve based on the server-channel
-    chat.getChannel(activeChannel.id).then((localActiveChannel) => {
+    chat.getChannel(activeChannel.id).then(localActiveChannel => {
       console.log('INIT: ' + localActiveChannel)
-      localActiveChannel.getPinnedMessage().then((localActiveChannelPinnedMessage) => {
-        console.log('INIT2: ' + localActiveChannelPinnedMessage?.content.text)
-        setActiveChannelPinnedMessage(localActiveChannelPinnedMessage)
-      })
+      localActiveChannel?.getPinnedMessage()
+        .then(localActiveChannelPinnedMessage => {
+          console.log('INIT2: ' + localActiveChannelPinnedMessage?.content.text)
+          setActiveChannelPinnedMessage(localActiveChannelPinnedMessage)
+        })
     })
 
     //  Only register typing indicators for non-public channels
@@ -740,77 +752,84 @@ export default function Page () {
         //  todo end test code
         console.log(data)
         setQuotedMessage(data)
-        chat.getUser(data.userId).then(user => {
-          console.log('found user: ' + user.name)
-          setQuotedMessageSender(user.name)
+        chat?.getUser(data.userId).then(user => {
+          if (user && user.name)
+            {
+              console.log('found user: ' + user.name)
+              setQuotedMessageSender(user.name)
+            }
         })
         break
       case MessageActionsTypes.PIN:
-        let localActiveChannel = await chat.getChannel(activeChannel.id)
-        console.log('local active channel: ' + localActiveChannel.id)
-        const localActiveChannelPinnedMessage = await localActiveChannel.getPinnedMessage()
-        console.log('currently pinned message: ' + localActiveChannelPinnedMessage?.text)
-        //  Check whether we need to unpin an existing message first
-        if (localActiveChannelPinnedMessage)
+        if (activeChannel)
           {
-            console.log('Unpinning message')
-            localActiveChannel = await localActiveChannel.unpinMessage()
-            //setActiveChannelPinnedMessage(null)
-          }
-        else
-        {
-          console.log('there was no message, so did not unpin anything')
-        }
-        //  Channel now has no pinned message.  Pin the requested message if it is different from
-        //  the one we just unpinned
-        if (localActiveChannelPinnedMessage?.timetoken != data.timetoken)
-          {
-            console.log('pinning message: ' + data.text)
-            localActiveChannel = await localActiveChannel.pinMessage(data)
-            //setActiveChannelPinnedMessage(data)
-            showUserMessage(
-              'Message Pinned:',
-              'The Message has been pinned to the top of ' + activeChannel.name,
-              'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
-              ToastType.CHECK)
-          }
+            let localActiveChannel = await chat?.getChannel(activeChannel?.id)
+            console.log('local active channel: ' + localActiveChannel?.id)
+            const localActiveChannelPinnedMessage =
+              await localActiveChannel?.getPinnedMessage()
+            console.log(
+              'currently pinned message: ' + localActiveChannelPinnedMessage?.text
+            )
+            //  Check whether we need to unpin an existing message first
+            if (localActiveChannelPinnedMessage) {
+              console.log('Unpinning message')
+              localActiveChannel = await localActiveChannel?.unpinMessage()
+              //setActiveChannelPinnedMessage(null)
+            } else {
+              console.log('there was no message, so did not unpin anything')
+            }
+            //  Channel now has no pinned message.  Pin the requested message if it is different from
+            //  the one we just unpinned
+            if (localActiveChannelPinnedMessage?.timetoken != data.timetoken) {
+              console.log('pinning message: ' + data.text)
+              localActiveChannel = await localActiveChannel?.pinMessage(data)
+              //setActiveChannelPinnedMessage(data)
+              showUserMessage(
+                'Message Pinned:',
+                'The Message has been pinned to the top of ' + activeChannel.name,
+                'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
+                ToastType.CHECK
+              )
+            }
+    
+            /*
+            
+            console.log('CURRENTLY PINNED MESSAGE 100: ' + pinnedMessage100?.text)
+            
           
-/*
-        
-        console.log('CURRENTLY PINNED MESSAGE 100: ' + pinnedMessage100?.text)
-        
-      
-        const currentPinnedMessage = await activeChannel.getPinnedMessage()
-        console.log('CURRENTLY PINNED MESSAGE: ' + currentPinnedMessage?.text)
-        if (currentPinnedMessage) {
-          console.log('UNPINNING MESSAGE')
-          activeChannel.unpinMessage().then(async channel => {
-            console.log ("MESSAGE UNPINNED FROM " + channel.id)
-            setActiveChannel(channel)
-            const currentPinnedMessage2 = await channel.getPinnedMessage()
-            console.log('CURRENTLY PINNED MESSAGE 2: ' + currentPinnedMessage2?.text)
-            })
+            const currentPinnedMessage = await activeChannel.getPinnedMessage()
+            console.log('CURRENTLY PINNED MESSAGE: ' + currentPinnedMessage?.text)
+            if (currentPinnedMessage) {
+              console.log('UNPINNING MESSAGE')
+              activeChannel.unpinMessage().then(async channel => {
+                console.log ("MESSAGE UNPINNED FROM " + channel.id)
+                setActiveChannel(channel)
+                const currentPinnedMessage2 = await channel.getPinnedMessage()
+                console.log('CURRENTLY PINNED MESSAGE 2: ' + currentPinnedMessage2?.text)
+                })
+    
+            }
+            if (currentPinnedMessage?.timetoken != data.timetoken) {
+              //   Only pin if this is a new message
+              console.log('PINNING MESSAGE')
+              const justPinnedMessage = await activeChannel.pinMessage(data)
+              const shouldBePinned = await activeChannel.getPinnedMessage()
+              //setPinnedMessageTimetoken(data.timetoken)
+              console.log(shouldBePinned)
+              console.log(justPinnedMessage)
+    
+    
+              )
+            } else {
+              //setPinnedMessageTimetoken('0')
+            }
+              */
+            console.log('FINISHED PINNING LOGIC')
+            //await activeChannel.pinMessage(data)
+            //setShowThread(false)
+            //setShowPinnedMessages(true)
+          }
 
-        }
-        if (currentPinnedMessage?.timetoken != data.timetoken) {
-          //   Only pin if this is a new message
-          console.log('PINNING MESSAGE')
-          const justPinnedMessage = await activeChannel.pinMessage(data)
-          const shouldBePinned = await activeChannel.getPinnedMessage()
-          //setPinnedMessageTimetoken(data.timetoken)
-          console.log(shouldBePinned)
-          console.log(justPinnedMessage)
-
-
-          )
-        } else {
-          //setPinnedMessageTimetoken('0')
-        }
-          */
-        console.log("FINISHED PINNING LOGIC")
-        //await activeChannel.pinMessage(data)
-        //setShowThread(false)
-        //setShowPinnedMessages(true)
         break
       case MessageActionsTypes.REACT:
         showUserMessage(
@@ -823,6 +842,7 @@ export default function Page () {
         showUserMessage('Copied', `${data.text}`, '', ToastType.CHECK)
         break
       case MessageActionsTypes.SHOW_EMOJI:
+        setEmojiPickerTargetsInput(false)
         setShowEmojiMessageTimetoken(data.messageTimetoken)
         //  Avoid interference from the logic that hides the picker when you click outside it
         setTimeout(function () {
@@ -1062,7 +1082,7 @@ export default function Page () {
       <div
         className={`${
           !showEmojiPicker && 'hidden'
-        } absolute left-0 bottom-0 z-50 bg-white`}
+        } absolute left-2 bottom-2 z-50 bg-white`}
       >
         <Picker
           data={data}
@@ -1454,6 +1474,7 @@ export default function Page () {
                 activeChannel={activeChannel}
                 currentUser={chat.currentUser}
                 //users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers .  todo can I reuse what I'm doing for private groups and dms?
+                quotedMessageSender={''}
                 groupUsers={
                   activeChannel?.type == 'group' && privateGroups
                     ? privateGroupsUsers[
@@ -1528,6 +1549,17 @@ export default function Page () {
                 setQuotedMessage={setQuotedMessage}
                 creatingNewMessage={creatingNewMessage}
                 showUserMessage={showUserMessage}
+                setEmojiPickerTargetsInput={() =>
+                  setEmojiPickerTargetsInput(true)
+                }
+                setShowEmojiPicker={() =>
+                  {console.log('showing picker')
+                  setTimeout(function () {
+                    setShowEmojiPicker(!showEmojiPicker)
+                  }, 50)}
+                }
+                selectedEmoji={selectedEmoji}
+                setSelectedEmoji={setSelectedEmoji}
               />
             </div>
           </div>

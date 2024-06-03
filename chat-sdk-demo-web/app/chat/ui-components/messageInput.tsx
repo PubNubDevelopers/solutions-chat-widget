@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { MessageDraft } from '@pubnub/chat'
 import QuotedMessage from './quotedMessage'
 import { useState, useEffect } from 'react'
-import { CustomQuotedMessage, ToastType } from '@/app/types'
+import { ToastType } from '@/app/types'
 
 export default function MessageInput ({
   activeChannel,
@@ -12,7 +12,11 @@ export default function MessageInput ({
   setQuotedMessage = any => {},
   creatingNewMessage = false,
   showUserMessage = (a, b, c, d) => {},
-  plusAction = () => {}
+  plusAction = () => {},
+  setShowEmojiPicker = any => {},
+  setEmojiPickerTargetsInput = any => {},
+  selectedEmoji = '',
+  setSelectedEmoji = (a) => {}
 }) {
   const [text, setText] = useState('') //  todo Will be replaced by message draft
   const [newMessageDraft, setNewMessageDraft] = useState<MessageDraft>()
@@ -45,7 +49,7 @@ export default function MessageInput ({
       activeChannel.startTyping()
     }
     setText(e.target.value)
-    await newMessageDraft.onChange(e.target.value)
+    await newMessageDraft?.onChange(e.target.value)
     handleMessageDraftChanged(e.target.value)
   }
 
@@ -59,12 +63,8 @@ export default function MessageInput ({
   }
 
   async function addEmoji () {
-    showUserMessage(
-      'Demo Limitation',
-      'You can send any Unicode data through the Chat SDK, the emoji window just isn`t implemented in this demo yet',
-      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/send-receive',
-      ToastType.INFO
-    )
+    setEmojiPickerTargetsInput(true)
+    setShowEmojiPicker(true)
   }
 
   useEffect(() => {
@@ -72,6 +72,14 @@ export default function MessageInput ({
     console.log("MESSAGE LIST INIT")
     setNewMessageDraft(activeChannel.createMessageDraft({isTypingIndicatorTriggered: (activeChannel.type !== 'public')}))
   }, [activeChannel])
+
+  useEffect(() => {
+    if (!selectedEmoji) return
+    if (selectedEmoji === '') return
+    setText(text + selectedEmoji)
+    newMessageDraft?.onChange(text + selectedEmoji)
+    setSelectedEmoji('')
+  }, [selectedEmoji, setSelectedEmoji, text])
 
   return (
     <div
@@ -83,6 +91,7 @@ export default function MessageInput ({
       {quotedMessage && (
         <div className='flex flex-row w-full h-[100px]'>
           <QuotedMessage
+            originalMessage={null}
             quotedMessage={quotedMessage}
             quotedMessageSender={quotedMessageSender}
             setQuotedMessage={setQuotedMessage}

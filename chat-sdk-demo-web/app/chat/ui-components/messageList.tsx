@@ -3,7 +3,7 @@ import Avatar from './avatar'
 import Message from './message'
 import UnreadIndicator from './unreadIndicator'
 import Image from 'next/image'
-import { CustomQuotedMessage, PresenceIcon } from '@/app/types'
+import { PresenceIcon } from '@/app/types'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
@@ -194,30 +194,6 @@ export default function MessageList ({
     }, 10) //  Some weird timing issue
   }, [messages])
 
-  const renderMessagePart = useCallback(
-    (messagePart: MixedTextTypedElement) => {
-      if (messagePart?.type === 'text') {
-        return messagePart.content.text
-      }
-      if (messagePart?.type === 'plainLink') {
-        return <a href={messagePart.content.link}>{messagePart.content.link}</a>
-      }
-      if (messagePart?.type === 'textLink') {
-        return <a href={messagePart.content.link}>{messagePart.content.text}</a>
-      }
-      if (messagePart?.type === 'mention') {
-        return (
-          <a href={`https://pubnub.com/${messagePart.content.id}`}>
-            {messagePart.content.name}
-          </a>
-        )
-      }
-
-      return ''
-    },
-    []
-  )
-
   if (!activeChannel)
     return (
       <div className='flex flex-col max-h-screen h-screen justify-center items-center w-full'>
@@ -314,13 +290,19 @@ export default function MessageList ({
           <div className='flex flex-row'>
             {/* Pin with number of pinned messages */}
             <div className='flex justify-center items-center rounded min-w-6 px-2 my-2 border text-xs font-normal border-navy50 bg-neutral-100'>
-              0
+              {activeChannelPinnedMessage ? "1" : "0"}
             </div>
             <div
-              className='p-3 py-3 cursor-pointer hover:bg-neutral-100 hover:rounded-md'
+              className={`p-3 py-3 ${activeChannelPinnedMessage && 'cursor-pointer hover:bg-neutral-100 hover:rounded-md'} `}
               onClick={() => {
-                setShowPinnedMessages(true)
-                setShowThread(false)
+                if (!activeChannelPinnedMessage) return;
+                //  
+                if (messageListRef && messageListRef.current)
+                  {
+                    messageListRef.current.scrollTop = 0
+                  }
+                //setShowPinnedMessages(true)
+                //setShowThread(false)
               }}
             >
               <Image
@@ -398,6 +380,9 @@ export default function MessageList ({
             />}
 
         {messages.map((message, index) => {
+          //console.log(message)
+          //const elements = message?.getMessageElements()
+          //console.log(elements)
           return (
             <Message
               key={message.timetoken}

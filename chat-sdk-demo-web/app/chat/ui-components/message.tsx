@@ -8,7 +8,7 @@ import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
 import { MessageActionsTypes, PresenceIcon } from '@/app/types'
 import ToolTip from './toolTip'
-import { Channel, TimetokenUtils } from '@pubnub/chat'
+import { Channel, TimetokenUtils, MixedTextTypedElement } from '@pubnub/chat'
 
 export default function Message ({
   received,
@@ -84,7 +84,7 @@ export default function Message ({
     console.log('click')
   }
 
-  const determineUserReadableDate = useCallback((timetoken) => {
+  const determineUserReadableDate = useCallback(timetoken => {
     const months = [
       'Jan',
       'Feb',
@@ -110,30 +110,107 @@ export default function Message ({
     //setUserReadableDate(datetime)
     return datetime
     //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
-  })
+  }, [])
 
-  //  Originally I was not writing the 'lastTimetoken' for messages I was sending myself, however 
+  //  Originally I was not writing the 'lastTimetoken' for messages I was sending myself, however
   //  that caused the Chat SDK's notion of an unread message count inconsistent, so I am removing
   //  readReceipts I set myself in this useCallback
   const determineReadStatus = useCallback((timetoken, readReceipts) => {
     if (!readReceipts) return ''
     let returnVal = false
-    for (var i = 0; i < Object.keys(readReceipts).length; i++)
-      {
-        const receipt = Object.keys(readReceipts)[i]
-        const findMe = readReceipts[receipt].indexOf(currentUserId)
-        if (findMe > -1)
-          {
-            readReceipts[receipt].splice(findMe, 1);
-          }
-        if (readReceipts[receipt].length > 0)
-          {
-            return receipt >= timetoken
-          }
+    for (var i = 0; i < Object.keys(readReceipts).length; i++) {
+      const receipt = Object.keys(readReceipts)[i]
+      const findMe = readReceipts[receipt].indexOf(currentUserId)
+      if (findMe > -1) {
+        readReceipts[receipt].splice(findMe, 1)
       }
+      if (readReceipts[receipt].length > 0) {
+        return receipt >= timetoken
+      }
+    }
     return false
   }, [])
 
+  
+  /*
+  const renderMessagePart = (messagePart: MixedTextTypedElement) => {
+    return "";
+    if (messagePart?.type === "textLink") {
+      return (
+        ""
+        //<a href={messagePart.content.link} style={{ backgroundColor: 'red' }}>
+          //{messagePart.content.text}
+        //</a>
+      );
+    }
+    return "";
+  }
+  */
+
+  const renderMessagePart = useCallback(
+    (
+      messagePart: MixedTextTypedElement,
+      index: number,
+      userId: string | number
+    ) => {
+      // TODO make it look nice
+      //  ToDo: Does this useCallback still require the UserId
+      if (messagePart?.type === 'text') {
+        return messagePart.content.text + ""
+      }
+      if (messagePart?.type === 'plainLink') {
+        return {
+          /*<Text
+            key={index}
+            variant="body"
+            onPress={() => openLink(messagePart.content.link)}
+            color="sky150"
+          >
+            {messagePart.content.link}
+        </Text>*/
+        }
+      }
+      if (messagePart?.type === 'textLink') {
+        return {
+          /*<Text
+            key={index}
+            variant="body"
+            onPress={() => openLink(messagePart.content.link)}
+            color="sky150"
+          >
+            {messagePart.content.text}
+        </Text>*/
+        }
+      }
+      if (messagePart?.type === 'mention') {
+        return {
+          /*<Text
+            key={index}
+            variant="body"
+            onPress={() => openLink(`https://pubnub.com/${messagePart.content.id}`)}
+            color="sky150"
+          >
+            @{messagePart.content.name}
+        </Text>*/
+        }
+      }
+      if (messagePart?.type === 'channelReference') {
+        return {
+          /*<Text
+            key={index}
+            variant="body"
+            onPress={() => openChannel(messagePart.content.id)}
+            color="sky150"
+          >
+            #{messagePart.content.name}
+        </Text>*/
+        }
+      }
+
+      return ""
+    },
+    []
+  )
 
   return (
     <div className='flex flex-col w-full'>
@@ -161,7 +238,11 @@ export default function Message ({
                 : 'justify-end'
             }`}
           >
-        {pinned && !received && <div className="flex justify-start grow select-none"><PinnedMessagePill /></div>}
+            {pinned && !received && (
+              <div className='flex justify-start grow select-none'>
+                <PinnedMessagePill />
+              </div>
+            )}
             {(inThread || inPinned || received) && (
               <div
                 className={`${roboto.className} text-sm font-normal flex text-neutral-600`}
@@ -233,11 +314,21 @@ export default function Message ({
                   displayedWithMesageInput={false}
                 />
               )}
-              {message.content.text}
+              {/*message.content.text*/}
+              {/*todo "hack" because I accidentally posted some messages with no content*/}
+              {message.content.text && message.getMessageElements().map((msgPart, index) => (
+                  //"blah"
+                  //<div key={index}>index</div>)
+                  renderMessagePart(msgPart, index, message.userId)
+                ))}
             </div>
             {!received && showReadIndicator && (
               <Image
-                src={`${determineReadStatus(message.timetoken, readReceipts) ? '/icons/read.svg' : '/icons/sent.svg'}`}
+                src={`${
+                  determineReadStatus(message.timetoken, readReceipts)
+                    ? '/icons/read.svg'
+                    : '/icons/sent.svg'
+                }`}
                 alt='Read'
                 className='absolute right-[10px] bottom-[14px]'
                 width={21}

@@ -659,12 +659,28 @@ export default function Page () {
       }
     })
 
-    //  todo other listeners go here
+    const removeMentionsListener = chat.listenForEvents({
+      user: chat.currentUser.id,
+      type: 'mention',
+      callback: async evt => {
+        const channelId = evt.payload.channel
+        const messageTimetoken = evt.payload.messageTimetoken
+        const channel = await chat.getChannel(channelId)
+        const message = await channel?.getMessage(messageTimetoken)
+        showUserMessage(
+          'You Were Mentioned:',
+          'You have been mentioned in the following message: ' +
+            message?.content.text,
+          'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events#events-for-mentions',
+          ToastType.INFO
+        )
+      }
+    })
 
     return () => {
       removeCustomListener()
       removeModerationListener()
-      //  todo remove other listeners
+      removeMentionsListener()
     }
   }, [chat])
 
@@ -1185,16 +1201,14 @@ export default function Page () {
               {unreadMessages?.map(
                 (unreadMessage, index) =>
                   unreadMessage.channel.id !== activeChannel?.id &&
-                  (unreadMessage.channel.type === 'direct' && directChats
+                  ((unreadMessage.channel.type === 'direct' && directChats
                     ? directChatsUsers[
                         directChats.findIndex(
                           dmChannel => dmChannel.id == unreadMessage.channel.id
                         )
                       ]?.find(user => user.id !== chat.currentUser.id)?.name
                     : unreadMessage.channel.name
-                  )
-                    .toLowerCase()
-                    .indexOf(searchChannels.toLowerCase()) > -1 && (
+                  ) ?? "").toLowerCase()?.indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
                       key={index}
                       avatarUrl={
@@ -1381,7 +1395,7 @@ export default function Page () {
             <div>
               {publicChannels?.map(
                 (publicChannel, index) =>
-                  publicChannel.name
+                  (publicChannel.name ?? '')
                     .toLowerCase()
                     .indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
@@ -1415,7 +1429,7 @@ export default function Page () {
             <div>
               {privateGroups?.map(
                 (privateGroup, index) =>
-                  privateGroup.name
+                  (privateGroup.name ?? '')
                     .toLowerCase()
                     .indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
@@ -1462,9 +1476,9 @@ export default function Page () {
             <div>
               {directChats?.map(
                 (directChat, index) =>
-                  directChatsUsers[index]
+                  (directChatsUsers[index]
                     ?.find(user => user.id !== chat.currentUser.id)
-                    ?.name.toLowerCase()
+                    ?.name ?? '').toLowerCase()
                     .indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
                       key={index}
@@ -1562,6 +1576,7 @@ export default function Page () {
                 activeChannelPinnedMessage={activeChannelPinnedMessage}
                 setActiveChannelPinnedMessage={setActiveChannelPinnedMessage}
                 setShowThread={setShowThread}
+                showUserMessage={showUserMessage}
               />
             )}
             {!quotedMessage &&

@@ -1,3 +1,5 @@
+//  NOT CURRENTLY USED
+
 import Image from 'next/image'
 import Avatar from './avatar'
 import { roboto } from '@/app/fonts'
@@ -97,7 +99,7 @@ export default function ProfileScreen ({
             ToastType.INFO
           )}>
             {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-            <input type='checkbox' defaultValue={false} onChange={(e) => {console.log(e.target.checked = false)}} />
+            <input type='checkbox' defaultChecked={false} onChange={(e) => {console.log(e.target.checked = false)}} />
           </div>
         </div>
         <div className='border border-navy600'></div>

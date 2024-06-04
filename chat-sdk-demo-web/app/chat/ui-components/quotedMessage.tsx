@@ -15,7 +15,7 @@ export default function QuotedMessage ({
       } mt-2 rounded-r-md mr-24 ${
         originalMessage && !originalMessageReceived 
           ? 'bg-neutral-50'
-          : (originalMessage && originalMessageReceived ? 'bg-[#e3f1fd]' : '')
+          : (originalMessage && originalMessageReceived ? 'bg-[#e3f1fd]' : 'bg-neutral-50')
       }`}
     >
       <div className='flex flex-col w-full p-2.5 justify-center border-l-2 border-sky-950 '>

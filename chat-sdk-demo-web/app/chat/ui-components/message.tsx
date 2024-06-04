@@ -6,7 +6,7 @@ import MessageActions from './messageActions'
 import PinnedMessagePill from './pinnedMessagePill'
 import QuotedMessage from './quotedMessage'
 import MessageReaction from './messageReaction'
-import { MessageActionsTypes, PresenceIcon } from '@/app/types'
+import { MessageActionsTypes, PresenceIcon, ToastType } from '@/app/types'
 import ToolTip from './toolTip'
 import { Channel, TimetokenUtils, MixedTextTypedElement } from '@pubnub/chat'
 
@@ -31,7 +31,8 @@ export default function Message ({
   },
   message,
   currentUserId,
-  isOnline = -1
+  isOnline = -1,
+  showUserMessage = (a, b, c, d) => {},
   //setMessages
   //activeChannel
   //reactions = ['']
@@ -74,6 +75,32 @@ export default function Message ({
 
   function copyMessageText (messageText) {
     navigator.clipboard.writeText(messageText)
+  }
+
+  function openLink(url)
+  {
+    console.log('opening: ' + url)
+    window.open(url, '_blank')
+  }
+
+  function userClick(userId, userName) {
+    console.log('clicked: ' + userId)
+    showUserMessage(
+      '@Mentioned User Clicked:',
+      `You have Clicked on user with ID ${userId} and name ${userName}`,
+      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/mentions',
+      ToastType.INFO
+    )
+  }
+
+  function channelClick(channelId, channelName) {
+    console.log('clicked: ' + channelId)
+    showUserMessage(
+      '#Referenced Channel Clicked:',
+      `You have Clicked on channel with ID ${channelId} and name ${channelName}`,
+      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/references',
+      ToastType.INFO
+    )
   }
 
   async function reactionClicked (emoji, timetoken) {
@@ -131,7 +158,6 @@ export default function Message ({
     return false
   }, [])
 
-  
   /*
   const renderMessagePart = (messagePart: MixedTextTypedElement) => {
     return "";
@@ -155,12 +181,13 @@ export default function Message ({
     ) => {
       // TODO make it look nice
       //  ToDo: Does this useCallback still require the UserId
+      //console.log(messagePart)
       if (messagePart?.type === 'text') {
-        return messagePart.content.text + ""
+        return (<span>{messagePart.content.text}</span>)
       }
       if (messagePart?.type === 'plainLink') {
-        return {
-          /*<Text
+        return (<span key={index} className="cursor-pointer underline" onClick={() => openLink(`${messagePart.content.link}`)}>{messagePart.content.link}</span>)
+        /*<Text
             key={index}
             variant="body"
             onPress={() => openLink(messagePart.content.link)}
@@ -168,11 +195,10 @@ export default function Message ({
           >
             {messagePart.content.link}
         </Text>*/
-        }
       }
       if (messagePart?.type === 'textLink') {
-        return {
-          /*<Text
+        return (<span key={index} className="cursor-pointer underline" onClick={() => openLink(`${messagePart.content.link}`)}>{messagePart.content.link}</span>)
+        /*<Text
             key={index}
             variant="body"
             onPress={() => openLink(messagePart.content.link)}
@@ -180,34 +206,32 @@ export default function Message ({
           >
             {messagePart.content.text}
         </Text>*/
-        }
       }
       if (messagePart?.type === 'mention') {
-        return {
-          /*<Text
+        return (
+          <span
             key={index}
-            variant="body"
-            onPress={() => openLink(`https://pubnub.com/${messagePart.content.id}`)}
-            color="sky150"
+            onClick={() => userClick(`${messagePart.content.id}`, `${messagePart.content.name}`)}
+            className="rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1"
           >
             @{messagePart.content.name}
-        </Text>*/
-        }
+          </span>
+        )
       }
+        
       if (messagePart?.type === 'channelReference') {
-        return {
-          /*<Text
+        return (
+          <span
             key={index}
-            variant="body"
-            onPress={() => openChannel(messagePart.content.id)}
-            color="sky150"
+            onClick={() => channelClick(`${messagePart.content.id}`, `${messagePart.content.name}`)}
+            className="rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1"
           >
             #{messagePart.content.name}
-        </Text>*/
-        }
+          </span>
+        )
       }
 
-      return ""
+      return 'error'
     },
     []
   )
@@ -316,11 +340,18 @@ export default function Message ({
               )}
               {/*message.content.text*/}
               {/*todo "hack" because I accidentally posted some messages with no content*/}
-              {message.content.text && message.getMessageElements().map((msgPart, index) => (
+              <div className='flex flex-row items-center w-full flex-wrap'>
+              {(message.content.text ||
+                message.content.plainLink ||
+                message.content.textLink ||
+                message.content.mention ||
+                message.content.channelReference) &&
+                message.getMessageElements().map((msgPart, index) =>
                   //"blah"
                   //<div key={index}>index</div>)
                   renderMessagePart(msgPart, index, message.userId)
-                ))}
+                )}
+                </div>
             </div>
             {!received && showReadIndicator && (
               <Image

@@ -1,7 +1,9 @@
 import Image from 'next/image'
-import { MessageDraft } from '@pubnub/chat'
+import Avatar from './avatar'
+import { MessageDraft, User, Channel } from '@pubnub/chat'
 import QuotedMessage from './quotedMessage'
-import { useState, useEffect } from 'react'
+import MentionSuggestions from './mentionSuggestions'
+import { useState, useEffect, useRef } from 'react'
 import { ToastType } from '@/app/types'
 
 export default function MessageInput ({
@@ -20,8 +22,14 @@ export default function MessageInput ({
 }) {
   const [text, setText] = useState('') //  todo Will be replaced by message draft
   const [newMessageDraft, setNewMessageDraft] = useState<MessageDraft>()
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([])
+  const [nameOccurrenceIndex, setNameOccurrenceIndex] = useState<number>(-1)
+  const [suggestedChannels, setSuggestedChannels] = useState<Channel[]>([])
+  const [channelOccurrenceIndex, setChannelOccurrenceIndex] =
+    useState<number>(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  function handleMessageDraftChanged (draft) {}
+  //function handleMessageDraftChanged (draft) {}
 
   async function handleSend (event: React.SyntheticEvent) {
     event.preventDefault()
@@ -39,7 +47,10 @@ export default function MessageInput ({
       await newMessageDraft.send({ storeInHistory: true })
       setNewMessageDraft(
         activeChannel?.createMessageDraft({
-          isTypingIndicatorTriggered: activeChannel.type !== 'public'
+          userSuggestionSource: 'channel',
+          isTypingIndicatorTriggered: activeChannel.type !== 'public',
+          userLimit: 5,
+          channelLimit: 5
         })
       )
       setQuotedMessage(false)
@@ -52,8 +63,22 @@ export default function MessageInput ({
       activeChannel.startTyping()
     }
     setText(e.target.value)
-    await newMessageDraft?.onChange(e.target.value)
-    handleMessageDraftChanged(e.target.value)
+    const response = await newMessageDraft?.onChange(e.target.value)
+    if ((response?.users.suggestedUsers.length ?? 0) > 0) {
+      setSuggestedUsers(response!.users.suggestedUsers)
+      setNameOccurrenceIndex(response!.users.nameOccurrenceIndex)
+    } else {
+      setSuggestedUsers([])
+      setNameOccurrenceIndex(-1)
+    }
+    if ((response?.channels.suggestedChannels.length ?? 0) > 0) {
+      setSuggestedChannels(response!.channels.suggestedChannels)
+      setChannelOccurrenceIndex(response!.channels.channelOccurrenceIndex)
+    } else {
+      setSuggestedChannels([])
+      setChannelOccurrenceIndex(-1)
+    }
+    //handleMessageDraftChanged(e.target.value)
   }
 
   async function addAttachment () {
@@ -70,12 +95,33 @@ export default function MessageInput ({
     setShowEmojiPicker(true)
   }
 
+  function pickSuggestedUser (user: User) {
+    if (!newMessageDraft) return
+    newMessageDraft.addMentionedUser(user, nameOccurrenceIndex)
+    setText(newMessageDraft.value)
+    setSuggestedUsers([])
+    setNameOccurrenceIndex(-1)
+    inputRef.current?.focus()
+  }
+
+  function pickSuggestedChannel (channel: Channel) {
+    if (!newMessageDraft) return
+    newMessageDraft.addReferencedChannel(channel, channelOccurrenceIndex)
+    setText(newMessageDraft.value)
+    setSuggestedChannels([])
+    setChannelOccurrenceIndex(-1)
+    inputRef.current?.focus()
+  }
+
   useEffect(() => {
     if (!activeChannel) return
     console.log('MESSAGE LIST INIT')
     setNewMessageDraft(
       activeChannel.createMessageDraft({
-        isTypingIndicatorTriggered: activeChannel.type !== 'public'
+        userSuggestionSource: 'channel',
+        isTypingIndicatorTriggered: activeChannel.type !== 'public',
+        userLimit: 5,
+        channelLimit: 5
       })
     )
   }, [activeChannel])
@@ -94,6 +140,19 @@ export default function MessageInput ({
         quotedMessage ? 'h-[170px]' : ''
       } pr-6`}
     >
+      {((suggestedUsers && suggestedUsers.length > 0) ||
+        (suggestedChannels && suggestedChannels.length > 0)) && (
+        <MentionSuggestions
+          suggestedUsers={suggestedUsers}
+          suggestedChannels={suggestedChannels}
+          pickSuggestedUser={user => {
+            pickSuggestedUser(user)
+          }}
+          pickSuggestedChannel={channel => {
+            pickSuggestedChannel(channel)
+          }}
+        />
+      )}
       {/* The sections around here hard-code the height of the message input Div, which will vary depending on whether there is a quoted message displayed or not.  Without a quoted message it is 114px, but with a quoted message it is 170px */}
       {quotedMessage && (
         <div className='flex flex-row w-full h-[100px]'>
@@ -116,6 +175,7 @@ export default function MessageInput ({
             className={`flex grow rounded-md border border-neutral-300 h-[50px] mr-1 ${
               quotedMessage ? '' : 'my-8'
             } ml-6 px-6 text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500`}
+            ref={inputRef}
             placeholder='Type message'
             value={text}
             onChange={e => {

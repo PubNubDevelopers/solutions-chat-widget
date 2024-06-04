@@ -86,7 +86,7 @@ export default function Header ({
           className='cursor-pointer hover:bg-sky-900 hover:rounded-md'
           onClick={e =>
             showUserMessage(null, 
-              "The Chat SDK supports mentioning users with the '@' syntax, although not yet supported by this demo",
+              "The Chat SDK supports mentioning @users and #channels.  This demo will show you a pop-up message when somebody mentions you",
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/mentions'
             )
           }

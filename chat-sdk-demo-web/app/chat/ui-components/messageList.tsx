@@ -28,7 +28,8 @@ export default function MessageList ({
   setShowPinnedMessages,
   activeChannelPinnedMessage,
   setActiveChannelPinnedMessage,
-  setShowThread
+  setShowThread,
+  showUserMessage
 }) {
   const MAX_AVATARS_SHOWN = 9
   const [loadedChannelId, setLoadedChannelId] = useState('')
@@ -377,6 +378,7 @@ export default function MessageList ({
               }
               message={activeChannelPinnedMessage}
               currentUserId={currentUser.id}
+              showUserMessage={showUserMessage}
             />}
 
         {messages.map((message, index) => {
@@ -415,6 +417,7 @@ export default function MessageList ({
               }
               message={message}
               currentUserId={currentUser.id}
+              showUserMessage={showUserMessage}
             />
           )
         })}

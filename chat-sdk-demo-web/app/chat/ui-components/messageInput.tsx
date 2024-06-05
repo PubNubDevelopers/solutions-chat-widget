@@ -5,7 +5,7 @@ import QuotedMessage from './quotedMessage'
 import MentionSuggestions from './mentionSuggestions'
 import { useState, useEffect, useRef } from 'react'
 import { ToastType } from '@/app/types'
-import { actionCompleted } from "pubnub-demo-integration";
+import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function MessageInput ({
   activeChannel,
@@ -21,7 +21,7 @@ export default function MessageInput ({
   selectedEmoji = '',
   setSelectedEmoji = a => {}
 }) {
-  const [text, setText] = useState('') //  todo Will be replaced by message draft
+  const [text, setText] = useState('')
   const [newMessageDraft, setNewMessageDraft] = useState<MessageDraft>()
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([])
   const [nameOccurrenceIndex, setNameOccurrenceIndex] = useState<number>(-1)
@@ -29,8 +29,6 @@ export default function MessageInput ({
   const [channelOccurrenceIndex, setChannelOccurrenceIndex] =
     useState<number>(-1)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  //function handleMessageDraftChanged (draft) {}
 
   async function handleSend (event: React.SyntheticEvent) {
     event.preventDefault()
@@ -40,8 +38,6 @@ export default function MessageInput ({
       await activeChannel.sendText(text, { storeInHistory: true })
       setText('')
     } else {
-      //  ToDo support message draft in non-threaded channels
-      //await activeChannel.sendText(text, { storeInHistory: true })
       if (quotedMessage) {
         newMessageDraft.addQuote(quotedMessage)
       }
@@ -58,10 +54,10 @@ export default function MessageInput ({
       setText('')
 
       actionCompleted({
-        action: "Send a Chat Message",
+        action: 'Send a Chat Message',
         blockDuplicateCalls: false,
         debug: false
-      });
+      })
     }
   }
 
@@ -85,7 +81,6 @@ export default function MessageInput ({
       setSuggestedChannels([])
       setChannelOccurrenceIndex(-1)
     }
-    //handleMessageDraftChanged(e.target.value)
   }
 
   async function addAttachment () {
@@ -109,10 +104,10 @@ export default function MessageInput ({
     setSuggestedUsers([])
     setNameOccurrenceIndex(-1)
     actionCompleted({
-      action: "@Mention another User",
+      action: '@Mention another User',
       blockDuplicateCalls: false,
       debug: false
-    });
+    })
     inputRef.current?.focus()
   }
 
@@ -123,16 +118,15 @@ export default function MessageInput ({
     setSuggestedChannels([])
     setChannelOccurrenceIndex(-1)
     actionCompleted({
-      action: "#Reference a Channel",
+      action: '#Reference a Channel',
       blockDuplicateCalls: false,
       debug: false
-    });
+    })
     inputRef.current?.focus()
   }
 
   useEffect(() => {
     if (!activeChannel) return
-    console.log('MESSAGE LIST INIT')
     setNewMessageDraft(
       activeChannel.createMessageDraft({
         userSuggestionSource: 'channel',
@@ -149,7 +143,7 @@ export default function MessageInput ({
     setText(text + selectedEmoji)
     newMessageDraft?.onChange(text + selectedEmoji)
     setSelectedEmoji('')
-  }, [selectedEmoji, setSelectedEmoji, text])
+  }, [newMessageDraft, selectedEmoji, setSelectedEmoji, text])
 
   return (
     <div

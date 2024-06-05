@@ -12,34 +12,23 @@ import { Channel, TimetokenUtils, MixedTextTypedElement } from '@pubnub/chat'
 
 export default function Message ({
   received,
-  //reactions,
   inThread = false,
   inPinned = false,
   avatarUrl,
-  //isRead,
   readReceipts,
   showReadIndicator = true,
-  //containsQuote = false,
-  //quotedMessage = null,
   quotedMessageSender = '',
   sender,
-  //messageText,
   messageActionHandler = (a, b) => {},
   pinned = false,
-  unpinMessageHandler = () => {
-    console.log('ToDo: Unpin Message')
-  },
+  unpinMessageHandler = () => {},
   message,
   currentUserId,
   isOnline = -1,
-  showUserMessage = (a, b, c, d) => {},
-  //setMessages
-  //activeChannel
-  //reactions = ['']
+  showUserMessage = (a, b, c, d) => {}
 }) {
   const [showToolTip, setShowToolTip] = useState(false)
   const [actionsShown, setActionsShown] = useState(false)
-  //const [userReadableDate, setUserReadableDate] = useState('')
   let messageHovered = false
   let actionsHovered = false
 
@@ -65,11 +54,9 @@ export default function Message ({
   }
 
   function handleMessageActionsLeave () {
-    //console.log('parent - message actions leave')
     actionsHovered = false
     if (!messageHovered) {
       setActionsShown(false)
-      //console.log('setting actions shown false from message actions mouse leave.  messageHovered is ' + messageHovered)
     }
   }
 
@@ -77,14 +64,11 @@ export default function Message ({
     navigator.clipboard.writeText(messageText)
   }
 
-  function openLink(url)
-  {
-    console.log('opening: ' + url)
+  function openLink (url) {
     window.open(url, '_blank')
   }
 
-  function userClick(userId, userName) {
-    console.log('clicked: ' + userId)
+  function userClick (userId, userName) {
     showUserMessage(
       '@Mentioned User Clicked:',
       `You have Clicked on user with ID ${userId} and name ${userName}`,
@@ -93,8 +77,7 @@ export default function Message ({
     )
   }
 
-  function channelClick(channelId, channelName) {
-    console.log('clicked: ' + channelId)
+  function channelClick (channelId, channelName) {
     showUserMessage(
       '#Referenced Channel Clicked:',
       `You have Clicked on channel with ID ${channelId} and name ${channelName}`,
@@ -104,11 +87,7 @@ export default function Message ({
   }
 
   async function reactionClicked (emoji, timetoken) {
-    //const message = messages.find(message => message.timetoken === timetoken)
-    //    const message = await activeChannel?.getMessage(timetoken)
     await message?.toggleReaction(emoji)
-    //setMessages(messages => [...messages])
-    console.log('click')
   }
 
   const determineUserReadableDate = useCallback(timetoken => {
@@ -134,9 +113,7 @@ export default function Message ({
       date.getMinutes() + ''
     ).padStart(2, '0')}`
 
-    //setUserReadableDate(datetime)
     return datetime
-    //setUserReadableDate(`${days[dateTime.getDay()]} ${dateTime.getDate()} ${months[dateTime.getMonth()]} ${(dateTime.getHours() + "").padStart(2, '0')}:${(dateTime.getMinutes() + "").padStart(2, '0')}`)
   }, [])
 
   //  Originally I was not writing the 'lastTimetoken' for messages I was sending myself, however
@@ -158,79 +135,66 @@ export default function Message ({
     return false
   }, [])
 
-  /*
-  const renderMessagePart = (messagePart: MixedTextTypedElement) => {
-    return "";
-    if (messagePart?.type === "textLink") {
-      return (
-        ""
-        //<a href={messagePart.content.link} style={{ backgroundColor: 'red' }}>
-          //{messagePart.content.text}
-        //</a>
-      );
-    }
-    return "";
-  }
-  */
-
   const renderMessagePart = useCallback(
-    (
-      messagePart: MixedTextTypedElement,
-      index: number,
-      userId: string | number
-    ) => {
-      // TODO make it look nice
-      //  ToDo: Does this useCallback still require the UserId
-      //console.log(messagePart)
+    (messagePart: MixedTextTypedElement, index: number) => {
       if (messagePart?.type === 'text') {
-        return (<span key={index}>{messagePart.content.text}</span>)
+        return <span key={index}>{messagePart.content.text}</span>
       }
       if (messagePart?.type === 'plainLink') {
-        return (<span key={index} className="cursor-pointer underline" onClick={() => openLink(`${messagePart.content.link}`)}>{messagePart.content.link}</span>)
-        /*<Text
+        return (
+          <span
             key={index}
-            variant="body"
-            onPress={() => openLink(messagePart.content.link)}
-            color="sky150"
+            className='cursor-pointer underline'
+            onClick={() => openLink(`${messagePart.content.link}`)}
           >
             {messagePart.content.link}
-        </Text>*/
+          </span>
+        )
       }
       if (messagePart?.type === 'textLink') {
-        return (<span key={index} className="cursor-pointer underline" onClick={() => openLink(`${messagePart.content.link}`)}>{messagePart.content.link}</span>)
-        /*<Text
+        return (
+          <span
             key={index}
-            variant="body"
-            onPress={() => openLink(messagePart.content.link)}
-            color="sky150"
+            className='cursor-pointer underline'
+            onClick={() => openLink(`${messagePart.content.link}`)}
           >
-            {messagePart.content.text}
-        </Text>*/
+            {messagePart.content.link}
+          </span>
+        )
       }
       if (messagePart?.type === 'mention') {
         return (
           <span
             key={index}
-            onClick={() => userClick(`${messagePart.content.id}`, `${messagePart.content.name}`)}
-            className="rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1"
+            onClick={() =>
+              userClick(
+                `${messagePart.content.id}`,
+                `${messagePart.content.name}`
+              )
+            }
+            className='rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1'
           >
             @{messagePart.content.name}
           </span>
         )
       }
-        
+
       if (messagePart?.type === 'channelReference') {
         return (
           <span
             key={index}
-            onClick={() => channelClick(`${messagePart.content.id}`, `${messagePart.content.name}`)}
-            className="rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1"
+            onClick={() =>
+              channelClick(
+                `${messagePart.content.id}`,
+                `${messagePart.content.name}`
+              )
+            }
+            className='rounded-lg border px-2 py-0.5 line-clamp-1 text-nowrap select-none cursor-pointer border-neutral-300 bg-neutral-50 text-neutral-900 m-1'
           >
             #{messagePart.content.name}
           </span>
         )
       }
-
       return 'error'
     },
     []
@@ -338,20 +302,17 @@ export default function Message ({
                   displayedWithMesageInput={false}
                 />
               )}
-              {/*message.content.text*/}
-              {/*todo "hack" because I accidentally posted some messages with no content*/}
+              {/* Will chase with the chat team to see why I need these conditions (get an error about missing 'type' if they are absent) */}
               <div className='flex flex-row items-center w-full flex-wrap'>
-              {(message.content.text ||
-                message.content.plainLink ||
-                message.content.textLink ||
-                message.content.mention ||
-                message.content.channelReference) &&
-                message.getMessageElements().map((msgPart, index) =>
-                  //"blah"
-                  //<div key={index}>index</div>)
-                  renderMessagePart(msgPart, index, message.userId)
-                )}
-                </div>
+                {(message.content.text ||
+                  message.content.plainLink ||
+                  message.content.textLink ||
+                  message.content.mention ||
+                  message.content.channelReference) &&
+                  message
+                    .getMessageElements()
+                    .map((msgPart, index) => renderMessagePart(msgPart, index))}
+              </div>
             </div>
             {!received && showReadIndicator && (
               <Image

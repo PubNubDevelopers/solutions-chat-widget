@@ -22,7 +22,6 @@ import UnreadIndicator from './ui-components/unreadIndicator'
 import Message from './ui-components/message'
 import MessageList from './ui-components/messageList'
 import MessageListThread from './ui-components/messageListThread'
-import MessageListPinned from './ui-components/messageListPinned'
 import MessageInput from './ui-components/messageInput'
 import NewMessageGroup from './ui-components/newMessageGroup'
 import UserMessage from './ui-components/userMessage'
@@ -39,7 +38,6 @@ import { testData } from './data/user-data'
 import {
   ChatNameModals,
   MessageActionsTypes,
-  //CustomQuotedMessage,
   ChatHeaderActionIcon,
   ToastType,
   ChatEventTypes,
@@ -53,6 +51,7 @@ export default function Page () {
   const router = useRouter()
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
+  const [guidedDemo, setGuidedDemo] = useState<String | null>(null)
   const [searchChannels, setSearchChannels] = useState('')
   const [loadMessage, setLoadMessage] = useState('Demo is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -65,7 +64,6 @@ export default function Page () {
   const [groupsExpanded, setGroupsExpanded] = useState(true)
   const [directMessagesExpanded, setDirectMessagesExpanded] = useState(true)
   const [showThread, setShowThread] = useState(false)
-  const [showPinnedMessages, setShowPinnedMessages] = useState(false)
   const [roomSelectorVisible, setRoomSelectorVisible] = useState(false)
   const [profileScreenVisible, setProfileScreenVisible] = useState(false)
   const [chatSettingsScreenVisible, setChatSettingsScreenVisible] =
@@ -143,7 +141,6 @@ export default function Page () {
   /* Bootstrap the application if it is run in an empty keyset */
   async function keysetInit (chat) {
     if (!chat) return
-    console.log('Keyset Init')
     try {
       await chat?.createPublicConversation({
         channelId: 'public-general',
@@ -169,15 +166,12 @@ export default function Page () {
         }
       })
     } catch (e) {}
-
-    console.log('finished keyset init')
-    //refreshMembersFromServer()
   }
 
   /*  Initialize or Update all the state arrays related to public groups */
   async function updateChannelMembershipsForPublic (chat) {
     if (!chat) return
-    console.log('updating channel memberships public')
+    //  During development there was an issue filtering on getMemberships on the server, which has since been fixed, so this code could be made more efficient
     chat.currentUser.getMemberships({}).then(async membershipResponse => {
       const currentMemberOfThesePublicChannels = membershipResponse.memberships
         .map(m => m.channel)
@@ -200,7 +194,6 @@ export default function Page () {
         const response = await currentMemberOfThesePublicChannels[
           indexGroup
         ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
-        //.then(function (response) {
         if (response.members) {
           //  response contains the most recent 100 members
           const channelUsers = response.members.map((membership, index) => {
@@ -208,10 +201,8 @@ export default function Page () {
           })
           tempPublicUsers[tempIndex] = channelUsers
         }
-        //            }, tempIndex)
       }
       setPublicChannelsUsers(tempPublicUsers)
-      //})
     })
   }
 
@@ -231,10 +222,6 @@ export default function Page () {
         for (var i = 0; i < currentMemberOfTheseGroupChannels.length; i++) {
           if (currentMemberOfTheseGroupChannels[i].id === desiredChannelId) {
             //  We have found the channel we want to focus
-            console.log(
-              'GROUP: setting active channel: ' +
-                currentMemberOfTheseGroupChannels[i].id
-            )
             setActiveChannel(currentMemberOfTheseGroupChannels[i])
           }
         }
@@ -285,10 +272,6 @@ export default function Page () {
         for (var i = 0; i < currentMemberOfTheseDirectChannels.length; i++) {
           if (currentMemberOfTheseDirectChannels[i].id === desiredChannelId) {
             //  We have found the channel we want to focus
-            console.log(
-              'DIRECT: setting active channel: ' +
-                currentMemberOfTheseDirectChannels[i].id
-            )
             setActiveChannel(currentMemberOfTheseDirectChannels[i])
           }
         }
@@ -352,6 +335,11 @@ export default function Page () {
         setLoadMessage('No Subscribe Key Found')
         return
       }
+      setGuidedDemo(
+        process.env.NEXT_PUBLIC_GUIDED_DEMO
+          ? process.env.NEXT_PUBLIC_GUIDED_DEMO
+          : null
+      )
       const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
@@ -399,12 +387,8 @@ export default function Page () {
         })
 
       //  Initialization for private groups and direct messages
-      //updateChannelMembershipsForPublic(chat)
-      //updateChannelMembershipsForGroups(chat)
-      //updateChannelMembershipsForDirects(chat)
       //  Calling inside a timeout as there was some timing issue when creating a new user
       let setTimeoutIdInit = setTimeout(() => {
-        console.log('timeout fired')
         updateChannelMembershipsForPublic(chat)
         updateChannelMembershipsForDirects(chat)
         updateChannelMembershipsForGroups(chat)
@@ -415,11 +399,8 @@ export default function Page () {
         blockDuplicateCalls: false,
         debug: false
       })
-
-      //refreshMembersFromServer()
     }
     init()
-    //updateChannelMembershipsForDirects()
   }, [userId, setChat, searchParams, router])
 
   useEffect(() => {
@@ -430,8 +411,6 @@ export default function Page () {
     if (!directChats) return
     if (!privateGroups) return
     if (!activeChannel) return
-
-    //  todo check ActiveGroupIndex is correct here
 
     function updateUnreadMessagesCounts () {
       chat?.getUnreadMessagesCounts({}).then(result => {
@@ -450,7 +429,6 @@ export default function Page () {
     var publicHandlers: (() => void)[] = []
     publicChannels.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
-        console.log('MESSAGE AT TOP LEVEL PUBLIC: ' + message.content.text)
         if (
           !(
             message.userId == chat.currentUser.id ||
@@ -465,7 +443,6 @@ export default function Page () {
     var directHandlers: (() => void)[] = []
     directChats.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
-        console.log('MESSAGE AT TOP LEVEL DIRECT')
         if (
           !(
             message.userId == chat.currentUser.id ||
@@ -480,7 +457,6 @@ export default function Page () {
     var privateHandlers: (() => void)[] = []
     privateGroups.forEach((channel, index) => {
       const disconnectHandler = channel.connect(message => {
-        console.log('MESSAGE AT TOP LEVEL: Private Groups')
         if (
           !(
             message.userId == chat.currentUser.id ||
@@ -493,7 +469,6 @@ export default function Page () {
       privateHandlers.push(disconnectHandler)
     })
 
-    console.log(activeChannel)
     updateUnreadMessagesCounts() //  Update the unread message counts whenever the channel changes
 
     return () => {
@@ -536,7 +511,6 @@ export default function Page () {
     //  This use effect is only called once after the local user cache has been initialized
     if (chat && publicChannelsUsers?.length > 0 && initOnce == 0) {
       setInitOnce(1)
-      console.log('Notifying others that I am on the public channels')
       if (publicChannels) {
         setActiveChannel(publicChannels[0])
         sendChatEvent(ChatEventTypes.JOINED, publicChannelsUsers[0], {
@@ -552,9 +526,7 @@ export default function Page () {
   useEffect(() => {
     //  Get updates on the current user's name and profile URL
     if (!chat) return
-    console.log('streaming updates current user: ' + chat.currentUser.id)
     return chat.currentUser.streamUpdates(updatedUser => {
-      //console.log('received update')
       if (updatedUser.name) {
         setName(updatedUser.name)
       }
@@ -707,25 +679,18 @@ export default function Page () {
       forceUpdateGroupChannels = false,
       desiredChannelId = ''
     ) => {
-      console.log('useCallback - refreshMembersFromServer')
       if (!chat) return
-      console.log('REMEMBER YOU ARE NOT REFRESHING MEMBERS FROM THE SERVER!!!')
-      return //  TODO REMOVE THIS TO ENABLE OBJECT UPDATES.  IT'S JUST A PAIN WHEN DEBUGGING
+      //return //  TODO REMOVE THIS TO ENABLE OBJECT UPDATES.  IT'S JUST A PAIN WHEN DEBUGGING
 
-      console.log('CLEARING TIMEOUT: ' + refreshMembersTimeoutId)
       clearTimeout(refreshMembersTimeoutId)
 
       if (forceUpdateDirectChannels) {
         //updateChannelMembershipsForPublic(chat)  //  Not needed as we only call this when we create a new group or DM
-        console.log('force updating directs')
         updateChannelMembershipsForDirects(chat, desiredChannelId)
       } else if (forceUpdateGroupChannels) {
-        console.log('force updating groups')
         updateChannelMembershipsForGroups(chat, desiredChannelId)
       } else {
-        console.log('setting timeout')
         let setTimeoutId: ReturnType<typeof setTimeout> = setTimeout(() => {
-          console.log('timeout fired')
           updateChannelMembershipsForPublic(chat)
           updateChannelMembershipsForDirects(chat)
           updateChannelMembershipsForGroups(chat)
@@ -738,22 +703,8 @@ export default function Page () {
     [chat, refreshMembersTimeoutId]
   )
 
-  /* Detect when the user switches channel and update our membership variables */
-  useEffect(() => {
-    if (!chat || !activeChannel) return
-    console.log('ACTIVE CHANNEL CHANGED ' + activeChannel.id)
-
-    //  Retrieve the members of this channel
-    //getActiveChannelMembers()
-  }, [chat, activeChannel /*, getActiveChannelMembers*/])
-
   function handleChatSearch (term: string) {
     setSearchChannels(term)
-    console.log(term)
-  }
-
-  function handleMessageDraftChanged (draft: string) {
-    console.log(draft)
   }
 
   function sendChatEvent (
@@ -763,7 +714,6 @@ export default function Page () {
   ) {
     recipients.forEach(async recipient => {
       //  Don't send the message to myself
-      console.log('sending event: ' + eventType)
       if (recipient.id !== chat?.currentUser.id) {
         await chat?.emitEvent({
           channel: recipient.id,
@@ -782,14 +732,7 @@ export default function Page () {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
         setShowThread(true)
-        setShowPinnedMessages(false)
-        //showUserMessage(
-        //  'Please Note:',
-        //  'Work in progress: Though supported by the Chat SDK, this demo does not yet support threaded messages',
-        //  ''
-        //)
         //  The data parameter is the message we are to reply to
-        console.log(data)
         if (!data.hasThread) {
           setActiveThreadChannel(await data.createThread())
         } else {
@@ -803,16 +746,9 @@ export default function Page () {
         })
         break
       case MessageActionsTypes.QUOTE:
-        //  todo this is test code
-        //const other = await chat.getUser('test-darryn-2')
-        //await chat.createGroupConversation({users: [other]})
-        //break;
-        //  todo end test code
-        console.log(data)
         setQuotedMessage(data)
         chat?.getUser(data.userId).then(user => {
           if (user && user.name) {
-            console.log('found user: ' + user.name)
             setQuotedMessageSender(user.name)
           }
         })
@@ -824,27 +760,20 @@ export default function Page () {
         break
       case MessageActionsTypes.PIN:
         if (activeChannel) {
+          //  The data parameter is the message we are to reply to
           let localActiveChannel = await chat?.getChannel(activeChannel?.id)
-          console.log('local active channel: ' + localActiveChannel?.id)
           const localActiveChannelPinnedMessage =
             await localActiveChannel?.getPinnedMessage()
-          console.log(
-            'currently pinned message: ' + localActiveChannelPinnedMessage?.text
-          )
           //  Check whether we need to unpin an existing message first
           if (localActiveChannelPinnedMessage) {
-            console.log('Unpinning message')
             localActiveChannel = await localActiveChannel?.unpinMessage()
-            //setActiveChannelPinnedMessage(null)
           } else {
-            console.log('there was no message, so did not unpin anything')
+            //  There was no message, so did not unpin anything'
           }
           //  Channel now has no pinned message.  Pin the requested message if it is different from
           //  the one we just unpinned
           if (localActiveChannelPinnedMessage?.timetoken != data.timetoken) {
-            console.log('pinning message: ' + data.text)
             localActiveChannel = await localActiveChannel?.pinMessage(data)
-            //setActiveChannelPinnedMessage(data)
             showUserMessage(
               'Message Pinned:',
               'The Message has been pinned to the top of ' + activeChannel.name,
@@ -935,7 +864,6 @@ export default function Page () {
         profileScreenVisible={profileScreenVisible}
         setProfileScreenVisible={setProfileScreenVisible}
         changeUserNameScreenVisible={changeUserNameModalVisible}
-        //currentUser={chat.currentUser}
         name={name}
         profileUrl={profileUrl}
         logout={() => logout()}
@@ -1106,6 +1034,7 @@ export default function Page () {
         creatingNewMessage={creatingNewMessage}
         setCreatingNewMessage={setCreatingNewMessage}
         showUserMessage={showUserMessage}
+        guidedDemo={guidedDemo}
       />
       <UserMessage
         userMsgShown={userMsgShown}
@@ -1184,7 +1113,6 @@ export default function Page () {
                 const markedAsRead = await chat.markAllMessagesAsRead()
                 updateUnreadMessagesCounts()
 
-                //console.log(markedAsRead)
                 showUserMessage(
                   'Success:',
                   'All messsages have been marked as read, and sent receipts are updated accordingly',
@@ -1290,7 +1218,6 @@ export default function Page () {
                               index
                             ]?.getHistory({ count: 1 })
                             if (lastMessage && lastMessage.messages) {
-                              console.log(lastMessage)
                               await publicChannelsMemberships[
                                 index
                               ].setLastReadMessage(lastMessage.messages[0])
@@ -1543,7 +1470,6 @@ export default function Page () {
               <MessageList
                 activeChannel={activeChannel}
                 currentUser={chat.currentUser}
-                //users={channelStreamedUsers} //  channelStreamedUsers activeChannelUsers .  todo can I reuse what I'm doing for private groups and dms?
                 quotedMessageSender={''}
                 groupUsers={
                   activeChannel?.type == 'group' && privateGroups
@@ -1567,19 +1493,25 @@ export default function Page () {
                     : []
                 }
                 groupMembership={
-                  activeChannel?.type == 'group' && privateGroups
+                  activeChannel?.type == 'group' &&
+                  privateGroups &&
+                  privateGroupsMemberships
                     ? privateGroupsMemberships[
                         privateGroups.findIndex(
                           group => group.id == activeChannel?.id
                         )
                       ]
-                    : activeChannel?.type == 'direct' && directChats
+                    : activeChannel?.type == 'direct' &&
+                      directChats &&
+                      directChatsMemberships
                     ? directChatsMemberships[
                         directChats.findIndex(
                           dmChannel => dmChannel.id == activeChannel?.id
                         )
                       ]
-                    : activeChannel?.type == 'public' && publicChannels
+                    : activeChannel?.type == 'public' &&
+                      publicChannels &&
+                      publicChannelsMemberships
                     ? publicChannelsMemberships[
                         publicChannels.findIndex(
                           channel => channel.id == activeChannel?.id
@@ -1598,7 +1530,6 @@ export default function Page () {
                 }}
                 setChatSettingsScreenVisible={setChatSettingsScreenVisible}
                 quotedMessage={quotedMessage}
-                setShowPinnedMessages={setShowPinnedMessages}
                 activeChannelPinnedMessage={activeChannelPinnedMessage}
                 setActiveChannelPinnedMessage={setActiveChannelPinnedMessage}
                 setShowThread={setShowThread}
@@ -1645,7 +1576,6 @@ export default function Page () {
                   setEmojiPickerTargetsInput(true)
                 }
                 setShowEmojiPicker={() => {
-                  console.log('showing picker')
                   setTimeout(function () {
                     setShowEmojiPicker(!showEmojiPicker)
                   }, 50)
@@ -1683,10 +1613,6 @@ export default function Page () {
                 ]
               : []
           }
-        />
-        <MessageListPinned
-          showPinnedMessages={showPinnedMessages}
-          setShowPinnedMessages={setShowPinnedMessages}
         />
       </div>
     </main>

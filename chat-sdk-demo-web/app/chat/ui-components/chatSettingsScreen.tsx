@@ -4,7 +4,7 @@ import { roboto } from '@/app/fonts'
 import { Membership, User } from '@pubnub/chat'
 import { useState, useEffect } from 'react'
 import { ToastType } from '@/app/types'
-import { actionCompleted } from "pubnub-demo-integration";
+import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function ChatSettingsScreen ({
   chatSettingsScreenVisible,
@@ -14,11 +14,9 @@ export default function ChatSettingsScreen ({
   isDirectChat,
   activeChannel,
   activeChannelUsers,
-  //users,
   buttonAction,
   changeChatNameAction = () => {},
   manageMembershipsAction = () => {},
-  //seenUserId = () => {}
   showUserMessage
 }) {
   const MAX_AVATARS_SHOWN = 13
@@ -26,10 +24,10 @@ export default function ChatSettingsScreen ({
   useEffect(() => {
     if (!chatSettingsScreenVisible) return
     actionCompleted({
-      action: "Open the Chat Settings",
+      action: 'Open the Chat Settings',
       blockDuplicateCalls: false,
       debug: false
-    });
+    })
   }, [chatSettingsScreenVisible])
 
   return (
@@ -75,20 +73,19 @@ export default function ChatSettingsScreen ({
         <div className='flex flex-col'>
           {/* Avatar(s) */}
           <div className='flex justify-center pb-6'>
-            
-              <div className='flex flex-row -space-x-2.5'>
-
-              {activeChannelUsers?.map((member, index) => (
-                                (index < MAX_AVATARS_SHOWN) && <Avatar
-                                key={index}
-                                avatarUrl={member.profileUrl}
-                                width={88}
-                                height={88}
-                              />
-                            ))}
-
-
-              </div>
+            <div className='flex flex-row -space-x-2.5'>
+              {activeChannelUsers?.map(
+                (member, index) =>
+                  index < MAX_AVATARS_SHOWN && (
+                    <Avatar
+                      key={index}
+                      avatarUrl={member.profileUrl}
+                      width={88}
+                      height={88}
+                    />
+                  )
+              )}
+            </div>
           </div>
 
           {/* Chat members for 1:1 chats, or Chat name for Group chats */}
@@ -97,17 +94,11 @@ export default function ChatSettingsScreen ({
               <div className='flex flex-col'>
                 <div className='text-lg text-white'>Chat members</div>
                 {activeChannelUsers?.map((member, index) => (
-                                <div className='text-lg text-white font-semibold'
-                                key={index}
-                              >{member.name}</div>
-                            ))}
+                  <div className='text-lg text-white font-semibold' key={index}>
+                    {member.name}
+                  </div>
+                ))}
               </div>
-              {/*<div
-              className={`${roboto.className} flex flex-row justify-between items-center font-medium text-sm px-6 mx-2.5 h-10 cursor-pointer rounded-lg bg-pubnubbabyblue`}
-              onClick={(e) => changeChatNameAction()}
-            >
-              Change
-        </div>*/}
             </div>
           ) : (
             <div className='flex flex-row justify-between items-center py-4 px-4'>
@@ -151,11 +142,23 @@ export default function ChatSettingsScreen ({
                 Get notified about new messages and mentions from chats
               </div>
             </div>
-            <div className='h-6 relative inline-block' onClick={() => {showUserMessage('Demo Limitation:',
-            'Though supported by the Chat SDK, this demo does not yet support custom events or notifications',
-            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events', ToastType.INFO)}}>
-              {/* ToDo: Checkbox is currently disabled with no handlers - change the type back to 'input' */}
-              <input type='checkbox' defaultChecked={false} onChange={(e) => {console.log(e.target.checked = false)}} />
+            <div
+              className='h-6 relative inline-block'
+              onClick={() => {
+                showUserMessage(
+                  'Demo Limitation:',
+                  'Though supported by the Chat SDK, this demo does not yet support custom events or notifications',
+                  'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events',
+                  ToastType.INFO
+                )
+              }}
+            >
+              {/* Checkbox is currently disabled with no handlers */}
+              <input
+                type='checkbox'
+                defaultChecked={false}
+                onChange={e => {}}
+              />
             </div>
           </div>
           <div className='border border-navy600'></div>
@@ -176,20 +179,23 @@ export default function ChatSettingsScreen ({
               Leave this 1:1 chat
             </div>
           ) : (
-            (activeChannel?.type !== 'public' /* To simplify the logic of the demo, do not allow to leave from public channels */) && <div
-              className={`${roboto.className} flex flex-row justify-center my-6 items-center text-white font-medium text-sm px-4 mx-2.5 h-10 cursor-pointer border border-[#938F99] rounded-lg bg-sky-950`}
-              onClick={e => buttonAction()}
-            >
-              <Image
-                src='/icons/logout.svg'
-                alt='Logout'
-                className='p-3'
-                width={36}
-                height={36}
-                priority
-              />
-              Leave conversation
-            </div>
+            activeChannel?.type !==
+              'public' /* To simplify the logic of the demo, do not allow to leave from public channels */ && (
+              <div
+                className={`${roboto.className} flex flex-row justify-center my-6 items-center text-white font-medium text-sm px-4 mx-2.5 h-10 cursor-pointer border border-[#938F99] rounded-lg bg-sky-950`}
+                onClick={e => buttonAction()}
+              >
+                <Image
+                  src='/icons/logout.svg'
+                  alt='Logout'
+                  className='p-3'
+                  width={36}
+                  height={36}
+                  priority
+                />
+                Leave conversation
+              </div>
+            )
           )}
         </div>
       </div>

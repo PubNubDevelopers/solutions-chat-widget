@@ -1,22 +1,26 @@
-import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Poppins } from 'next/font/google'
+import './globals.css'
 
-const poppins = Poppins({ weight: ['400', '500', '600', '700'], subsets: ["latin"] });
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin']
+})
 
 export const metadata: Metadata = {
-  title: "PubNub Chat SDK Demo",
-  description: "Demo application using the PubNub Chat SDK to create an app in Next.js",
-};
+  title: 'PubNub Chat SDK Demo',
+  description:
+    'Demo application using the PubNub Chat SDK to create an app in Next.js'
+}
 
-export default function RootLayout({
-  children,
+export default function RootLayout ({
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body className={poppins.className}>{children}</body>
     </html>
-  );
+  )
 }

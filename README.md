@@ -6,7 +6,7 @@ Demo of the PubNub Chat SDK running in a React app
 Live application is here: [https://chat-sdk-demo-web.netlify.app/](https://chat-sdk-demo-web.netlify.app/)
 
 
-## Unsupported Features
+## Limitations of this Demo
 
 Although the Chat SDK supports the following features, the demo does not:
 
@@ -16,6 +16,8 @@ Threads don't support mentioning users or channels
 
 ### Presence:
 This demo uses global presence, as described here: https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/presence.  Channel presence, detailed on that same page, is not supported.
+
+### Notifications:
 
 
 ### Other:

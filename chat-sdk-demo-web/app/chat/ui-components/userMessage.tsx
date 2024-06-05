@@ -6,28 +6,30 @@ export default function UserMessage ({
   userMsgShown,
   title = 'Please Note:',
   message,
-  href = "",
+  href = '',
   type = ToastType.INFO,
   closeToastAction
 }) {
-
-
   return (
     <div
       className={`${
         userMsgShown ? 'flex' : 'hidden'
-      } absolute flex-row justify-start left-5 bottom-5 p-4 rounded-lg shadow-lg ${type==ToastType.INFO && 'bg-statusIndicatorInfo100'} ${type==ToastType.CHECK && 'bg-statusIndicatorSuccess100'} ${type==ToastType.ERROR && 'bg-red-100'} w-2/6 z-40`}
+      } absolute flex-row justify-start left-5 bottom-5 p-4 rounded-lg shadow-lg ${
+        type == ToastType.INFO && 'bg-statusIndicatorInfo100'
+      } ${type == ToastType.CHECK && 'bg-statusIndicatorSuccess100'} ${
+        type == ToastType.ERROR && 'bg-red-100'
+      } w-2/6 z-40`}
     >
       <div className='flex place-self-start min-w-[24px]'>
-        {(type === ToastType.INFO && (
-            <Image
-              src='/icons/toast_info.svg'
-              alt='Info'
-              className=''
-              width={24}
-              height={24}
-            />
-          ))}
+        {type === ToastType.INFO && (
+          <Image
+            src='/icons/toast_info.svg'
+            alt='Info'
+            className=''
+            width={24}
+            height={24}
+          />
+        )}
         {type === ToastType.CHECK && (
           <Image
             src='/icons/toast_check.svg'
@@ -49,7 +51,7 @@ export default function UserMessage ({
       </div>
       <div className='flex flex-col gap-1 px-4 py-1'>
         <div className='flex font-normal text-base text-neutral-900'>
-          {title || "Please Note: "}
+          {title || 'Please Note: '}
         </div>
         <div className='flex font-normal text-sm text-neutral-700'>
           {message}
@@ -69,14 +71,17 @@ export default function UserMessage ({
           </div>
         )}
       </div>
-      <div className="absolute right-0 top-0 cursor-pointer" onClick={() => closeToastAction()}>
-      <Image
-            src='/icons/close.svg'
-            alt='Error'
-            className='m-3'
-            width={24}
-            height={24}
-          />
+      <div
+        className='absolute right-0 top-0 cursor-pointer'
+        onClick={() => closeToastAction()}
+      >
+        <Image
+          src='/icons/close.svg'
+          alt='Error'
+          className='m-3'
+          width={24}
+          height={24}
+        />
       </div>
     </div>
   )

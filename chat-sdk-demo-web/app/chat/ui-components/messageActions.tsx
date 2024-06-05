@@ -1,8 +1,6 @@
 import Image from 'next/image'
 import ToolTip from './toolTip'
 import { useState } from 'react'
-//import data from '@emoji-mart/data'
-//import Picker from '@emoji-mart/react'
 
 export default function MessageActions ({
   received,
@@ -14,7 +12,6 @@ export default function MessageActions ({
   replyInThreadClick,
   quoteMessageClick,
   pinMessageClick,
-  //reactMessageClick,
   copyMessageClick,
   showEmojiPickerClick
 }) {
@@ -23,7 +20,6 @@ export default function MessageActions ({
   const [pinToolTip, setPinToolTip] = useState(false)
   const [replyToolTip, setReplyToolTip] = useState(false)
   const [copyToolTip, setCopyToolTip] = useState(false)
-  //const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   function copyClick (e) {
     copyMessageClick()
@@ -72,15 +68,12 @@ export default function MessageActions ({
   }
 
   function emoteClick (e) {
-    //setShowEmojiPicker(true)
-    showEmojiPickerClick({isShown: true, mouseX: e.clientX, mouseY: e.clientY, messageTimetoken: timetoken})
-    //reactMessageClick()
-  }
-
-  function emojiSelected(data) {
-    console.log(data)
-    //setShowEmojiPicker(false)
-    //reactMessageClick(data)
+    showEmojiPickerClick({
+      isShown: true,
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      messageTimetoken: timetoken
+    })
   }
 
   function emoteEnter () {
@@ -96,7 +89,6 @@ export default function MessageActions ({
   }
   const handleMessageActionsMouseLeave = e => {
     messageActionsLeave()
-    //setShowEmojiPicker(false)
   }
 
   return (
@@ -164,7 +156,7 @@ export default function MessageActions ({
           />
           <ToolTip
             className={`${pinToolTip ? 'block' : 'hidden'}`}
-            tip={`${isPinned ? "Unpin message" : "Pin message"}`}
+            tip={`${isPinned ? 'Unpin message' : 'Pin message'}`}
           />
         </div>
         <div
@@ -205,13 +197,6 @@ export default function MessageActions ({
             tip='React to message'
           />
         </div>
-        {/*showEmojiPicker && <div
-          className={`absolute ${
-            received ? 'right-[250px]' : 'left-[60px]'
-          } -top-[250px]`}
-        >
-          <Picker data={data} sheetRows={3} previewPosition={'none'} navPosition={'none'} searchPosition={'none'} maxFrequentRows={0} onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}} />
-        </div>*/}
       </div>
     </div>
   )

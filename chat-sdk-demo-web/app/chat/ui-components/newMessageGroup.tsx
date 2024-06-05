@@ -7,7 +7,7 @@ import Image from 'next/image'
 import NewMessageUserRow from './newMessageUserRow'
 import NewMessageUserPill from './newMessageUserPill'
 import { ChatEventTypes, ToastType, PresenceIcon } from '@/app/types'
-import { actionCompleted } from "pubnub-demo-integration";
+import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function NewMessageGroup ({
   chat,
@@ -25,7 +25,6 @@ export default function NewMessageGroup ({
 
   function handleUserSearch (term: string) {
     setSearchTerm(term)
-    console.log(term)
     if (!chat) return
     chat
       .getUsers({
@@ -68,15 +67,12 @@ export default function NewMessageGroup ({
     const filteredArray = newDraftGroupUsers.filter(
       user => user.id !== removingUserId
     )
-    console.log(filteredArray)
     setNewDraftGroupUsers(filteredArray)
-    console.log('removing pill for user: ' + removingUserId)
   }
 
   async function createGroup () {
-    console.log('creating group')
     setCreationInProgress(true)
-    //  Call createGroup or direct conversation, depending on which one it is.          //await chat.createGroupConversation({users: [other]})
+    //  Call createGroup or direct conversation, depending on which one it is.
     //  Send joined events to all participants to let them know they are in a new group
     //  Refresh all my membership arrays from the server
     //  Set the new group as the active chat session
@@ -99,10 +95,10 @@ export default function NewMessageGroup ({
         channelType: channel.type
       })
       actionCompleted({
-        action: "Create a new 1:1 (Direct) Chat",
+        action: 'Create a new 1:1 (Direct) Chat',
         blockDuplicateCalls: false,
         debug: false
-      });
+      })
     } else {
       //  Creating a group conversation
       const randomNewChannelName = 'Group ' + Math.floor(Math.random() * 1000)
@@ -121,10 +117,10 @@ export default function NewMessageGroup ({
       })
       createdChannel = channel
       actionCompleted({
-        action: "Create a new Private Group",
+        action: 'Create a new Private Group',
         blockDuplicateCalls: false,
         debug: false
-      });
+      })
     }
     if (createdChannel) {
       invokeRefresh(desiredChannelId, createdChannel['type'])
@@ -172,8 +168,6 @@ export default function NewMessageGroup ({
                   height={36}
                 />
               ))}
-
-           
             </div>
             <div className='flex flex-row gap-2'>
               {newDraftGroupUsers?.length == 1
@@ -207,11 +201,12 @@ export default function NewMessageGroup ({
                   <NewMessageUserRow
                     key={index}
                     user={user}
-                    present={user.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE}
+                    present={
+                      user.active ? PresenceIcon.ONLINE : PresenceIcon.OFFLINE
+                    }
                     clickAction={user => onSearchResultClicked(user)}
                   />
                 ))}
-
               </div>
             </div>
           </div>
@@ -226,7 +221,6 @@ export default function NewMessageGroup ({
               removePillAction={userId => onRemovePill(userId)}
             />
           ))}
-
         </div>
       </div>
       <div

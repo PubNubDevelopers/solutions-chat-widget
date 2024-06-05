@@ -36,7 +36,6 @@ export default function ModalChangeName ({
           <div
             className=' cursor-pointer'
             onClick={() => {
-              //setNewChatName(name);
               setChangeNameModalVisible(false)
             }}
           >
@@ -82,7 +81,7 @@ export default function ModalChangeName ({
             <div
               className={`${roboto.className} flex flex-row justify-center items-center text-navy700 font-normal text-base w-1/3 h-12 cursor-pointer border border-neutral-300 rounded-lg bg-white`}
               onClick={e => {
-                /*setNewChatName(name);*/ setChangeNameModalVisible(false)
+                setChangeNameModalVisible(false)
               }}
             >
               Cancel

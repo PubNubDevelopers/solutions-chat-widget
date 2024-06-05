@@ -85,16 +85,20 @@ export default function Home () {
               className='relative bg-navy900 text-neutral50 text-sm py-3 rounded-md shadow-sm w-full'
             >
               Log in
-              <div className={`${!showSpinner && "hidden"} absolute -right-[50px] bottom-0 animate-spin`}>
-                  <Image
-                    src='/icons/loading.png'
-                    alt='Chat Icon'
-                    className=''
-                    width={40}
-                    height={40}
-                    priority
-                  />
-                </div>
+              <div
+                className={`${
+                  !showSpinner && 'hidden'
+                } absolute -right-[50px] bottom-0 animate-spin`}
+              >
+                <Image
+                  src='/icons/loading.png'
+                  alt='Chat Icon'
+                  className=''
+                  width={40}
+                  height={40}
+                  priority
+                />
+              </div>
             </button>
           </form>
         </div>

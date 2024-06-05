@@ -131,10 +131,7 @@ export default function MessageListThread ({
           )}
           {/* THREAD BUBBLES */}
           {messages.map((message, index) => {
-            //seenUserId(message.userId)  //  dcc
             return (
-              /*<UnreadIndicator key={index} count={5}>index</UnreadIndicator>*/
-
               <Message
                 key={message.timetoken}
                 received={currentUser.id !== message.userId}

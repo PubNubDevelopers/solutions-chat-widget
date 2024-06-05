@@ -6,16 +6,18 @@ export default function QuotedMessage ({
   quotedMessage,
   quotedMessageSender,
   setQuotedMessage,
-  displayedWithMesageInput
+  displayedWithMesageInput  //  Whether this component is rendered above the input control, or as part of a message
 }) {
   return (
     <div
       className={`flex flex-row justify-between w-full ${
         displayedWithMesageInput ? 'ml-6' : 'mb-2'
       } mt-2 rounded-r-md mr-24 ${
-        originalMessage && !originalMessageReceived 
+        originalMessage && !originalMessageReceived
           ? 'bg-neutral-50'
-          : (originalMessage && originalMessageReceived ? 'bg-[#e3f1fd]' : 'bg-neutral-50')
+          : originalMessage && originalMessageReceived
+          ? 'bg-[#e3f1fd]'
+          : 'bg-neutral-50'
       }`}
     >
       <div className='flex flex-col w-full p-2.5 justify-center border-l-2 border-sky-950 '>

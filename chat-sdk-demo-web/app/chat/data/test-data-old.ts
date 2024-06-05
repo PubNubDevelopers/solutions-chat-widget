@@ -99,11 +99,10 @@
           messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis convallis. Lectus placerat sit cursus parturient metus sagittis at mauris. Pharetra aliquam luctus ac fringilla ultricesluctus ac fringilla ultrices.'
         />*/
 
-
-
 //  New Message Group
 
-   {/*<Avatar
+{
+  /*<Avatar
                 present={-1}
                 avatarUrl={'/avatars/avatar08.png'}
                 border={true}
@@ -123,7 +122,8 @@
                 border={true}
                 width={36}
                 height={36}
-                          />*/}
+                          />*/
+}
 
 /*<div
                   className='cursor-pointer'
@@ -141,7 +141,7 @@
                   />
                 </div>*/
 
-                /*<NewMessageUserRow
+/*<NewMessageUserRow
                   name='Jack Cooper'
                   avatarUrl='/avatars/avatar06.png'
                   present='1'
@@ -161,7 +161,6 @@
                   avatarUrl='/avatars/avatar09.png'
                   present='1'
                           />*/
-
 
 /*<NewMessageUserPill
             name='Darryn'
@@ -230,10 +229,9 @@
             }
           /> */
 
+//  Logic for kicking a present participant from the group
 
-          //  Logic for kicking a present participant from the group
-
-                    /*case ChatEventTypes.KICK:
+/*case ChatEventTypes.KICK:
             //  Somebody has instructed us to leave the chat.  In production, clients
             //  would not be trusted to just say this to eachother, a Server would arbitrate this
             const channelIdToLeave = evt.payload.body.channelAffected
@@ -265,10 +263,10 @@
 
             break*/
 
+//  Private Groups
 
-            //  Private Groups
-
-              {/*<ChatMenuItem
+{
+  /*<ChatMenuItem
                 avatarUrl='/avatars/avatar04.png'
                 text='Label 04'
                 present={1}
@@ -285,12 +283,13 @@
                 text='Label 06'
                 present={1}
                 avatarBubblePrecedent='+1'
-          />*/}
+          />*/
+}
 
-          //  DMs
+//  DMs
 
-
-              {/*<ChatMenuItem
+{
+  /*<ChatMenuItem
                 avatarUrl='/avatars/avatar07.png'
                 text='Label 07'
                 present={1}
@@ -324,11 +323,13 @@
                 avatarUrl='/avatars/avatar09.png'
                 text='Label 09'
                 present={1}
-          />*/}
+          />*/
+}
 
-          //  Unread Users
+//  Unread Users
 
-              {/*<ChatMenuItem
+{
+  /*<ChatMenuItem
                 avatarUrl='/avatars/avatar01.png'
                 text='Label 01'
                 present={1}
@@ -370,11 +371,12 @@
                     ''
                   )
                 }}
-              />*/}
+              />*/
+}
 
-  //  Threaded messages
+//  Threaded messages
 
-  /*<Message
+/*<Message
             received={true}
             inThread={true}
             message={null}
@@ -416,9 +418,9 @@
             messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo '
           />*/
 
-  //  Managed Members
+//  Managed Members
 
-  /*<ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
+/*<ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
@@ -436,9 +438,9 @@
           <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
       <ManagedMember name="Leslie Alexander" avatarUrl="/avatars/avatar12.png" removeAction={() => {console.log("ToDo: Remove Member")}} lastElement={true}/>*/
 
-  //  Chat Settings Screen
+//  Chat Settings Screen
 
-                  /*<Avatar
+/*<Avatar
                   avatarUrl={'/avatars/avatar01.png'}
                   width={88}
                   height={88}
@@ -458,7 +460,7 @@
 
 //  Global groups
 
-              /*<ChatMenuItem
+/*<ChatMenuItem
                 avatarUrl='/group/globe1.svg'
                 text='General Chat'
                 present={-1}
@@ -468,3 +470,184 @@
                 text='Work Chat'
                 present={-1}
           />*/
+
+//  Managed member - old design for remove icon (subsequently removed)
+/*<div
+          className='flex flex-row items-center pr-4 cursor-pointer'
+          onClick={() => {
+            removeAction(userId)
+          }}
+        >
+          <Image
+            src='/icons/remove.svg'
+            alt='Remove'
+            className='m-3'
+            width={24}
+            height={24}
+            priority
+          />
+          <div
+            className={`${roboto.className} text-sm font-medium text-sky-800`}
+          >
+            Remove
+        </div>
+        </div>*/
+
+//  MessageListPinned
+
+//  NOT USED
+
+/*
+import Message from './message'
+import { roboto } from '@/app/fonts'
+import Image from 'next/image'
+
+export default function MessageListPinned ({
+  showPinnedMessages,
+  setShowPinnedMessages
+}) {
+  return (
+    <div className='relative'>
+      <div
+        className={`${
+          !showPinnedMessages && 'hidden'
+        } flex flex-col min-w-80 max-w-80 h-full py-0 mt-[64px] `}
+      >
+        <div
+          id='threads-header'
+          className='flex flex-row items-center w-full h-16 min-h-16 border border-navy-200'
+        >
+          <div
+            className={`${roboto.className} text-base font-bold flex grow pl-6 pr-3 justify-between items-center`}
+          >
+            Pinned messages
+            <div
+              className='flex cursor-pointer p-3'
+              onClick={e => setShowPinnedMessages(false)}
+            >
+              <Image
+                src='/icons/close.svg'
+                alt='Close Thread'
+                className=''
+                width={24}
+                height={24}
+                priority
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          className={`flex flex-col grow border border-navy-200 overflow-y-auto overscroll-none overflow-hidden pb-[84px]`}
+        >
+          {<Message
+            received={true}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            avatarUrl='/avatars/avatar01.png'
+            isRead={true}
+            sender='Sarah Johannsen is a very long name'
+            timetoken={"17179544908908795"}
+            reactions={['🐕', '🐶']}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque. Feugiat et a eget rutrum leo in. Pretium cras amet consequat est metus sodales. Id phasellus habitant dignissim viverra. Nulla non faucibus mus scelerisque diam. Nulla a quis venenatis '
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+          />
+
+          <Message
+            received={false}
+            inPinned={true}
+            message={null}
+            readReceipts={null}
+            currentUserId={'123'}
+            reactions={null}
+            avatarUrl='/avatars/avatar02.png'
+            isRead={true}
+            sender='Mikey 222'
+            timetoken={"17179544908908795"}
+            messageText='Aliquam a magna arcu tellus pellentesque mi pellentesque.'
+      />}
+        </div>
+      </div>
+    </div>
+  )
+}
+*/
+
+//  ModalManageMembers Cancel
+
+/*<div
+              className={`${roboto.className} flex flex-row justify-center items-center text-navy700 font-normal text-base w-1/3 h-12 cursor-pointer border border-neutral-300 rounded-lg bg-white`}
+              onClick={e => setManageMembersModalVisible(false)}
+            >
+              Cancel
+          </div>*/

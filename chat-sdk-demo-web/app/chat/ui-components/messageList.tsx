@@ -26,7 +26,6 @@ export default function MessageList ({
   setChatSettingsScreenVisible,
   quotedMessage,
   quotedMessageSender,
-  setShowPinnedMessages,
   activeChannelPinnedMessage,
   setActiveChannelPinnedMessage,
   setShowThread,
@@ -52,46 +51,18 @@ export default function MessageList ({
   useEffect(() => {
     //  UseEffect to handle initial configuration of the Message List including reading the historical messages
     setLoadingMessage('Fetching History from Server...')
-    console.log(
-      'ACTIVE CHANNEL CHANGED from MESSAGE LIST 1: ' + activeChannel?.id
-    )
-    console.log('current user: ' + currentUser.id)
-    console.log('group membership: ')
-    console.log(groupMembership)
     if (!activeChannel) return
-    //if (activeChannel.id == loadedChannelId) return
     async function initMessageList () {
-      console.log('start: InitMessageList')
       setMessages([])
-      console.log('waiting for memberships')
       if (groupMembership == null) {
-        console.log('BUG: groupMembership should not be null')
+        console.log('Error: groupMembership should not be null')
       }
       var localCurrentMembership = groupMembership
       setCurrentMembership(groupMembership)
-      //if (groupMembership == null) {
-      //  const result = await currentUser.getMemberships() //  Some issue with filtering on memberships by channel ID, will raise.  I should be able to filter on channel.id == currentChannel.id
-      //  var localCurrentMembership
-      //  for (var i = 0; i < result?.memberships.length; i++) {
-      //    if (result.memberships[i].channel.id == activeChannel.id) {
-      //      localCurrentMembership = result.memberships[i]
-      //      setCurrentMembership(localCurrentMembership)
-      //    }
-      //  }
-      //  console.log('got memberships')
-      //} else {
-      //  setCurrentMembership(groupMembership)
-      //  console.log('already had membership')
-      //}
-
-      //setMessages([])
-      console.log('calling get history')
       activeChannel
         .getHistory({ count: 20 })
         .then(async historicalMessagesObj => {
-          console.log('retrieved history')
           //  Run through the historical messages and set the most recently received one (that we were not the sender of) as read
-          console.log(historicalMessagesObj.messages)
           if (historicalMessagesObj.messages) {
             if (historicalMessagesObj.messages.length == 0) {
               setLoadingMessage('No messages in this chat yet')
@@ -104,19 +75,11 @@ export default function MessageList ({
                 i >= 0;
                 i--
               ) {
-                console.log(historicalMessagesObj.messages[i].userId)
-                //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
-                console.log(
-                  'setting last read token to ' +
-                    historicalMessagesObj.messages[i].timetoken
-                )
-                console.log(localCurrentMembership)
                 await localCurrentMembership?.setLastReadMessageTimetoken(
                   historicalMessagesObj.messages[i].timetoken
                 )
                 updateUnreadMessagesCounts()
                 break
-                //}
               }
             }
           }
@@ -136,9 +99,7 @@ export default function MessageList ({
   }, [activeChannel])
 
   useEffect(() => {
-    console.log('ACTIVE CHANNEL CHANGED.')
     activeChannel?.streamUpdates(async channelUpdate => {
-      console.log('STREAMMMMM')
       if (channelUpdate.custom) {
         const pinnedMessageTimetoken =
           channelUpdate.custom.pinnedMessageTimetoken
@@ -154,26 +115,12 @@ export default function MessageList ({
     })
   }, [activeChannel])
 
-  //  useEffect(() => {
-  //    if (!activeChannel) return
-  //    if (!pinnedMessageTimetoken) return
-  //    console.log('USE EFFECT PINNED MESSAGE')
-  //    console.log(activeChannel.id)
-  //    activeChannel.getPinnedMessage().then(pinnedMessage => {
-  //      console.log('PINNED MESSAGE')
-  //      console.log(pinnedMessage)
-  //      setPinnedMessage(pinnedMessage)
-  //    })
-  //  }, [activeChannel, pinnedMessageTimetoken])
-
   useEffect(() => {
     //  UseEffect to receive new messages sent on the channel
     if (!activeChannel) return
 
     return activeChannel.connect(message => {
-      //if (message.userId !== currentUser.id) {
       currentMembership?.setLastReadMessageTimetoken(message.timetoken)
-      //}
       setMessages(messages => {
         return uniqueById([...messages, message]) //  Avoid race condition where message was being added twice when the channel was launched with historical messages
       })
@@ -187,10 +134,6 @@ export default function MessageList ({
   }, [messages])
 
   useEffect(() => {
-    console.log('GROUP USERS')
-    console.log(groupUsers)
-    console.log('END END')
-
     if (groupUsers && groupUsers.length > 0) {
       return User.streamUpdatesOn(groupUsers, updatedUsers => {
         usersHaveChanged()
@@ -319,12 +262,9 @@ export default function MessageList ({
               } `}
               onClick={() => {
                 if (!activeChannelPinnedMessage) return
-                //
                 if (messageListRef && messageListRef.current) {
                   messageListRef.current.scrollTop = 0
                 }
-                //setShowPinnedMessages(true)
-                //setShowThread(false)
               }}
             >
               <Image
@@ -364,13 +304,13 @@ export default function MessageList ({
         {messages && messages.length == 0 && (
           <div className='flex flex-col items-center justify-center w-full h-screen text-xl select-none'>
             <Image
-            src='/chat.svg'
-            alt='Chat Icon'
-            className=''
-            width={100}
-            height={100}
-            priority
-          />
+              src='/chat.svg'
+              alt='Chat Icon'
+              className=''
+              width={100}
+              height={100}
+              priority
+            />
             {loadingMessage}
           </div>
         )}
@@ -424,9 +364,6 @@ export default function MessageList ({
         )}
 
         {messages.map((message, index) => {
-          //console.log(message)
-          //const elements = message?.getMessageElements()
-          //console.log(elements)
           return (
             <Message
               key={message.timetoken}
@@ -443,7 +380,6 @@ export default function MessageList ({
                   : groupUsers?.find(user => user.id === message.userId)?.active
               }
               readReceipts={readReceipts}
-              //quotedMessage={message.quotedMessage}
               quotedMessageSender={
                 message.quotedMessage &&
                 (message.quotedMessage.userId === currentUser.id
@@ -458,7 +394,7 @@ export default function MessageList ({
                   ? currentUser.name
                   : groupUsers?.find(user => user.id === message.userId)?.name
               }
-              pinned={false} //  todo - message pinning
+              pinned={false}
               messageActionHandler={(action, vars) =>
                 messageActionHandler(action, vars)
               }

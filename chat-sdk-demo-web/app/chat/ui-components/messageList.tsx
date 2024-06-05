@@ -19,6 +19,7 @@ export default function MessageList ({
   activeChannel,
   currentUser,
   groupUsers,
+  groupMembership,
   messageActionHandler = (action, vars) => {},
   usersHaveChanged,
   updateUnreadMessagesCounts,
@@ -32,12 +33,12 @@ export default function MessageList ({
   showUserMessage
 }) {
   const MAX_AVATARS_SHOWN = 9
-  const [loadedChannelId, setLoadedChannelId] = useState('')
   const [messages, setMessages] = useState<pnMessage[]>([])
   const [currentMembership, setCurrentMembership] = useState<Membership>()
   const [readReceipts, setReadReceipts] = useState()
-  const [pinnedMessageTimetoken, setPinnedMessageTimetoken] = useState('')  //  Keep track of if someone else has updated the pinned message
+  const [pinnedMessageTimetoken, setPinnedMessageTimetoken] = useState('') //  Keep track of if someone else has updated the pinned message
   const messageListRef = useRef<HTMLDivElement>(null)
+  const [loadingMessage, setLoadingMessage] = useState('')
 
   function uniqueById (items) {
     const set = new Set()
@@ -50,57 +51,79 @@ export default function MessageList ({
 
   useEffect(() => {
     //  UseEffect to handle initial configuration of the Message List including reading the historical messages
+    setLoadingMessage('Fetching History from Server...')
     console.log(
       'ACTIVE CHANNEL CHANGED from MESSAGE LIST 1: ' + activeChannel?.id
     )
+    console.log('current user: ' + currentUser.id)
+    console.log('group membership: ')
+    console.log(groupMembership)
     if (!activeChannel) return
-    if (activeChannel.id == loadedChannelId) return
+    //if (activeChannel.id == loadedChannelId) return
     async function initMessageList () {
+      console.log('start: InitMessageList')
       setMessages([])
-      setLoadedChannelId(activeChannel.id)
-      const result = await currentUser.getMemberships() //  Some issue with filtering on memberships by channel ID, will raise.  I should be able to filter on channel.id == currentChannel.id
-      var localCurrentMembership
-      for (var i = 0; i < result?.memberships.length; i++) {
-        if (result.memberships[i].channel.id == activeChannel.id) {
-          localCurrentMembership = result.memberships[i]
-          setCurrentMembership(localCurrentMembership)
-        }
+      console.log('waiting for memberships')
+      if (groupMembership == null) {
+        console.log('BUG: groupMembership should not be null')
       }
+      var localCurrentMembership = groupMembership
+      setCurrentMembership(groupMembership)
+      //if (groupMembership == null) {
+      //  const result = await currentUser.getMemberships() //  Some issue with filtering on memberships by channel ID, will raise.  I should be able to filter on channel.id == currentChannel.id
+      //  var localCurrentMembership
+      //  for (var i = 0; i < result?.memberships.length; i++) {
+      //    if (result.memberships[i].channel.id == activeChannel.id) {
+      //      localCurrentMembership = result.memberships[i]
+      //      setCurrentMembership(localCurrentMembership)
+      //    }
+      //  }
+      //  console.log('got memberships')
+      //} else {
+      //  setCurrentMembership(groupMembership)
+      //  console.log('already had membership')
+      //}
 
       //setMessages([])
+      console.log('calling get history')
       activeChannel
         .getHistory({ count: 20 })
         .then(async historicalMessagesObj => {
+          console.log('retrieved history')
           //  Run through the historical messages and set the most recently received one (that we were not the sender of) as read
           console.log(historicalMessagesObj.messages)
           if (historicalMessagesObj.messages) {
-            for (
-              var i = historicalMessagesObj.messages.length - 1;
-              i >= 0;
-              i--
-            ) {
-              console.log(historicalMessagesObj.messages[i].userId)
-              //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
-              console.log(
-                'setting last read token to ' +
+            if (historicalMessagesObj.messages.length == 0) {
+              setLoadingMessage('No messages in this chat yet')
+            } else {
+              setMessages(messages => {
+                return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
+              })
+              for (
+                var i = historicalMessagesObj.messages.length - 1;
+                i >= 0;
+                i--
+              ) {
+                console.log(historicalMessagesObj.messages[i].userId)
+                //if (historicalMessagesObj.messages[i].userId !== currentUser.id) {
+                console.log(
+                  'setting last read token to ' +
+                    historicalMessagesObj.messages[i].timetoken
+                )
+                console.log(localCurrentMembership)
+                await localCurrentMembership?.setLastReadMessageTimetoken(
                   historicalMessagesObj.messages[i].timetoken
-              )
-              console.log(localCurrentMembership)
-              await localCurrentMembership?.setLastReadMessageTimetoken(
-                historicalMessagesObj.messages[i].timetoken
-              )
-              updateUnreadMessagesCounts()
-              break
-              //}
+                )
+                updateUnreadMessagesCounts()
+                break
+                //}
+              }
             }
           }
-          setMessages(messages => {
-            return uniqueById([...historicalMessagesObj.messages]) //  Avoid race condition where message was being added twice
-          })
         })
     }
     initMessageList()
-  }, [activeChannel, currentUser, loadedChannelId])
+  }, [activeChannel])
 
   useEffect(() => {
     //  UseEffect to stream Read Receipts
@@ -110,45 +133,38 @@ export default function MessageList ({
     activeChannel.streamReadReceipts(receipts => {
       setReadReceipts(receipts)
     })
-
   }, [activeChannel])
 
   useEffect(() => {
-    console.log("ACTIVE CHANNEL CHANGED.")
-    activeChannel?.streamUpdates(async (channelUpdate) => {
+    console.log('ACTIVE CHANNEL CHANGED.')
+    activeChannel?.streamUpdates(async channelUpdate => {
       console.log('STREAMMMMM')
       if (channelUpdate.custom) {
-        const pinnedMessageTimetoken = channelUpdate.custom.pinnedMessageTimetoken
-        if (!pinnedMessageTimetoken)
-          {
-            //  Message was unpinned
-            setActiveChannelPinnedMessage(null)
-          }
-          else
-          {
-            channelUpdate.getMessage(pinnedMessageTimetoken).then((message) => {
-              setActiveChannelPinnedMessage(message)
-            })
-          }
-  
+        const pinnedMessageTimetoken =
+          channelUpdate.custom.pinnedMessageTimetoken
+        if (!pinnedMessageTimetoken) {
+          //  Message was unpinned
+          setActiveChannelPinnedMessage(null)
+        } else {
+          channelUpdate.getMessage(pinnedMessageTimetoken).then(message => {
+            setActiveChannelPinnedMessage(message)
+          })
+        }
       }
-
     })
   }, [activeChannel])
 
-
-
-//  useEffect(() => {
-//    if (!activeChannel) return
-//    if (!pinnedMessageTimetoken) return
-//    console.log('USE EFFECT PINNED MESSAGE')
-//    console.log(activeChannel.id)
-//    activeChannel.getPinnedMessage().then(pinnedMessage => {
-//      console.log('PINNED MESSAGE')
-//      console.log(pinnedMessage)
-//      setPinnedMessage(pinnedMessage)
-//    })
-//  }, [activeChannel, pinnedMessageTimetoken])
+  //  useEffect(() => {
+  //    if (!activeChannel) return
+  //    if (!pinnedMessageTimetoken) return
+  //    console.log('USE EFFECT PINNED MESSAGE')
+  //    console.log(activeChannel.id)
+  //    activeChannel.getPinnedMessage().then(pinnedMessage => {
+  //      console.log('PINNED MESSAGE')
+  //      console.log(pinnedMessage)
+  //      setPinnedMessage(pinnedMessage)
+  //    })
+  //  }, [activeChannel, pinnedMessageTimetoken])
 
   useEffect(() => {
     //  UseEffect to receive new messages sent on the channel
@@ -294,17 +310,19 @@ export default function MessageList ({
           <div className='flex flex-row'>
             {/* Pin with number of pinned messages */}
             <div className='flex justify-center items-center rounded min-w-6 px-2 my-2 border text-xs font-normal border-navy50 bg-neutral-100'>
-              {activeChannelPinnedMessage ? "1" : "0"}
+              {activeChannelPinnedMessage ? '1' : '0'}
             </div>
             <div
-              className={`p-3 py-3 ${activeChannelPinnedMessage && 'cursor-pointer hover:bg-neutral-100 hover:rounded-md'} `}
+              className={`p-3 py-3 ${
+                activeChannelPinnedMessage &&
+                'cursor-pointer hover:bg-neutral-100 hover:rounded-md'
+              } `}
               onClick={() => {
-                if (!activeChannelPinnedMessage) return;
-                //  
-                if (messageListRef && messageListRef.current)
-                  {
-                    messageListRef.current.scrollTop = 0
-                  }
+                if (!activeChannelPinnedMessage) return
+                //
+                if (messageListRef && messageListRef.current) {
+                  messageListRef.current.scrollTop = 0
+                }
                 //setShowPinnedMessages(true)
                 //setShowThread(false)
               }}
@@ -343,46 +361,67 @@ export default function MessageList ({
         }`}
         ref={messageListRef}
       >
-
-
         {messages && messages.length == 0 && (
-          <div className='flex flex-row items-center justify-center w-full h-screen text-xl select-none'>
-            No messages in this chat yet
+          <div className='flex flex-col items-center justify-center w-full h-screen text-xl select-none'>
+            <Image
+            src='/chat.svg'
+            alt='Chat Icon'
+            className=''
+            width={100}
+            height={100}
+            priority
+          />
+            {loadingMessage}
           </div>
         )}
         {/* Show the pinned message first if there is one */}
-        {activeChannelPinnedMessage && <Message
-              key={activeChannelPinnedMessage.timetoken}
-              received={currentUser.id !== activeChannelPinnedMessage.userId}
-              avatarUrl={
-                activeChannelPinnedMessage.userId === currentUser.id
-                  ? currentUser.profileUrl
-                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)
-                      ?.profileUrl
-              }
-              isOnline={
-                activeChannelPinnedMessage.userId === currentUser.id
-                  ? currentUser.active
-                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)?.active
-              }
-              readReceipts={readReceipts}
-              quotedMessageSender={activeChannelPinnedMessage.quotedMessage && ( activeChannelPinnedMessage.quotedMessage.userId === currentUser.id
+        {activeChannelPinnedMessage && (
+          <Message
+            key={activeChannelPinnedMessage.timetoken}
+            received={currentUser.id !== activeChannelPinnedMessage.userId}
+            avatarUrl={
+              activeChannelPinnedMessage.userId === currentUser.id
+                ? currentUser.profileUrl
+                : groupUsers?.find(
+                    user => user.id === activeChannelPinnedMessage.userId
+                  )?.profileUrl
+            }
+            isOnline={
+              activeChannelPinnedMessage.userId === currentUser.id
+                ? currentUser.active
+                : groupUsers?.find(
+                    user => user.id === activeChannelPinnedMessage.userId
+                  )?.active
+            }
+            readReceipts={readReceipts}
+            quotedMessageSender={
+              activeChannelPinnedMessage.quotedMessage &&
+              (activeChannelPinnedMessage.quotedMessage.userId ===
+              currentUser.id
                 ? currentUser.name
-                : groupUsers?.find(user => user.id === activeChannelPinnedMessage.quotedMessage.userId)?.name)}
-              showReadIndicator={activeChannel.type !== 'public'}
-              sender={
-                activeChannelPinnedMessage.userId === currentUser.id
-                  ? currentUser.name
-                  : groupUsers?.find(user => user.id === activeChannelPinnedMessage.userId)?.name
-              }
-              pinned={true}
-              messageActionHandler={(action, vars) =>
-                messageActionHandler(action, vars)
-              }
-              message={activeChannelPinnedMessage}
-              currentUserId={currentUser.id}
-              showUserMessage={showUserMessage}
-            />}
+                : groupUsers?.find(
+                    user =>
+                      user.id ===
+                      activeChannelPinnedMessage.quotedMessage.userId
+                  )?.name)
+            }
+            showReadIndicator={activeChannel.type !== 'public'}
+            sender={
+              activeChannelPinnedMessage.userId === currentUser.id
+                ? currentUser.name
+                : groupUsers?.find(
+                    user => user.id === activeChannelPinnedMessage.userId
+                  )?.name
+            }
+            pinned={true}
+            messageActionHandler={(action, vars) =>
+              messageActionHandler(action, vars)
+            }
+            message={activeChannelPinnedMessage}
+            currentUserId={currentUser.id}
+            showUserMessage={showUserMessage}
+          />
+        )}
 
         {messages.map((message, index) => {
           //console.log(message)
@@ -405,9 +444,14 @@ export default function MessageList ({
               }
               readReceipts={readReceipts}
               //quotedMessage={message.quotedMessage}
-              quotedMessageSender={message.quotedMessage && ( message.quotedMessage.userId === currentUser.id
-                ? currentUser.name
-                : groupUsers?.find(user => user.id === message.quotedMessage.userId)?.name)}
+              quotedMessageSender={
+                message.quotedMessage &&
+                (message.quotedMessage.userId === currentUser.id
+                  ? currentUser.name
+                  : groupUsers?.find(
+                      user => user.id === message.quotedMessage.userId
+                    )?.name)
+              }
               showReadIndicator={activeChannel.type !== 'public'}
               sender={
                 message.userId === currentUser.id

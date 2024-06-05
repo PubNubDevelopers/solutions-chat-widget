@@ -183,7 +183,7 @@ export default function Message ({
       //  ToDo: Does this useCallback still require the UserId
       //console.log(messagePart)
       if (messagePart?.type === 'text') {
-        return (<span>{messagePart.content.text}</span>)
+        return (<span key={index}>{messagePart.content.text}</span>)
       }
       if (messagePart?.type === 'plainLink') {
         return (<span key={index} className="cursor-pointer underline" onClick={() => openLink(`${messagePart.content.link}`)}>{messagePart.content.link}</span>)

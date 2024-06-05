@@ -46,7 +46,7 @@ import {
   UnreadMessagesOnChannel,
   PresenceIcon
 } from '@/app/types'
-import { actionCompleted } from "pubnub-demo-integration";
+import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function Page () {
   const searchParams = useSearchParams()
@@ -132,10 +132,10 @@ export default function Page () {
       const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
       message?.toggleReaction(data.native)
       actionCompleted({
-        action: "React to a message (Emoji)",
+        action: 'React to a message (Emoji)',
         blockDuplicateCalls: false,
         debug: false
-      });
+      })
     }
     setShowEmojiPicker(false)
   }
@@ -143,7 +143,7 @@ export default function Page () {
   /* Bootstrap the application if it is run in an empty keyset */
   async function keysetInit (chat) {
     if (!chat) return
-    console.log("Keyset Init")
+    console.log('Keyset Init')
     try {
       await chat?.createPublicConversation({
         channelId: 'public-general',
@@ -332,7 +332,6 @@ export default function Page () {
         }
         unreadMessagesOnChannel.push(newUnreadMessage)
       })
-      console.log(unreadMessagesOnChannel)
       setUnreadMessages(unreadMessagesOnChannel)
     })
   }
@@ -412,10 +411,10 @@ export default function Page () {
       }, 500)
 
       actionCompleted({
-        action: "Login",
+        action: 'Login',
         blockDuplicateCalls: false,
         debug: false
-      });
+      })
 
       //refreshMembersFromServer()
     }
@@ -436,7 +435,6 @@ export default function Page () {
 
     function updateUnreadMessagesCounts () {
       chat?.getUnreadMessagesCounts({}).then(result => {
-        console.log(result)
         let unreadMessagesOnChannel: UnreadMessagesOnChannel[] = []
         result.forEach((element, index) => {
           let newUnreadMessage: UnreadMessagesOnChannel = {
@@ -445,7 +443,6 @@ export default function Page () {
           }
           unreadMessagesOnChannel.push(newUnreadMessage)
         })
-        console.log(unreadMessagesOnChannel)
         setUnreadMessages(unreadMessagesOnChannel)
       })
     }
@@ -519,11 +516,9 @@ export default function Page () {
 
     //  Set the pinned message for the active channel, this returns an updated channel ID so retrieve based on the server-channel
     chat.getChannel(activeChannel.id).then(localActiveChannel => {
-      console.log('INIT: ' + localActiveChannel)
       localActiveChannel
         ?.getPinnedMessage()
         .then(localActiveChannelPinnedMessage => {
-          console.log('INIT2: ' + localActiveChannelPinnedMessage?.content.text)
           setActiveChannelPinnedMessage(localActiveChannelPinnedMessage)
         })
     })
@@ -805,7 +800,7 @@ export default function Page () {
           action: "Open a Message's Thread",
           blockDuplicateCalls: false,
           debug: false
-        });
+        })
         break
       case MessageActionsTypes.QUOTE:
         //  todo this is test code
@@ -822,10 +817,10 @@ export default function Page () {
           }
         })
         actionCompleted({
-          action: "Quote a Message",
+          action: 'Quote a Message',
           blockDuplicateCalls: false,
           debug: false
-        });
+        })
         break
       case MessageActionsTypes.PIN:
         if (activeChannel) {
@@ -857,10 +852,10 @@ export default function Page () {
               ToastType.CHECK
             )
             actionCompleted({
-              action: "Pin a Message",
+              action: 'Pin a Message',
               blockDuplicateCalls: false,
               debug: false
-            });
+            })
           }
         }
         break
@@ -1005,10 +1000,10 @@ export default function Page () {
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
             )
             actionCompleted({
-              action: "Leave a Private Group",
+              action: 'Leave a Private Group',
               blockDuplicateCalls: false,
               debug: false
-            });
+            })
             if (publicChannels.length > 0) {
               setActiveChannel(publicChannels[0])
             }
@@ -1042,10 +1037,10 @@ export default function Page () {
             ToastType.CHECK
           )
           actionCompleted({
-            action: "Change the Private Group name",
+            action: 'Change the Private Group name',
             blockDuplicateCalls: false,
             debug: false
-          });
+          })
         }}
         changeNameModalVisible={changeChatNameModalVisible}
         setChangeNameModalVisible={setChangeChatNameModalVisible}
@@ -1204,14 +1199,18 @@ export default function Page () {
               {unreadMessages?.map(
                 (unreadMessage, index) =>
                   unreadMessage.channel.id !== activeChannel?.id &&
-                  ((unreadMessage.channel.type === 'direct' && directChats
-                    ? directChatsUsers[
-                        directChats.findIndex(
-                          dmChannel => dmChannel.id == unreadMessage.channel.id
-                        )
-                      ]?.find(user => user.id !== chat.currentUser.id)?.name
-                    : unreadMessage.channel.name
-                  ) ?? "").toLowerCase()?.indexOf(searchChannels.toLowerCase()) > -1 && (
+                  (
+                    (unreadMessage.channel.type === 'direct' && directChats
+                      ? directChatsUsers[
+                          directChats.findIndex(
+                            dmChannel =>
+                              dmChannel.id == unreadMessage.channel.id
+                          )
+                        ]?.find(user => user.id !== chat.currentUser.id)?.name
+                      : unreadMessage.channel.name) ?? ''
+                  )
+                    .toLowerCase()
+                    ?.indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
                       key={index}
                       avatarUrl={
@@ -1479,9 +1478,12 @@ export default function Page () {
             <div>
               {directChats?.map(
                 (directChat, index) =>
-                  (directChatsUsers[index]
-                    ?.find(user => user.id !== chat.currentUser.id)
-                    ?.name ?? '').toLowerCase()
+                  (
+                    directChatsUsers[index]?.find(
+                      user => user.id !== chat.currentUser.id
+                    )?.name ?? ''
+                  )
+                    .toLowerCase()
                     .indexOf(searchChannels.toLowerCase()) > -1 && (
                     <ChatMenuItem
                       key={index}
@@ -1563,6 +1565,27 @@ export default function Page () {
                         )
                       ]
                     : []
+                }
+                groupMembership={
+                  activeChannel?.type == 'group' && privateGroups
+                    ? privateGroupsMemberships[
+                        privateGroups.findIndex(
+                          group => group.id == activeChannel?.id
+                        )
+                      ]
+                    : activeChannel?.type == 'direct' && directChats
+                    ? directChatsMemberships[
+                        directChats.findIndex(
+                          dmChannel => dmChannel.id == activeChannel?.id
+                        )
+                      ]
+                    : activeChannel?.type == 'public' && publicChannels
+                    ? publicChannelsMemberships[
+                        publicChannels.findIndex(
+                          channel => channel.id == activeChannel?.id
+                        )
+                      ]
+                    : null
                 }
                 messageActionHandler={(action, vars) =>
                   messageActionHandler(action, vars)

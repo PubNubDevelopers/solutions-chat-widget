@@ -46,6 +46,7 @@ import {
   UnreadMessagesOnChannel,
   PresenceIcon
 } from '@/app/types'
+import { actionCompleted } from "pubnub-demo-integration";
 
 export default function Page () {
   const searchParams = useSearchParams()
@@ -130,6 +131,11 @@ export default function Page () {
       //  Selected emoji is intended for a message reaction
       const message = await activeChannel?.getMessage(showEmojiMessageTimetoken)
       message?.toggleReaction(data.native)
+      actionCompleted({
+        action: "React to a message (Emoji)",
+        blockDuplicateCalls: false,
+        debug: true
+      });
     }
     setShowEmojiPicker(false)
   }
@@ -349,7 +355,7 @@ export default function Page () {
         userId: userId,
         typingTimeout: 5000,
         storeUserActivityTimestamps: true,
-        storeUserActivityInterval: 60000
+        storeUserActivityInterval: 300000 /* 5 minutes */
       })
 
       setChat(chat)
@@ -400,6 +406,12 @@ export default function Page () {
         updateChannelMembershipsForDirects(chat)
         updateChannelMembershipsForGroups(chat)
       }, 500)
+
+      actionCompleted({
+        action: "Login",
+        blockDuplicateCalls: false,
+        debug: true
+      });
 
       //refreshMembersFromServer()
     }
@@ -784,7 +796,11 @@ export default function Page () {
           setActiveThreadChannel(await data.getThread())
         }
         setActiveThreadMessage(data)
-
+        actionCompleted({
+          action: "Open a Message's Thread",
+          blockDuplicateCalls: false,
+          debug: true
+        });
         break
       case MessageActionsTypes.QUOTE:
         //  todo this is test code
@@ -800,6 +816,11 @@ export default function Page () {
             setQuotedMessageSender(user.name)
           }
         })
+        actionCompleted({
+          action: "Quote a Message",
+          blockDuplicateCalls: false,
+          debug: true
+        });
         break
       case MessageActionsTypes.PIN:
         if (activeChannel) {
@@ -830,53 +851,13 @@ export default function Page () {
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/pinned',
               ToastType.CHECK
             )
+            actionCompleted({
+              action: "Pin a Message",
+              blockDuplicateCalls: false,
+              debug: true
+            });
           }
-
-          /*
-            
-            console.log('CURRENTLY PINNED MESSAGE 100: ' + pinnedMessage100?.text)
-            
-          
-            const currentPinnedMessage = await activeChannel.getPinnedMessage()
-            console.log('CURRENTLY PINNED MESSAGE: ' + currentPinnedMessage?.text)
-            if (currentPinnedMessage) {
-              console.log('UNPINNING MESSAGE')
-              activeChannel.unpinMessage().then(async channel => {
-                console.log ("MESSAGE UNPINNED FROM " + channel.id)
-                setActiveChannel(channel)
-                const currentPinnedMessage2 = await channel.getPinnedMessage()
-                console.log('CURRENTLY PINNED MESSAGE 2: ' + currentPinnedMessage2?.text)
-                })
-    
-            }
-            if (currentPinnedMessage?.timetoken != data.timetoken) {
-              //   Only pin if this is a new message
-              console.log('PINNING MESSAGE')
-              const justPinnedMessage = await activeChannel.pinMessage(data)
-              const shouldBePinned = await activeChannel.getPinnedMessage()
-              //setPinnedMessageTimetoken(data.timetoken)
-              console.log(shouldBePinned)
-              console.log(justPinnedMessage)
-    
-    
-              )
-            } else {
-              //setPinnedMessageTimetoken('0')
-            }
-              */
-          console.log('FINISHED PINNING LOGIC')
-          //await activeChannel.pinMessage(data)
-          //setShowThread(false)
-          //setShowPinnedMessages(true)
         }
-
-        break
-      case MessageActionsTypes.REACT:
-        showUserMessage(
-          `Selected ${data.native}`,
-          'Work in progress: Though supported by the Chat SDK, this demo does not yet support message reactions',
-          ''
-        )
         break
       case MessageActionsTypes.COPY:
         showUserMessage('Copied', `${data.text}`, '', ToastType.CHECK)
@@ -1018,6 +999,11 @@ export default function Page () {
               'You have left this group, please select a different channel or create a new group / DM',
               'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
             )
+            actionCompleted({
+              action: "Leave a Private Group",
+              blockDuplicateCalls: false,
+              debug: true
+            });
             if (publicChannels.length > 0) {
               setActiveChannel(publicChannels[0])
             }
@@ -1035,7 +1021,7 @@ export default function Page () {
       />
       {/* Modal to change the Chat group name*/}
       <ModalChangeName
-        name={null}
+        name={name}
         activeChannel={activeChannel}
         modalType={ChatNameModals.CHANNEL}
         showUserMessage={showUserMessage}
@@ -1047,8 +1033,14 @@ export default function Page () {
           showUserMessage(
             'Channel Name Changed',
             'The channel name has been successfully updated',
-            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details'
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details',
+            ToastType.CHECK
           )
+          actionCompleted({
+            action: "Change the Private Group name",
+            blockDuplicateCalls: false,
+            debug: true
+          });
         }}
         changeNameModalVisible={changeChatNameModalVisible}
         setChangeNameModalVisible={setChangeChatNameModalVisible}
@@ -1094,6 +1086,12 @@ export default function Page () {
             name: newName
           })
           setName(newName)
+          showUserMessage(
+            'Name Changed',
+            'Your name has been successfully updated',
+            'https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/updates#update-user-details',
+            ToastType.CHECK
+          )
         }}
         showUserMessage={showUserMessage}
         changeNameModalVisible={changeUserNameModalVisible}

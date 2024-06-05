@@ -5,6 +5,7 @@ import QuotedMessage from './quotedMessage'
 import MentionSuggestions from './mentionSuggestions'
 import { useState, useEffect, useRef } from 'react'
 import { ToastType } from '@/app/types'
+import { actionCompleted } from "pubnub-demo-integration";
 
 export default function MessageInput ({
   activeChannel,
@@ -49,12 +50,18 @@ export default function MessageInput ({
         activeChannel?.createMessageDraft({
           userSuggestionSource: 'channel',
           isTypingIndicatorTriggered: activeChannel.type !== 'public',
-          userLimit: 5,
-          channelLimit: 5
+          userLimit: 6,
+          channelLimit: 6
         })
       )
       setQuotedMessage(false)
       setText('')
+
+      actionCompleted({
+        action: "Send a Chat Message",
+        blockDuplicateCalls: false,
+        debug: true
+      });
     }
   }
 
@@ -101,6 +108,11 @@ export default function MessageInput ({
     setText(newMessageDraft.value)
     setSuggestedUsers([])
     setNameOccurrenceIndex(-1)
+    actionCompleted({
+      action: "@Mention another User",
+      blockDuplicateCalls: false,
+      debug: true
+    });
     inputRef.current?.focus()
   }
 
@@ -110,6 +122,11 @@ export default function MessageInput ({
     setText(newMessageDraft.value)
     setSuggestedChannels([])
     setChannelOccurrenceIndex(-1)
+    actionCompleted({
+      action: "#Reference a Channel",
+      blockDuplicateCalls: false,
+      debug: true
+    });
     inputRef.current?.focus()
   }
 
@@ -120,8 +137,8 @@ export default function MessageInput ({
       activeChannel.createMessageDraft({
         userSuggestionSource: 'channel',
         isTypingIndicatorTriggered: activeChannel.type !== 'public',
-        userLimit: 5,
-        channelLimit: 5
+        userLimit: 6,
+        channelLimit: 6
       })
     )
   }, [activeChannel])

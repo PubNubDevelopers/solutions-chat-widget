@@ -7,6 +7,7 @@ import Image from 'next/image'
 import NewMessageUserRow from './newMessageUserRow'
 import NewMessageUserPill from './newMessageUserPill'
 import { ChatEventTypes, ToastType, PresenceIcon } from '@/app/types'
+import { actionCompleted } from "pubnub-demo-integration";
 
 export default function NewMessageGroup ({
   chat,
@@ -97,6 +98,11 @@ export default function NewMessageGroup ({
         channelId: channel.id,
         channelType: channel.type
       })
+      actionCompleted({
+        action: "Create a new 1:1 (Direct) Chat",
+        blockDuplicateCalls: false,
+        debug: true
+      });
     } else {
       //  Creating a group conversation
       const randomNewChannelName = 'Group ' + Math.floor(Math.random() * 1000)
@@ -114,6 +120,11 @@ export default function NewMessageGroup ({
         channelType: channel.type
       })
       createdChannel = channel
+      actionCompleted({
+        action: "Create a new Private Group",
+        blockDuplicateCalls: false,
+        debug: true
+      });
     }
     if (createdChannel) {
       invokeRefresh(desiredChannelId, createdChannel['type'])

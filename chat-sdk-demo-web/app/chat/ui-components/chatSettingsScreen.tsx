@@ -4,6 +4,7 @@ import { roboto } from '@/app/fonts'
 import { Membership, User } from '@pubnub/chat'
 import { useState, useEffect } from 'react'
 import { ToastType } from '@/app/types'
+import { actionCompleted } from "pubnub-demo-integration";
 
 export default function ChatSettingsScreen ({
   chatSettingsScreenVisible,
@@ -21,6 +22,15 @@ export default function ChatSettingsScreen ({
   showUserMessage
 }) {
   const MAX_AVATARS_SHOWN = 13
+
+  useEffect(() => {
+    if (!chatSettingsScreenVisible) return
+    actionCompleted({
+      action: "Open the Chat Settings",
+      blockDuplicateCalls: false,
+      debug: true
+    });
+  }, [chatSettingsScreenVisible])
 
   return (
     <div

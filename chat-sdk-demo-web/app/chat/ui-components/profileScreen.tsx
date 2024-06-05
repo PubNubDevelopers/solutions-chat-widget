@@ -1,10 +1,11 @@
-//  NOT CURRENTLY USED
+
 
 import Image from 'next/image'
 import Avatar from './avatar'
 import { roboto } from '@/app/fonts'
 import { useState, useEffect } from 'react'
 import {ToastType} from '@/app/types'
+import { actionCompleted } from "pubnub-demo-integration";
 
 export default function ProfileScreen ({
   profileScreenVisible,
@@ -17,6 +18,15 @@ export default function ProfileScreen ({
   showUserMessage,
   changeUserNameScreenVisible
 }) {
+
+  useEffect(() => {
+    if (!profileScreenVisible) return
+    actionCompleted({
+      action: "Open your Profile Settings",
+      blockDuplicateCalls: false,
+      debug: true
+    });
+  }, [profileScreenVisible])
 
   return (
     <div

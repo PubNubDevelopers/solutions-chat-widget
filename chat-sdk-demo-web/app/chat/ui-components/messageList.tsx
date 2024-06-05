@@ -117,18 +117,21 @@ export default function MessageList ({
     console.log("ACTIVE CHANNEL CHANGED.")
     activeChannel?.streamUpdates(async (channelUpdate) => {
       console.log('STREAMMMMM')
-      const pinnedMessageTimetoken = channelUpdate.custom.pinnedMessageTimetoken
-      if (!pinnedMessageTimetoken)
-        {
-          //  Message was unpinned
-          setActiveChannelPinnedMessage(null)
-        }
-        else
-        {
-          channelUpdate.getMessage(pinnedMessageTimetoken).then((message) => {
-            setActiveChannelPinnedMessage(message)
-          })
-        }
+      if (channelUpdate.custom) {
+        const pinnedMessageTimetoken = channelUpdate.custom.pinnedMessageTimetoken
+        if (!pinnedMessageTimetoken)
+          {
+            //  Message was unpinned
+            setActiveChannelPinnedMessage(null)
+          }
+          else
+          {
+            channelUpdate.getMessage(pinnedMessageTimetoken).then((message) => {
+              setActiveChannelPinnedMessage(message)
+            })
+          }
+  
+      }
 
     })
   }, [activeChannel])

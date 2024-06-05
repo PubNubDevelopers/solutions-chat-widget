@@ -10,7 +10,6 @@ export enum MessageActionsTypes {
   REPLY_IN_THREAD = "reply",
   QUOTE = "quote",
   PIN = "pin",
-  REACT = "react",
   COPY = "copy",
   SHOW_EMOJI = "show_emoji"
 }

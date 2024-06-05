@@ -24,7 +24,7 @@ export default function ProfileScreen ({
     actionCompleted({
       action: "Open your Profile Settings",
       blockDuplicateCalls: false,
-      debug: true
+      debug: false
     });
   }, [profileScreenVisible])
 

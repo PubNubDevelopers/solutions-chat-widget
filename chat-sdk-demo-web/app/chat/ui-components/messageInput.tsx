@@ -60,7 +60,7 @@ export default function MessageInput ({
       actionCompleted({
         action: "Send a Chat Message",
         blockDuplicateCalls: false,
-        debug: true
+        debug: false
       });
     }
   }
@@ -111,7 +111,7 @@ export default function MessageInput ({
     actionCompleted({
       action: "@Mention another User",
       blockDuplicateCalls: false,
-      debug: true
+      debug: false
     });
     inputRef.current?.focus()
   }
@@ -125,7 +125,7 @@ export default function MessageInput ({
     actionCompleted({
       action: "#Reference a Channel",
       blockDuplicateCalls: false,
-      debug: true
+      debug: false
     });
     inputRef.current?.focus()
   }

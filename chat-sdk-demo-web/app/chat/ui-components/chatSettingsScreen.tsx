@@ -28,7 +28,7 @@ export default function ChatSettingsScreen ({
     actionCompleted({
       action: "Open the Chat Settings",
       blockDuplicateCalls: false,
-      debug: true
+      debug: false
     });
   }, [chatSettingsScreenVisible])
 

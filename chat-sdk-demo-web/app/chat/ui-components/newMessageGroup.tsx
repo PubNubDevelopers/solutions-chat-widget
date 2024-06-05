@@ -101,7 +101,7 @@ export default function NewMessageGroup ({
       actionCompleted({
         action: "Create a new 1:1 (Direct) Chat",
         blockDuplicateCalls: false,
-        debug: true
+        debug: false
       });
     } else {
       //  Creating a group conversation
@@ -123,7 +123,7 @@ export default function NewMessageGroup ({
       actionCompleted({
         action: "Create a new Private Group",
         blockDuplicateCalls: false,
-        debug: true
+        debug: false
       });
     }
     if (createdChannel) {

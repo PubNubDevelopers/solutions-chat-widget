@@ -54,7 +54,7 @@ export default function Page () {
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
   const [searchChannels, setSearchChannels] = useState('')
-  const [loadMessage, setLoadMessage] = useState('Chat is initializing...')
+  const [loadMessage, setLoadMessage] = useState('Demo is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState('')
   const [emojiPickerTargetsInput, setEmojiPickerTargetsInput] = useState(false)
@@ -134,7 +134,7 @@ export default function Page () {
       actionCompleted({
         action: "React to a message (Emoji)",
         blockDuplicateCalls: false,
-        debug: true
+        debug: false
       });
     }
     setShowEmojiPicker(false)
@@ -143,6 +143,7 @@ export default function Page () {
   /* Bootstrap the application if it is run in an empty keyset */
   async function keysetInit (chat) {
     if (!chat) return
+    console.log("Keyset Init")
     try {
       await chat?.createPublicConversation({
         channelId: 'public-general',
@@ -168,6 +169,9 @@ export default function Page () {
         }
       })
     } catch (e) {}
+
+    console.log('finished keyset init')
+    //refreshMembersFromServer()
   }
 
   /*  Initialize or Update all the state arrays related to public groups */
@@ -381,7 +385,7 @@ export default function Page () {
           if (channelsResponse.channels.length < 2) {
             //  There are fewer than the expected number of public channels on this keyset, do any required Keyset initialization
             await keysetInit(chat)
-            router.refresh()
+            location.reload()
           } else {
             //  Join public channels
             if (channelsResponse.channels.length > 0) {
@@ -410,7 +414,7 @@ export default function Page () {
       actionCompleted({
         action: "Login",
         blockDuplicateCalls: false,
-        debug: true
+        debug: false
       });
 
       //refreshMembersFromServer()
@@ -708,6 +712,7 @@ export default function Page () {
       forceUpdateGroupChannels = false,
       desiredChannelId = ''
     ) => {
+      console.log('useCallback - refreshMembersFromServer')
       if (!chat) return
       console.log('REMEMBER YOU ARE NOT REFRESHING MEMBERS FROM THE SERVER!!!')
       return //  TODO REMOVE THIS TO ENABLE OBJECT UPDATES.  IT'S JUST A PAIN WHEN DEBUGGING
@@ -799,7 +804,7 @@ export default function Page () {
         actionCompleted({
           action: "Open a Message's Thread",
           blockDuplicateCalls: false,
-          debug: true
+          debug: false
         });
         break
       case MessageActionsTypes.QUOTE:
@@ -819,7 +824,7 @@ export default function Page () {
         actionCompleted({
           action: "Quote a Message",
           blockDuplicateCalls: false,
-          debug: true
+          debug: false
         });
         break
       case MessageActionsTypes.PIN:
@@ -854,7 +859,7 @@ export default function Page () {
             actionCompleted({
               action: "Pin a Message",
               blockDuplicateCalls: false,
-              debug: true
+              debug: false
             });
           }
         }
@@ -1002,7 +1007,7 @@ export default function Page () {
             actionCompleted({
               action: "Leave a Private Group",
               blockDuplicateCalls: false,
-              debug: true
+              debug: false
             });
             if (publicChannels.length > 0) {
               setActiveChannel(publicChannels[0])
@@ -1039,7 +1044,7 @@ export default function Page () {
           actionCompleted({
             action: "Change the Private Group name",
             blockDuplicateCalls: false,
-            debug: true
+            debug: false
           });
         }}
         changeNameModalVisible={changeChatNameModalVisible}

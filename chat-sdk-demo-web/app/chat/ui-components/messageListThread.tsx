@@ -18,7 +18,8 @@ export default function MessageListThread ({
   activeThreadChannel,
   activeThreadMessage,
   currentUser,
-  groupUsers
+  groupUsers,
+  setChatSelectionMenuMinimized
 }) {
   const [messages, setMessages] = useState<pnMessage[]>([])
   const messageListRef = useRef<HTMLDivElement>(null)
@@ -84,7 +85,7 @@ export default function MessageListThread ({
             Reply in thread
             <div
               className='flex cursor-pointer p-3'
-              onClick={e => setShowThread(false)}
+              onClick={e => {setShowThread(false);setChatSelectionMenuMinimized(false)}}
             >
               <Image
                 src='/icons/close.svg'

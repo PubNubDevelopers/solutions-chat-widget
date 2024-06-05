@@ -15,8 +15,7 @@ import {
 import Image from 'next/image'
 import { roboto } from '@/app/fonts'
 import Header from './ui-components/header'
-import ChatMenuHeader from './ui-components/chatMenuHeader'
-import ChatMenuItem from './ui-components/chatMenuItem'
+import ChatSelectionMenu from './ui-components/chatSelectionMenu'
 import Avatar from './ui-components/avatar'
 import UnreadIndicator from './ui-components/unreadIndicator'
 import Message from './ui-components/message'
@@ -59,15 +58,12 @@ export default function Page () {
   const [emojiPickerTargetsInput, setEmojiPickerTargetsInput] = useState(false)
   const [selectedEmoji, setSelectedEmoji] = useState('')
 
-  const [unreadExpanded, setUnreadExpanded] = useState(true)
-  const [publicExpanded, setPublicExpanded] = useState(true)
-  const [groupsExpanded, setGroupsExpanded] = useState(true)
-  const [directMessagesExpanded, setDirectMessagesExpanded] = useState(true)
   const [showThread, setShowThread] = useState(false)
   const [roomSelectorVisible, setRoomSelectorVisible] = useState(false)
   const [profileScreenVisible, setProfileScreenVisible] = useState(false)
   const [chatSettingsScreenVisible, setChatSettingsScreenVisible] =
     useState(false)
+  const [chatSelectionMenuMinimized, setChatSelectionMenuMinimized] = useState(false)
   const [creatingNewMessage, setCreatingNewMessage] = useState(false)
   const [changeUserNameModalVisible, setChangeUserNameModalVisible] =
     useState(false)
@@ -732,6 +728,7 @@ export default function Page () {
     switch (action) {
       case MessageActionsTypes.REPLY_IN_THREAD:
         setShowThread(true)
+        setChatSelectionMenuMinimized(true)
         //  The data parameter is the message we are to reply to
         if (!data.hasThread) {
           setActiveThreadChannel(await data.createThread())
@@ -1077,374 +1074,30 @@ export default function Page () {
           'blur-sm opacity-40'
         }`}
       >
-        <div
-          id='chats-menu'
-          className='flex flex-col min-w-80 w-80 bg-navy50 py-0 overflow-y-auto overscroll-none mt-[64px] pb-6 select-none'
-        >
-          <div id='chats-search' className='relative px-4 mt-5'>
-            <input
-              id='chats-search-input'
-              value={searchChannels}
-              className='flex w-full rounded-md bg-navy50 border  border-neutral-400 py-[9px] pl-9 px-[13px] text-sm focus:ring-1 focus:ring-inputring outline-none placeholder:text-neutral-500'
-              placeholder='Search'
-              onChange={e => {
-                handleChatSearch(e.target.value)
-              }}
-            />
-            <Image
-              src='/icons/search.svg'
-              alt='Search Icon'
-              className='absolute left-6 top-1/2 h-[20px] w-[20px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900'
-              width={20}
-              height={20}
-              priority
-            />
-          </div>
-
-          {unreadMessages && unreadMessages.length > 0 && (
-            <ChatMenuHeader
-              text='UNREAD'
-              actionIcon={ChatHeaderActionIcon.MARK_READ}
-              expanded={unreadExpanded}
-              expandCollapse={() => {
-                setUnreadExpanded(!unreadExpanded)
-              }}
-              action={async () => {
-                const markedAsRead = await chat.markAllMessagesAsRead()
-                updateUnreadMessagesCounts()
-
-                showUserMessage(
-                  'Success:',
-                  'All messsages have been marked as read, and sent receipts are updated accordingly',
-                  'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/unread#mark-messages-as-read-all-channels',
-                  ToastType.CHECK
-                )
-              }}
-            />
-          )}
-          {unreadExpanded && (
-            <div>
-              {unreadMessages?.map(
-                (unreadMessage, index) =>
-                  unreadMessage.channel.id !== activeChannel?.id &&
-                  (
-                    (unreadMessage.channel.type === 'direct' && directChats
-                      ? directChatsUsers[
-                          directChats.findIndex(
-                            dmChannel =>
-                              dmChannel.id == unreadMessage.channel.id
-                          )
-                        ]?.find(user => user.id !== chat.currentUser.id)?.name
-                      : unreadMessage.channel.name) ?? ''
-                  )
-                    .toLowerCase()
-                    ?.indexOf(searchChannels.toLowerCase()) > -1 && (
-                    <ChatMenuItem
-                      key={index}
-                      avatarUrl={
-                        unreadMessage.channel.type === 'group'
-                          ? chat?.currentUser.profileUrl
-                            ? chat?.currentUser.profileUrl
-                            : '/avatars/placeholder.png'
-                          : unreadMessage.channel.type == 'public'
-                          ? unreadMessage.channel.custom?.profileUrl
-                            ? unreadMessage.channel.custom?.profileUrl
-                            : '/avatars/placeholder.png'
-                          : unreadMessage.channel.type == 'direct' &&
-                            directChats
-                          ? directChatsUsers[
-                              directChats.findIndex(
-                                dmChannel =>
-                                  dmChannel.id == unreadMessage.channel.id
-                              )
-                            ]?.find(user => user.id !== chat.currentUser.id)
-                              ?.profileUrl
-                            ? directChatsUsers[
-                                directChats.findIndex(
-                                  dmChannel =>
-                                    dmChannel.id == unreadMessage.channel.id
-                                )
-                              ]?.find(user => user.id !== chat.currentUser.id)
-                                ?.profileUrl
-                            : '/avatars/placeholder.png'
-                          : '/avatars/placeholder.png'
-                      }
-                      avatarBubblePrecedent={
-                        unreadMessage.channel.type === 'group' && privateGroups
-                          ? privateGroupsUsers[
-                              privateGroups.findIndex(
-                                group => group.id == unreadMessage.channel.id
-                              )
-                            ]?.map(user => user.id !== chat.currentUser.id)
-                            ? `+${
-                                privateGroupsUsers[
-                                  privateGroups.findIndex(
-                                    group =>
-                                      group.id == unreadMessage.channel.id
-                                  )
-                                ]?.map(user => user.id !== chat.currentUser.id)
-                                  .length - 1
-                              }`
-                            : ''
-                          : ''
-                      }
-                      text={
-                        unreadMessage.channel.type === 'direct' && directChats
-                          ? directChatsUsers[
-                              directChats.findIndex(
-                                dmChannel =>
-                                  dmChannel.id == unreadMessage.channel.id
-                              )
-                            ]?.find(user => user.id !== chat.currentUser.id)
-                              ?.name
-                          : unreadMessage.channel.name
-                      }
-                      present={PresenceIcon.NOT_SHOWN}
-                      count={'' + unreadMessage.count}
-                      markAsRead={true}
-                      markAsReadAction={async e => {
-                        e.stopPropagation()
-                        if (
-                          unreadMessage.channel.type === 'public' &&
-                          publicChannelsMemberships &&
-                          publicChannels
-                        ) {
-                          const index = publicChannelsMemberships.findIndex(
-                            membership =>
-                              membership.channel.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            const lastMessage = await publicChannels[
-                              index
-                            ]?.getHistory({ count: 1 })
-                            if (lastMessage && lastMessage.messages) {
-                              await publicChannelsMemberships[
-                                index
-                              ].setLastReadMessage(lastMessage.messages[0])
-                              updateUnreadMessagesCounts()
-                            }
-                          }
-                        } else if (
-                          unreadMessage.channel.type === 'group' &&
-                          privateGroupsMemberships &&
-                          privateGroups
-                        ) {
-                          const index = privateGroupsMemberships.findIndex(
-                            membership =>
-                              membership.channel.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            const lastMessage = await privateGroups[
-                              index
-                            ]?.getHistory({ count: 1 })
-                            if (lastMessage && lastMessage.messages) {
-                              await privateGroupsMemberships[
-                                index
-                              ].setLastReadMessage(lastMessage.messages[0])
-                              updateUnreadMessagesCounts()
-                            }
-                          }
-                        } else if (
-                          unreadMessage.channel.type === 'direct' &&
-                          directChatsMemberships &&
-                          directChats
-                        ) {
-                          const index = directChatsMemberships.findIndex(
-                            membership =>
-                              membership.channel.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            const lastMessage = await directChats[
-                              index
-                            ]?.getHistory({ count: 1 })
-                            if (lastMessage && lastMessage.messages) {
-                              await directChatsMemberships[
-                                index
-                              ].setLastReadMessage(lastMessage.messages[0])
-                              updateUnreadMessagesCounts()
-                            }
-                          }
-                        }
-                      }}
-                      setActiveChannel={() => {
-                        setActiveChannelPinnedMessage(null)
-                        if (
-                          unreadMessage.channel.type === 'public' &&
-                          publicChannels
-                        ) {
-                          const index = publicChannels.findIndex(
-                            channel => channel.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            setActiveChannel(publicChannels[index])
-                          }
-                        } else if (
-                          unreadMessage.channel.type === 'group' &&
-                          privateGroups
-                        ) {
-                          const index = privateGroups.findIndex(
-                            group => group.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            setActiveChannel(privateGroups[index])
-                          }
-                        } else if (
-                          unreadMessage.channel.type === 'direct' &&
-                          directChats
-                        ) {
-                          const index = directChats.findIndex(
-                            dmChannel =>
-                              dmChannel.id == unreadMessage.channel.id
-                          )
-                          if (index > -1) {
-                            setActiveChannel(directChats[index])
-                          }
-                        }
-                      }}
-                    ></ChatMenuItem>
-                  )
-              )}
-            </div>
-          )}
-
-          {unreadMessages && unreadMessages.length > 0 && (
-            <div className='w-full border border-navy200 mt-4'></div>
-          )}
-
-          <ChatMenuHeader
-            text='PUBLIC CHANNELS'
-            expanded={publicExpanded}
-            expandCollapse={() => {
-              setPublicExpanded(!publicExpanded)
-            }}
-            actionIcon={ChatHeaderActionIcon.NONE}
-            action={() => {}}
-          />
-          {publicExpanded && (
-            <div>
-              {publicChannels?.map(
-                (publicChannel, index) =>
-                  (publicChannel.name ?? '')
-                    .toLowerCase()
-                    .indexOf(searchChannels.toLowerCase()) > -1 && (
-                    <ChatMenuItem
-                      key={index}
-                      avatarUrl={
-                        publicChannel.custom.profileUrl
-                          ? publicChannel.custom.profileUrl
-                          : '/avatars/placeholder.png'
-                      }
-                      text={publicChannel.name}
-                      present={PresenceIcon.NOT_SHOWN}
-                      setActiveChannel={() => {
-                        setActiveChannelPinnedMessage(null)
-                        setActiveChannel(publicChannels[index])
-                      }}
-                    ></ChatMenuItem>
-                  )
-              )}
-            </div>
-          )}
-
-          <div className='w-full border border-navy200 mt-4'></div>
-          <ChatMenuHeader
-            text='PRIVATE GROUPS'
-            expanded={groupsExpanded}
-            expandCollapse={() => setGroupsExpanded(!groupsExpanded)}
-            actionIcon={ChatHeaderActionIcon.ADD}
-            action={setCreatingNewMessage}
-          />
-          {groupsExpanded && (
-            <div>
-              {privateGroups?.map(
-                (privateGroup, index) =>
-                  (privateGroup.name ?? '')
-                    .toLowerCase()
-                    .indexOf(searchChannels.toLowerCase()) > -1 && (
-                    <ChatMenuItem
-                      key={index}
-                      avatarUrl={
-                        chat?.currentUser.profileUrl
-                          ? chat?.currentUser.profileUrl
-                          : '/avatars/placeholder.png'
-                      }
-                      text={privateGroup.name}
-                      present={PresenceIcon.NOT_SHOWN}
-                      avatarBubblePrecedent={
-                        privateGroupsUsers[index]?.map(
-                          user => user.id !== chat.currentUser.id
-                        )
-                          ? `+${
-                              privateGroupsUsers[index]?.map(
-                                user => user.id !== chat.currentUser.id
-                              ).length - 1
-                            }`
-                          : ''
-                      }
-                      setActiveChannel={() => {
-                        setActiveChannelPinnedMessage(null)
-                        setActiveChannel(privateGroups[index])
-                      }}
-                    />
-                  )
-              )}
-            </div>
-          )}
-
-          <div className='w-full border border-navy200 mt-4'></div>
-          <ChatMenuHeader
-            text='DIRECT MESSAGES'
-            expanded={directMessagesExpanded}
-            expandCollapse={() =>
-              setDirectMessagesExpanded(!directMessagesExpanded)
-            }
-            actionIcon={ChatHeaderActionIcon.ADD}
-            action={setCreatingNewMessage}
-          />
-          {directMessagesExpanded && (
-            <div>
-              {directChats?.map(
-                (directChat, index) =>
-                  (
-                    directChatsUsers[index]?.find(
-                      user => user.id !== chat.currentUser.id
-                    )?.name ?? ''
-                  )
-                    .toLowerCase()
-                    .indexOf(searchChannels.toLowerCase()) > -1 && (
-                    <ChatMenuItem
-                      key={index}
-                      avatarUrl={
-                        directChatsUsers[index]?.find(
-                          user => user.id !== chat.currentUser.id
-                        )?.profileUrl
-                          ? directChatsUsers[index]?.find(
-                              user => user.id !== chat.currentUser.id
-                            )?.profileUrl
-                          : '/avatars/placeholder.png'
-                      }
-                      text={
-                        directChatsUsers[index]?.find(
-                          user => user.id !== chat.currentUser.id
-                        )?.name
-                      }
-                      present={
-                        directChatsUsers[index]?.find(
-                          user => user.id !== chat.currentUser.id
-                        )?.active
-                          ? PresenceIcon.ONLINE
-                          : PresenceIcon.OFFLINE
-                      }
-                      setActiveChannel={() => {
-                        setActiveChannelPinnedMessage(null)
-                        setActiveChannel(directChats[index])
-                      }}
-                    />
-                  )
-              )}
-            </div>
-          )}
-        </div>
+        <ChatSelectionMenu
+          chatSelectionMenuMinimized={chatSelectionMenuMinimized}
+          setChatSelectionMenuMinimized={setChatSelectionMenuMinimized}
+          setShowThread={setShowThread}
+          chat={chat}
+          searchChannels={searchChannels}
+          setCreatingNewMessage={setCreatingNewMessage}
+          unreadMessages={unreadMessages}
+          publicChannels={publicChannels}
+          publicChannelsMemberships={publicChannelsMemberships}
+          privateGroups={privateGroups}
+          privateGroupsUsers={privateGroupsUsers}
+          privateGroupsMemberships={privateGroupsMemberships}
+          directChats={directChats}
+          directChatsUsers={directChatsUsers}
+          directChatsMemberships={directChatsMemberships}
+          activeChannel={setActiveChannel}
+          setActiveChannel={setActiveChannel}
+          setActiveChannelPinnedMessage={setActiveChannelPinnedMessage}
+          updateUnreadMessagesCounts={() => {
+            updateUnreadMessagesCounts()
+          }}
+          showUserMessage={showUserMessage}
+        />
         <div className='relative w-full'>
           <div
             id='chats-main'
@@ -1589,6 +1242,7 @@ export default function Page () {
         <MessageListThread
           showThread={showThread && !creatingNewMessage}
           setShowThread={setShowThread}
+          setChatSelectionMenuMinimized={setChatSelectionMenuMinimized}
           activeThreadChannel={activeThreadChannel}
           activeThreadMessage={activeThreadMessage}
           currentUser={chat.currentUser}

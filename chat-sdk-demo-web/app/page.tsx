@@ -46,7 +46,11 @@ export default function Home () {
         className='flex flex-col min-h-screen items-center justify-center w-full lg:w-1/2 bg-white'
       >
         <div id='login-container' className='flex flex-col max-w-80 gap-16'>
-          <div className='flex flex-col gap-3'>
+        <div className='sm:hidden text-center text-lg text-neutral900 font-bold'>
+              This app is not designed for mobile.  <br/><br/>Please visit our separate mobile demo at <a href="https://www.pubnub.com/demos/chat-sdk-mobile/">https://www.pubnub.com/demos/chat-sdk-mobile/</a>
+            </div>
+
+          <div className='hidden sm:flex flex-col gap-3'>
             <Image
               src='/chat.svg'
               alt='Chat Icon'
@@ -62,7 +66,7 @@ export default function Home () {
               Built with the PubNub Chat SDK for JavaScript and TypeScript.
             </div>
           </div>
-          <form className='flex flex-col gap-16' onSubmit={handleSubmit}>
+          <form className='hidden sm:flex flex-col gap-16' onSubmit={handleSubmit}>
             <div className='flex flex-col'>
               <label className='text-sm text-neutral900'>
                 Choose a User ID

@@ -120,7 +120,7 @@ export default function Message ({
   //  that caused the Chat SDK's notion of an unread message count inconsistent, so I am removing
   //  readReceipts I set myself in this useCallback
   const determineReadStatus = useCallback((timetoken, readReceipts) => {
-    if (!readReceipts) return ''
+    if (!readReceipts) return false
     let returnVal = false
     for (var i = 0; i < Object.keys(readReceipts).length; i++) {
       const receipt = Object.keys(readReceipts)[i]
@@ -128,8 +128,8 @@ export default function Message ({
       if (findMe > -1) {
         readReceipts[receipt].splice(findMe, 1)
       }
-      if (readReceipts[receipt].length > 0) {
-        return receipt >= timetoken
+      if (readReceipts[receipt].length > 0 && receipt >= timetoken) {
+        return true
       }
     }
     return false
@@ -328,7 +328,7 @@ export default function Message ({
                 priority
               />
             )}
-            <div className='absolute right-[10px] -bottom-[18px] flex flex-row items-center select-none'>
+            <div className='absolute right-[10px] -bottom-[20px] flex flex-row items-center z-10 select-none'>
               {/*arrayOfEmojiReactions*/}
               {message.reactions
                 ? Object?.keys(message.reactions)
@@ -344,6 +344,25 @@ export default function Message ({
                     ))
                 : ''}
             </div>
+            {!inThread && message.hasThread && <div className='absolute right-[10px] -bottom-[28px] flex flex-row items-center z-0 cursor-pointer select-none' onClick={() => {messageActionHandler(
+                  MessageActionsTypes.REPLY_IN_THREAD,
+                  message
+                )}}>
+              {/*Whether or not there is a threaded reply*/}
+              <div className='flex flex-row cursor-pointer' >
+              <Image
+                    src='/icons/reveal-thread.svg'
+                    alt='Expand'
+                    className=''
+                    width={20}
+                    height={20}
+                    priority
+                  />
+              <div className='text-sm font-normal text-navy700'>
+              Replies
+              </div>
+              </div>
+            </div>}
             {/* actions go here for received */}
             {received && !inThread && !inPinned && (
               <MessageActions

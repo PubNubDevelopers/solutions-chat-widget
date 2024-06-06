@@ -168,15 +168,12 @@ export default function Page () {
   async function updateChannelMembershipsForPublic (chat) {
     if (!chat) return
     //  During development there was an issue filtering on getMemberships on the server, which has since been fixed, so this code could be made more efficient
-    chat.currentUser.getMemberships({}).then(async membershipResponse => {
+    chat.currentUser.getMemberships({filter: "channel.type == 'public'"}).then(async membershipResponse => {
       const currentMemberOfThesePublicChannels = membershipResponse.memberships
         .map(m => m.channel)
-        .filter(c => c.type === 'public')
 
       setPublicChannels(currentMemberOfThesePublicChannels)
-      const publicChannelMemberships = membershipResponse.memberships.filter(
-        m => m.channel.type === 'public'
-      )
+      const publicChannelMemberships = membershipResponse.memberships
       setPublicChannelsMemberships(publicChannelMemberships)
 
       //  Get the users for every public group I am a member of
@@ -189,9 +186,9 @@ export default function Page () {
         var tempIndex = indexGroup
         const response = await currentMemberOfThesePublicChannels[
           indexGroup
-        ].getMembers({ sort: { updated: 'desc' }, limit: 100 })
+        ].getMembers({ sort: { updated: 'desc' }, limit: 40 })
         if (response.members) {
-          //  response contains the most recent 100 members
+          //  response contains the most recent 40 members
           const channelUsers = response.members.map((membership, index) => {
             return membership.user
           })
@@ -209,11 +206,10 @@ export default function Page () {
   ) {
     if (!chat) return
     chat.currentUser
-      .getMemberships({ sort: { updated: 'desc' } })
+      .getMemberships({ filter: "channel.type == 'group'", sort: { updated: 'desc' } })
       .then(async membershipResponse => {
-        const currentMemberOfTheseGroupChannels = membershipResponse.memberships
+          const currentMemberOfTheseGroupChannels = membershipResponse.memberships
           .map(m => m.channel)
-          .filter(c => c.type === 'group')
         //  Look for the desired channel ID
         for (var i = 0; i < currentMemberOfTheseGroupChannels.length; i++) {
           if (currentMemberOfTheseGroupChannels[i].id === desiredChannelId) {
@@ -223,9 +219,7 @@ export default function Page () {
         }
 
         setPrivateGroups(currentMemberOfTheseGroupChannels)
-        const groupChannelMemberships = membershipResponse.memberships.filter(
-          m => m.channel.type === 'group'
-        )
+        const groupChannelMemberships = membershipResponse.memberships
         setPrivateGroupsMemberships(groupChannelMemberships)
 
         //  Get the users for every private group I am a member of
@@ -258,12 +252,11 @@ export default function Page () {
   ) {
     if (!chat) return
     chat.currentUser
-      .getMemberships({ sort: { updated: 'desc' } })
+      .getMemberships({ filter: "channel.type == 'direct'", sort: { updated: 'desc' } })
       .then(async membershipResponse => {
         const currentMemberOfTheseDirectChannels =
           membershipResponse.memberships
             .map(m => m.channel)
-            .filter(c => c.type === 'direct')
         //  Look for the desired channel ID
         for (var i = 0; i < currentMemberOfTheseDirectChannels.length; i++) {
           if (currentMemberOfTheseDirectChannels[i].id === desiredChannelId) {
@@ -272,9 +265,7 @@ export default function Page () {
           }
         }
         setDirectChats(currentMemberOfTheseDirectChannels)
-        const directChannelMemberships = membershipResponse.memberships.filter(
-          m => m.channel.type === 'direct'
-        )
+        const directChannelMemberships = membershipResponse.memberships
         setDirectChatsMemberships(directChannelMemberships)
 
         //  Get the users for every direct message pair I am a member of

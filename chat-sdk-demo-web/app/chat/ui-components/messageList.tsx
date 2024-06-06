@@ -315,7 +315,7 @@ export default function MessageList ({
           </div>
         )}
         {/* Show the pinned message first if there is one */}
-        {activeChannelPinnedMessage && (
+        {activeChannelPinnedMessage && !activeChannelPinnedMessage.deleted && (
           <Message
             key={activeChannelPinnedMessage.timetoken}
             received={currentUser.id !== activeChannelPinnedMessage.userId}
@@ -364,7 +364,7 @@ export default function MessageList ({
         )}
 
         {messages.map((message, index) => {
-          return (
+          return !message.deleted && (
             <Message
               key={message.timetoken}
               received={currentUser.id !== message.userId}

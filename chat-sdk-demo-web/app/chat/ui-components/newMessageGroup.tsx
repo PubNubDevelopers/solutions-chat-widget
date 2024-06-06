@@ -173,8 +173,8 @@ export default function NewMessageGroup ({
               {newDraftGroupUsers?.length == 1
                 ? 'Please Choose some friends'
                 : newDraftGroupUsers?.length == 2
-                ? 'Draft Direct Message'
-                : 'Draft Private Group'}
+                ? 'New Direct Conversation'
+                : 'New Private Group'}
             </div>
           </div>
         </div>

@@ -27,3 +27,4 @@ Only the last 20 messages from a channel's history are read in
 Persistence is only set to a day
 User and Channel mentions aren't stored but a popup is shown
 Channel Monitor - muting and banning.
+Public groups - I am deliberately limiting it to 40 people

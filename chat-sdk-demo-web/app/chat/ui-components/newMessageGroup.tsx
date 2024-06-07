@@ -89,11 +89,6 @@ export default function NewMessageGroup ({
       }) //  Accepting defaults for channel ID and channel Data
       desiredChannelId = channel.id
       createdChannel = channel
-      await sendChatEvent(ChatEventTypes.INVITED, [otherUser], {
-        groupCreator: chat.currentUser.id,
-        channelId: channel.id,
-        channelType: channel.type
-      })
       actionCompleted({
         action: 'Create a new 1:1 (Direct) Chat',
         blockDuplicateCalls: false,
@@ -110,11 +105,6 @@ export default function NewMessageGroup ({
         channelData: { name: randomNewChannelName }
       })
       desiredChannelId = channel.id
-      await sendChatEvent(ChatEventTypes.INVITED, others, {
-        groupCreator: chat.currentUser.id,
-        channelId: channel.id,
-        channelType: channel.type
-      })
       createdChannel = channel
       actionCompleted({
         action: 'Create a new Private Group',

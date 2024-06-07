@@ -63,7 +63,8 @@ export default function Page () {
   const [profileScreenVisible, setProfileScreenVisible] = useState(false)
   const [chatSettingsScreenVisible, setChatSettingsScreenVisible] =
     useState(false)
-  const [chatSelectionMenuMinimized, setChatSelectionMenuMinimized] = useState(false)
+  const [chatSelectionMenuMinimized, setChatSelectionMenuMinimized] =
+    useState(false)
   const [creatingNewMessage, setCreatingNewMessage] = useState(false)
   const [changeUserNameModalVisible, setChangeUserNameModalVisible] =
     useState(false)
@@ -168,35 +169,42 @@ export default function Page () {
   async function updateChannelMembershipsForPublic (chat) {
     if (!chat) return
     //  During development there was an issue filtering on getMemberships on the server, which has since been fixed, so this code could be made more efficient
-    chat.currentUser.getMemberships({filter: "channel.type == 'public'"}).then(async membershipResponse => {
-      const currentMemberOfThesePublicChannels = membershipResponse.memberships
-        .map(m => m.channel)
+    chat.currentUser
+      .getMemberships({ filter: "channel.type == 'public'" })
+      .then(async membershipResponse => {
+        const currentMemberOfThesePublicChannels =
+          membershipResponse.memberships.map(m => m.channel)
 
-      setPublicChannels(currentMemberOfThesePublicChannels)
-      const publicChannelMemberships = membershipResponse.memberships
-      setPublicChannelsMemberships(publicChannelMemberships)
+        setPublicChannels(currentMemberOfThesePublicChannels)
+        const publicChannelMemberships = membershipResponse.memberships
+        setPublicChannelsMemberships(publicChannelMemberships)
 
-      //  Get the users for every public group I am a member of
-      let tempPublicUsers: User[][] = []
-      for (
-        var indexGroup = 0;
-        indexGroup < currentMemberOfThesePublicChannels.length;
-        indexGroup++
-      ) {
-        var tempIndex = indexGroup
-        const response = await currentMemberOfThesePublicChannels[
-          indexGroup
-        ].getMembers({ sort: { updated: 'desc' }, limit: 40 })
-        if (response.members) {
-          //  response contains the most recent 40 members
-          const channelUsers = response.members.map((membership, index) => {
-            return membership.user
-          })
-          tempPublicUsers[tempIndex] = channelUsers
+        //  Get the users for every public group I am a member of
+        let tempPublicUsers: User[][] = []
+        for (
+          var indexGroup = 0;
+          indexGroup < currentMemberOfThesePublicChannels.length;
+          indexGroup++
+        ) {
+          var tempIndex = indexGroup
+          const response = await currentMemberOfThesePublicChannels[
+            indexGroup
+          ].getMembers({ sort: { updated: 'desc' }, limit: 40 })
+          if (response.members) {
+            //  response contains the most recent 40 members
+            const channelUsers = response.members.map((membership, index) => {
+              return membership.user
+            })
+            tempPublicUsers[tempIndex] = channelUsers
+          }
         }
-      }
-      setPublicChannelsUsers(tempPublicUsers)
-    })
+        setPublicChannelsUsers(tempPublicUsers)
+        const me = tempPublicUsers[0].find(user => user.id == chat.currentUser.id)
+        if (me) {
+          setName(me.name)
+          setProfileUrl(me.profileUrl)
+        }
+      })
   }
 
   /* Initialize or Update all the state arrays related to private groups */
@@ -206,10 +214,13 @@ export default function Page () {
   ) {
     if (!chat) return
     chat.currentUser
-      .getMemberships({ filter: "channel.type == 'group'", sort: { updated: 'desc' } })
+      .getMemberships({
+        filter: "channel.type == 'group'",
+        sort: { updated: 'desc' }
+      })
       .then(async membershipResponse => {
-          const currentMemberOfTheseGroupChannels = membershipResponse.memberships
-          .map(m => m.channel)
+        const currentMemberOfTheseGroupChannels =
+          membershipResponse.memberships.map(m => m.channel)
         //  Look for the desired channel ID
         for (var i = 0; i < currentMemberOfTheseGroupChannels.length; i++) {
           if (currentMemberOfTheseGroupChannels[i].id === desiredChannelId) {
@@ -252,11 +263,13 @@ export default function Page () {
   ) {
     if (!chat) return
     chat.currentUser
-      .getMemberships({ filter: "channel.type == 'direct'", sort: { updated: 'desc' } })
+      .getMemberships({
+        filter: "channel.type == 'direct'",
+        sort: { updated: 'desc' }
+      })
       .then(async membershipResponse => {
         const currentMemberOfTheseDirectChannels =
-          membershipResponse.memberships
-            .map(m => m.channel)
+          membershipResponse.memberships.map(m => m.channel)
         //  Look for the desired channel ID
         for (var i = 0; i < currentMemberOfTheseDirectChannels.length; i++) {
           if (currentMemberOfTheseDirectChannels[i].id === desiredChannelId) {
@@ -591,11 +604,6 @@ export default function Page () {
             }
             refreshMembersFromServer()
             break
-          case ChatEventTypes.INVITED:
-            //  Somebody has added us to a new group chat or DM
-            refreshMembersFromServer()
-            break
-
           case ChatEventTypes.JOINED:
             //  Someone has joined one of the public channels
             refreshMembersFromServer()
@@ -647,10 +655,20 @@ export default function Page () {
       }
     })
 
+    const removeInvite = chat.listenForEvents({
+      user: chat.currentUser.id,
+      type: 'invite',
+      callback: async evt => {
+        //  Somebody has added us to a new group chat or DM
+        refreshMembersFromServer()
+      }
+    })
+
     return () => {
       removeCustomListener()
       removeModerationListener()
       removeMentionsListener()
+      removeInvite()
     }
   }, [chat])
 

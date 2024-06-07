@@ -39,7 +39,6 @@ export enum PresenceIcon {
 
 export enum ChatEventTypes {
   LEAVE = 0, //  Notify other members of a group that you are leaving that group
-  INVITED = 1, //  Notify the recipient(s) that they are now part of a new group chat or DM.
   JOINED = 3, //  Notify others in a group that you have joined as a new member (for public channels)
 }
 

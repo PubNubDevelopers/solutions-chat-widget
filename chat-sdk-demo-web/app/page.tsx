@@ -47,7 +47,7 @@ export default function Home () {
       >
         <div id='login-container' className='flex flex-col max-w-80 gap-16'>
         <div className='sm:hidden text-center text-lg text-neutral900 font-bold'>
-              This app is not designed for mobile.  <br/><br/>Please visit our separate mobile demo at <a href="https://www.pubnub.com/demos/chat-sdk-mobile/">https://www.pubnub.com/demos/chat-sdk-mobile/</a>
+              This app is not designed for mobile.  <br/><br/>Please visit our separate mobile demo at <a href="https://www.pubnub.com/demos/chat-sdk-mobile/" target="_top">https://www.pubnub.com/demos/chat-sdk-mobile/</a>
             </div>
 
           <div className='hidden sm:flex flex-col gap-3'>

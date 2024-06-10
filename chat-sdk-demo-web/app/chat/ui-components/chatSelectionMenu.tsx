@@ -26,6 +26,7 @@ export default function ChatSelectionMenu ({
   setActiveChannel,
   setActiveChannelPinnedMessage,
   updateUnreadMessagesCounts,
+  currentUserProfileUrl,
   showUserMessage
 }) {
   const [unreadExpanded, setUnreadExpanded] = useState(true)
@@ -122,8 +123,8 @@ export default function ChatSelectionMenu ({
                     key={index}
                     avatarUrl={
                       unreadMessage.channel.type === 'group'
-                        ? chat?.currentUser.profileUrl
-                          ? chat?.currentUser.profileUrl
+                        ? currentUserProfileUrl
+                          ? currentUserProfileUrl
                           : '/avatars/placeholder.png'
                         : unreadMessage.channel.type == 'public'
                         ? unreadMessage.channel.custom?.profileUrl
@@ -339,8 +340,8 @@ export default function ChatSelectionMenu ({
                   <ChatMenuItem
                     key={index}
                     avatarUrl={
-                      chat?.currentUser.profileUrl
-                        ? chat?.currentUser.profileUrl
+                      currentUserProfileUrl
+                        ? currentUserProfileUrl
                         : '/avatars/placeholder.png'
                     }
                     text={privateGroup.name}

@@ -1106,6 +1106,7 @@ export default function Page () {
           updateUnreadMessagesCounts={() => {
             updateUnreadMessagesCounts()
           }}
+          currentUserProfileUrl={profileUrl}
           showUserMessage={showUserMessage}
         />
         <div className='relative w-full'>

@@ -13,7 +13,7 @@ export default function Avatar ({
   return (
     <div className='relative'>
       <Image
-        src={avatarUrl}
+        src={avatarUrl ? avatarUrl : '/avatars/placeholder.png'}
         alt='User avatar'
         className={`rounded-full ${border && 'border-2 border-white'}`}
         width={width}

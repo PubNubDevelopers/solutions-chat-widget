@@ -146,7 +146,7 @@ export default function MessageList ({
     if (
       messageListRef.current.scrollTop != 0 &&
       messageListRef.current.scrollHeight - messageListRef.current.scrollTop >
-        1000
+        1115
     ) {
       return //  We aren't scrolled to the bottom
     }

@@ -42,9 +42,9 @@ export default function RoomSelector ({
         <div className='flex items-center'>
           <div className='flex justify-center w-12 h-12 rounded-full bg-navy50 mr-3'>
             <Image
-              src='/pn-logo-red-tint.svg'
+              src='/pn-logo-red-tint.png'
               alt='PubNub Logo'
-              className=''
+              className='flex self-center'
               width={23.81}
               height={17.07}
               priority

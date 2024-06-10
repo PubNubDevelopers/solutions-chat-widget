@@ -312,6 +312,7 @@ export default function Message ({
                   message
                     .getMessageElements()
                     .map((msgPart, index) => renderMessagePart(msgPart, index))}
+                {message.actions && message.actions.edited && <span className="text-navy500">&nbsp;&nbsp;(edited)</span>}
               </div>
             </div>
             {!received && showReadIndicator && (

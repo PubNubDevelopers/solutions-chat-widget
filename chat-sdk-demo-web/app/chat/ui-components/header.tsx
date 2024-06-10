@@ -27,7 +27,7 @@ export default function Header ({
           className='flex justify-center w-12 h-12 rounded-full bg-navy50'
         >
           <Image
-            src='/pn-logo-red-tint.svg'
+            src='/pn-logo-red-tint.png'
             alt='PubNub Logo'
             className='flex self-center'
             width={23.81}

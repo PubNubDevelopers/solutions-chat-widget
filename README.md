@@ -516,7 +516,7 @@ Both of these are achieved with the APIs [user.streamUpdates and User.streamUpda
 
 The Chat SDK has a robust set of `streamUpdates()` APIs for `Channels`, `Users`, and `Memberships`.  These APIs will provide you all the required information to update your application in realtime, with changes reflected immediately for other users.
 
-**Demo Limitations:** (see *) To simplify the logic of this demo, I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done for the sake of expediency.
+**Demo Limitations:** (see *) To simplify the logic of this demo, I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done for the sake of expediency.  If you experience any issues with users not updating, please refresh the browser to retrieve the latest updates.
 
 ## Integration with BizOps Workspace: User & Channel Management
 
@@ -526,7 +526,7 @@ Updates to Users and Channels made in the User Management and Channel Management
 
 This application has not been written with the BizOps Workspace Channel Monitor in mind, however it will work with some caveats:
 
-- If you edit a message in the Channel Monitor, you need to navigate away from that chat, and then back to it to see the edits in the app.  This is a limitation of the demo, because it only uses Message update streams to receive information about emoji reactions, and not edits.
+- If you edit a message the text will update and (edited) will be shown beside the message, but the demo does not show who edited the message, nor allow users other than BizOps Workspace to edit messages.
 - If you delete a message, it will disappear from the app immediately.  Some other sample apps will show the deleted message as grayed out, but this demo will not show the deleted message at all.
 - Muting and banning are discussed in the next section.
 

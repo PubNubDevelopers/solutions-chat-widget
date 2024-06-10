@@ -199,7 +199,9 @@ export default function Page () {
           }
         }
         setPublicChannelsUsers(tempPublicUsers)
-        const me = tempPublicUsers[0].find(user => user.id == chat.currentUser.id)
+        const me = tempPublicUsers[0].find(
+          user => user.id == chat.currentUser.id
+        )
         if (me) {
           setName(me.name)
           setProfileUrl(me.profileUrl)
@@ -963,7 +965,6 @@ export default function Page () {
           await activeChannel?.update({
             name: newName
           })
-          setName(newName)
           showUserMessage(
             'Channel Name Changed',
             'The channel name has been successfully updated',

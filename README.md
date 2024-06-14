@@ -80,7 +80,7 @@ channelData: {
 }})
 ```
 
-**Demo Limitations:** (see *) This demo does not allow you to join or leave a public channel, only the pre-configured 2 channels are supported.  Only the most recently created 40 members are shown as being part of the channel. 
+**Demo Limitations †:** This demo does not allow you to join or leave a public channel, only the pre-configured 2 channels are supported.  Only the most recently created 40 members are shown as being part of the channel. 
 
 ## Sending and Receiving Messages
 
@@ -95,7 +95,7 @@ useEffect(() => {
 }, [channel])
 ```
 
-**Demo Limitations:** (see *) The demo does not allow you to [delete](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/delete), [restore](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/restore), [forward](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/forward) or [edit](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/updates) sent messages, though ALL of these are possible using the Chat SDK
+**Demo Limitations †:** The demo does not allow you to [delete](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/delete), [restore](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/restore), [forward](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/forward) or [edit](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/updates) sent messages, though ALL of these are possible using the Chat SDK
 
 ### Message Input
 
@@ -103,7 +103,7 @@ This demo features a fairly standard user input
 
 ![Screenshot](./media/message-input.png)
 
-**Demo Limitations:** (see *) The emoji picker will allow you to insert emoji into your message, but this is not specifically part of the Chat SDK.  The SDK (and PubNub) supports all Unicode characters, including emoji.  This demo does not support sending files, but you **can** [send files using the Chat SDK](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/files) 
+**Demo Limitations †:** The emoji picker will allow you to insert emoji into your message, but this is not specifically part of the Chat SDK.  The SDK (and PubNub) supports all Unicode characters, including emoji.  This demo does not support sending files, but you **can** [send files using the Chat SDK](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/files) 
 
 ### Message History
 
@@ -120,7 +120,7 @@ channel.getHistory({
 }>
 ```
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 - The demo will only load in the past 20 messages, with no UI given to 'load more...'.  The Chat SDK supports a flexible API, shown above, that allows you to specify the start and end time to read messages from, as well as telling you if there are more messages available - the demo uses none of these features :) .  
 - The demo does not cache any of the historical responses, so every time you switch channels it will call the `getHistory()` api anew - in your production application, you will likely cache the response after the first call to getHistory().  
 - The keyset for the hosted demo only persists messages for 1 day, so if you revisit the demo after 24 hours you will find your messages have disappeared.
@@ -149,7 +149,7 @@ useEffect(() => {
 }, [messages])
 ```
 
-**Demo Limitations:** (see *) The demo UI for reactions could have been better, as it sometimes overlaps the message actions bar or the 'replies' text (for threads)... this is only my fault, but I am sure you will do a better job in your production app.
+**Demo Limitations †:** The demo UI for reactions could have been better, as it sometimes overlaps the message actions bar or the 'replies' text (for threads)... this is only my fault, but I am sure you will do a better job in your production app.
 
 ### Quoting a Message
 
@@ -159,7 +159,7 @@ Select the quote icon from the message actions bar to quote an existing message.
 
 Once sent, the quoted message will be shown within the sent message, retrieved with the [getQuotedMessage()](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/quotes#get-quoted-message) API
 
-**Demo Limitations:** (see *) The demo does not allow you to remove a quoted message, though this is supported by the Chat SDK
+**Demo Limitations †:** The demo does not allow you to remove a quoted message, though this is supported by the Chat SDK
 
 ### Pinning a Message
 
@@ -182,7 +182,7 @@ await channel?.unpinMessage()
 
 Note that the `pinMessage()` API returns a Promise<Channel>, on which subsequent calls should be invoked. 
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 - Typically a pinned message would include a link to 'Show message...' which would scroll the message list to the location of the message - this demo does not implement this feature but our [Chat SDK Demo for mobile](https://github.com/pubnub/js-chat/tree/master/samples/react-native-group-chat) does
 - Messsages cannot be pinned to threads, though this feature is supported by the Chat SDK
 
@@ -202,7 +202,7 @@ if (!message.hasThread) {
 }
 ```
 
-**Demo Limitations:** (see *) - A lot of features **present in the Chat SDK** for threads are unsupported by this demo:
+**Demo Limitations †:** - A lot of features **present in the Chat SDK** for threads are unsupported by this demo:
 - You are unable to quote messages in a thread, or react to them with emoji
 - You are unable to mention users or channels in a threaded channel
 - You can not pin messages to a thread, nor pin messages to the parent channel from a thread
@@ -211,7 +211,7 @@ if (!message.hasThread) {
 
 The final message action allows you to copy a message's text to the clipboard.  This doesn't use the Chat SDK, other than to retrieve the message's text content with [message.text](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/details#get-message-content).  
 
-**Demo Limitations:** (see *) This will only return the text of a message, so for example mentioned users will only have their name copied and lose the context that they were mentioned.
+**Demo Limitations †:** This will only return the text of a message, so for example mentioned users will only have their name copied and lose the context that they were mentioned.
 
 ## Creating a new Message / Group
 
@@ -237,7 +237,7 @@ chat.getUsers({
 
 To create a 1:1 chat, select just one other user and press 'Create'.  To create a group, select 2 or more additional collaborators.
 
-**Demo Limitations:** (see *) This demo caps the number of group members at 10, but the Chat SDK's limit is 100 members.  Note that if you need more than 100 people in a channel, you should be using a `public` channel
+**Demo Limitations †:** This demo caps the number of group members at 10, but the Chat SDK's limit is 100 members.  Note that if you need more than 100 people in a channel, you should be using a `public` channel
 
 ## Private Groups
 
@@ -256,7 +256,7 @@ The next step is to ensure the user is aware they were made part of a channel.  
 
 ```typescript
 const removeInvite = chat.listenForEvents({
-    user: chat.currentUser.id,
+    channel: chat.currentUser.id,
     type: 'invite',
     callback: async evt => {
         //  Somebody has added us to a new group chat or DM
@@ -265,7 +265,9 @@ const removeInvite = chat.listenForEvents({
 })
 ```
 
-**Demo Limitations:** (see *) If automatically accepting an invite feels very trusting, it is, but in production an application would use the [Access Manager](https://www.pubnub.com/docs/chat/chat-sdk/learn/access-control) to determine who is able to create new groups, and the client may arbitrate with a server, the latter being responsible for authenticating the request and creating the channel.
+**See also: Known Issues ‡**
+
+**Demo Limitations †:** If automatically accepting an invite feels very trusting, it is, but in production an application would use the [Access Manager](https://www.pubnub.com/docs/chat/chat-sdk/learn/access-control) to determine who is able to create new groups, and the client may arbitrate with a server, the latter being responsible for authenticating the request and creating the channel.
 
 ## Direct (1:1) Conversation
 
@@ -298,7 +300,7 @@ if (chat && privateGroups && privateGroups.length > 0) {
 }, [chat, privateGroups])
 ```
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 - As alluded to above, the Chat SDK allows you to change much more than just the channel's name, see the full list in the [Channel update() documentation](https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates).
 - The Chat settings also includes the UI to "Mute chat" which is purely visual.
@@ -344,7 +346,7 @@ activeChannel.streamReadReceipts(receipts => {
 
 You will also need some logic in your message list to determine whether the message has been read or not and the Chat SDK is flexible enough to allow you to decide how you present that information to your users.
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 - Typically, a user would expect separate notifications for 'sent', 'delivered' and 'read'.  There might also be an additional indication for 'read by entire group' vs. 'read by only some group members'.  This demo does not try to do anything that complicated, if any member of a group has viewed the channel which received the message, it is marked as read.
 
@@ -376,7 +378,7 @@ The returned array will contain the list of all currently typing users, includin
 
 You can customize the `default typing timeout` during initialization of the `chat` object, which defaults to 5 seconds.
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 - This demo does not use the [stopTyping()](https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/typing-indicator#stop-typing) method and relies solely on the timeout to determine when a user stops typing.
 - The typing indicator will not show if a message is being quoted.  This is just how the demo UI was designed and not a limitation of the API.
@@ -410,7 +412,7 @@ directChats.forEach((channel, index) => {
 
 To mark a single channel as read, this demo will use the [memberships.setLastMessage()](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/unread#mark-messages-as-read-one-channel) API, and to mark all messages as read, the demo will use the [chat.markAllMessagesAsRead()](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/unread#mark-messages-as-read-all-channels) API.
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 - If you refresh the page, the unread count for public channels will be lost, but the unread count for group and 1:1 conversations will still be shown.
 
@@ -424,7 +426,7 @@ What's the difference?  Channel presence will tell you exactly who is listening 
 
 You can easily access the user's online state with the `user.active` field.  This returns true if the user has been active in the past X minutes.
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 This demo uses [global app presence](https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/presence#global-presence) with the `storeUserActivityInterval` value set to 5 minutes.  As mentioned in the 'unread messages' section, the app maintains listeners for every channel the user is a member of, so the 'traditional' presence API would return true for every channel anyway. 
 
@@ -450,7 +452,7 @@ const removeMentionsListener = chat.listenForEvents({
 })
 ```
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:** 
 
 - The UI for choosing the user & channel could be a lot better
 - When you click on a mentioned user's name or referenced channel, the demo just shows a pop-up notice to show the principle, but in a production app you would perform some other action like navigating to the user's profile page.
@@ -508,7 +510,9 @@ Both of these are achieved with the APIs [user.streamUpdates and User.streamUpda
 
 ```
 
-**Demo Limitations:** (see *) 
+**See also: Known Issues ‡**
+
+**Demo Limitations †:** 
 
 - The Profile screen has options for 'Notifications' and 'Read receipts'.  These are **visual only**.  Notifications have not been implemented and read receipts will continue to be received as described earlier regardless of the state of the switch.
 
@@ -516,7 +520,9 @@ Both of these are achieved with the APIs [user.streamUpdates and User.streamUpda
 
 The Chat SDK has a robust set of `streamUpdates()` APIs for `Channels`, `Users`, and `Memberships`.  These APIs will provide you all the required information to update your application in realtime, with changes reflected immediately for other users.
 
-**Demo Limitations:** (see *) To simplify the logic of this demo, I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done for the sake of expediency.  If you experience any issues with users not updating, please refresh the browser to retrieve the latest updates.
+**See also: Known Issues ‡**
+
+**Demo Limitations †:** To simplify the logic of this demo, I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done for the sake of expediency.  
 
 ## Integration with BizOps Workspace: User & Channel Management
 
@@ -567,9 +573,16 @@ If you receive a moderation event, you will see a toast similar to the screensho
 
 ![Screenshot](./media/moderation-event-lifted.png)
 
-**Demo Limitations:** (see *) 
+**Demo Limitations †:**
 
 - **The demo remains functional regardless of whether the user has been muted or banned, the notification is shown for information only.**
 - The demo will receive moderation events but it does not do anything with them.  To understand the end-to-end moderation solution with BizOps Workspace please see my earlier articles on [How to Monitor and Moderate Conversations with BizOps Workspace](https://www.pubnub.com/how-to/monitor-and-moderate-conversations-with-bizops-workspace/) and [How to Securely Moderate Chat and Users with BizOps Workspace](https://www.pubnub.com/how-to/securely-moderate-chat-and-users/)
 
 
+# Demo Limitations †
+
+For each feature supported by this demo, some limitations are described.  Please note that these are limitations of the demo implementation, **not limitations of the Chat SDK**
+
+# Known Issues ‡ 
+
+Sometimes user names, avatars, group names, or invitations will not be updated automatically for other clients.  This includes updates made through the demo, or updates made through BizOps Workspace [User Management](https://www.pubnub.com/docs/bizops-workspace/user-management) / [Channel Management](https://www.pubnub.com/docs/bizops-workspace/channel-management).  If you experience this demo-only issue, please refresh the browser to retrieve the latest updates.

@@ -52,7 +52,7 @@ export default function Home () {
 
           <div className='hidden sm:flex flex-col gap-3'>
             <Image
-              src='/chat.svg'
+              src='/chat-logo.svg'
               alt='Chat Icon'
               className='self-center'
               width={75}

@@ -1,16 +1,15 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useMediaQuery } from 'react'
+import { useState } from 'react'
 import ChatMenuHeader from './chatMenuHeader'
 import ChatMenuItem from './chatMenuItem'
-import { ChatHeaderActionIcon, PresenceIcon, ToastType, useBreakpoints } from '@/app/types'
+import { ChatHeaderActionIcon, PresenceIcon, ToastType, useBreakpoints, useMediaQuery } from '@/app/types'
 
 export default function ChatSelectionMenu ({
   chatSelectionMenuMinimized,
   setChatSelectionMenuMinimized,
   chat,
-  searchChannels,
   setCreatingNewMessage,
   setShowThread,
   unreadMessages,
@@ -34,6 +33,11 @@ export default function ChatSelectionMenu ({
   const [groupsExpanded, setGroupsExpanded] = useState(true)
   const [directMessagesExpanded, setDirectMessagesExpanded] = useState(true)
   const { isXs, isSm, isMd, isLg, active } = useBreakpoints();
+  const [searchChannels, setSearchChannels] = useState('')
+
+  function handleChatSearch (term: string) {
+    setSearchChannels(term)
+  }
 
   return (
     <div

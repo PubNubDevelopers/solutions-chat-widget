@@ -50,8 +50,8 @@ export default function Page () {
   const router = useRouter()
   const [userId, setUserId] = useState<String | null>('')
   const [chat, setChat] = useState<Chat | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [guidedDemo, setGuidedDemo] = useState<String | null>(null)
-  const [searchChannels, setSearchChannels] = useState('')
   const [loadMessage, setLoadMessage] = useState('Demo is initializing...')
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showEmojiMessageTimetoken, setShowEmojiMessageTimetoken] = useState('')
@@ -203,8 +203,8 @@ export default function Page () {
           user => user.id == chat.currentUser.id
         )
         if (me) {
-          setName(me.name)
-          setProfileUrl(me.profileUrl)
+          if (me.name) {setName(me.name)}
+          if (me.profileUrl) {setProfileUrl(me.profileUrl)}
         }
       })
   }
@@ -350,9 +350,9 @@ export default function Page () {
         storeUserActivityTimestamps: true,
         storeUserActivityInterval: 300000 /* 5 minutes */
       })
-
       setChat(chat)
-
+      setCurrentUser(chat.currentUser)
+      
       if (!chat.currentUser.profileUrl) {
         const randomProfileUrl = Math.floor(
           Math.random() * testData.avatars.length
@@ -364,7 +364,7 @@ export default function Page () {
         setName('' + userId)
         setProfileUrl(testData.avatars[randomProfileUrl])
       } else {
-        setName('' + chat.currentUser.name)
+        if (chat.currentUser.name) {setName(chat.currentUser.name)}
         setProfileUrl(chat.currentUser.profileUrl)
       }
 
@@ -378,12 +378,32 @@ export default function Page () {
           } else {
             //  Join public channels
             if (channelsResponse.channels.length > 0) {
+              setLoadMessage('Creating Memberships')
               //  Join each of the public channels
-              channelsResponse.channels.forEach(async channel => {
-                await channel.join(message => {
+              const currentMemberships = await chat.currentUser.getMemberships({
+                filter: "channel.type == 'public'"
+              })
+
+              //  Test to see if we are already a member of the public channels, and if not, join them.
+              const publicMembership =
+                await currentMemberships.memberships.find(
+                  membership => membership.channel.id == 'public-general'
+                )
+              const workMembership = await currentMemberships.memberships.find(
+                membership => membership.channel.id == 'public-work'
+              )
+              if (!publicMembership) {
+                const publicChannel = await chat.getChannel('public-general')
+                publicChannel?.join(message => {
                   //  We have a message listener elsewhere for consistency with private and direct chats
                 })
-              })
+              }
+              if (!workMembership) {
+                const workChannel = await chat.getChannel('public-work')
+                workChannel?.join(message => {
+                  //  We have a message listener elsewhere for consistency with private and direct chats
+                })
+              }
             }
           }
         })
@@ -527,8 +547,8 @@ export default function Page () {
 
   useEffect(() => {
     //  Get updates on the current user's name and profile URL
-    if (!chat) return
-    return chat.currentUser.streamUpdates(updatedUser => {
+    if (!currentUser) return
+    return currentUser.streamUpdates(updatedUser => {
       if (updatedUser.name) {
         setName(updatedUser.name)
       }
@@ -536,7 +556,7 @@ export default function Page () {
         setProfileUrl(updatedUser.profileUrl)
       }
     })
-  }, [chat])
+  }, [currentUser])
 
   /* Handle updates to the Public Channels */
   useEffect(() => {
@@ -658,7 +678,7 @@ export default function Page () {
     })
 
     const removeInvite = chat.listenForEvents({
-      user: chat.currentUser.id,
+      channel: chat.currentUser.id,
       type: 'invite',
       callback: async evt => {
         //  Somebody has added us to a new group chat or DM
@@ -709,10 +729,6 @@ export default function Page () {
     },
     [chat, refreshMembersTimeoutId]
   )
-
-  function handleChatSearch (term: string) {
-    setSearchChannels(term)
-  }
 
   function sendChatEvent (
     eventType: ChatEventTypes,
@@ -838,7 +854,7 @@ export default function Page () {
         <div className='flex flex-col w-full h-screen justify-center items-center'>
           <div className='max-w-96 max-h-96 '>
             <Image
-              src='/chat.svg'
+              src='/chat-logo.svg'
               alt='Chat Icon'
               className=''
               width={1000}
@@ -1089,7 +1105,6 @@ export default function Page () {
           setChatSelectionMenuMinimized={setChatSelectionMenuMinimized}
           setShowThread={setShowThread}
           chat={chat}
-          searchChannels={searchChannels}
           setCreatingNewMessage={setCreatingNewMessage}
           unreadMessages={unreadMessages}
           publicChannels={publicChannels}

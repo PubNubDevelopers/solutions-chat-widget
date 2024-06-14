@@ -112,7 +112,7 @@ export default function ProfileScreen ({
             }
           >
             {/* Checkbox is currently disabled with no handlers */}
-            <input type='checkbox' defaultChecked={false} onChange={e => {}} />
+            <input type='checkbox' className="checked:before:bg-neutral-400 checked:after:translate-x-0" defaultChecked={false} onChange={e => {}} />
           </div>
         </div>
         <div className='border border-navy600'></div>

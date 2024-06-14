@@ -112,6 +112,9 @@ export default function MessageList ({
           })
         }
       }
+      else{
+        setActiveChannelPinnedMessage(null)
+      }
     })
   }, [activeChannel])
 
@@ -125,7 +128,7 @@ export default function MessageList ({
         return uniqueById([...messages, message]) //  Avoid race condition where message was being added twice when the channel was launched with historical messages
       })
     })
-  }, [activeChannel, currentMembership, currentUser.id])
+  }, [activeChannel, currentMembership])
 
   useEffect(() => {
     //  UseEffect to receive updates to messages such as reactions.  This does NOT include new messages being received on the channel (which is handled by the connect elsewhere)
@@ -162,7 +165,7 @@ export default function MessageList ({
       <div className='flex flex-col max-h-screen h-screen justify-center items-center w-full'>
         <div className='max-w-96 max-h-96 '>
           <Image
-            src='/chat.svg'
+            src='/chat-logo.svg'
             alt='Chat Icon'
             className=''
             width={200}
@@ -302,9 +305,9 @@ export default function MessageList ({
         ref={messageListRef}
       >
         {messages && messages.length == 0 && (
-          <div className='flex flex-col items-center justify-center w-full h-screen text-xl select-none'>
+          <div className='flex flex-col items-center justify-center w-full h-screen text-xl select-none gap-4'>
             <Image
-              src='/chat.svg'
+              src='/chat-logo.svg'
               alt='Chat Icon'
               className=''
               width={100}

@@ -157,6 +157,7 @@ export default function ChatSettingsScreen ({
               <input
                 type='checkbox'
                 defaultChecked={false}
+                className="checked:before:bg-neutral-400 checked:after:translate-x-0"
                 onChange={e => {}}
               />
             </div>

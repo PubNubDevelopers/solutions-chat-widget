@@ -207,10 +207,10 @@
   resolved "https://registry.npmjs.org/@pkgjs/parseargs/-/parseargs-0.11.0.tgz"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@pubnub/chat@^0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@pubnub/chat/-/chat-0.7.2.tgz#1a39ce61d55fe89d3bc90458da07a7d8a4df4c3b"
-  integrity sha512-k3DWcZIyLHc0RqN09HSqyIrjvXK6JQ3dJP2PkrJmbQLNhh4DS6eY9KMEIN6hBRVNNcJEpmN1olJWArwX7B9Xcg==
+"@pubnub/chat@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@pubnub/chat/-/chat-0.7.3.tgz#35da1b2b6d8e3231a205f1538ed75f6b8b2d4ab5"
+  integrity sha512-GxrZNRr6BV3TW1d3QVR17I1uFMKiyaCBYJCrawaWm0OZZluphrz0A7AF6JsKkcanROQhFnIyEfzMq/dKt7dLoQ==
   dependencies:
     pubnub "8.2.3"
 

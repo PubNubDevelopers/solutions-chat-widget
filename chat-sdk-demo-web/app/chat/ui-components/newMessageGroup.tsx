@@ -11,6 +11,7 @@ import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function NewMessageGroup ({
   chat,
+  currentUser,
   setCreatingNewMessage,
   showUserMessage,
   sendChatEvent,
@@ -19,7 +20,7 @@ export default function NewMessageGroup ({
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [newDraftGroupUsers, setNewDraftGroupUsers] = useState<User[]>([
-    chat.currentUser
+    currentUser
   ])
   const [creationInProgress, setCreationInProgress] = useState(false)
 

@@ -265,8 +265,6 @@ const removeInvite = chat.listenForEvents({
 })
 ```
 
-**See also: Known Issues ‡**
-
 **Demo Limitations †:** If automatically accepting an invite feels very trusting, it is, but in production an application would use the [Access Manager](https://www.pubnub.com/docs/chat/chat-sdk/learn/access-control) to determine who is able to create new groups, and the client may arbitrate with a server, the latter being responsible for authenticating the request and creating the channel.
 
 ## Direct (1:1) Conversation
@@ -510,8 +508,6 @@ Both of these are achieved with the APIs [user.streamUpdates and User.streamUpda
 
 ```
 
-**See also: Known Issues ‡**
-
 **Demo Limitations †:** 
 
 - The Profile screen has options for 'Notifications' and 'Read receipts'.  These are **visual only**.  Notifications have not been implemented and read receipts will continue to be received as described earlier regardless of the state of the switch.
@@ -520,9 +516,7 @@ Both of these are achieved with the APIs [user.streamUpdates and User.streamUpda
 
 The Chat SDK has a robust set of `streamUpdates()` APIs for `Channels`, `Users`, and `Memberships`.  These APIs will provide you all the required information to update your application in realtime, with changes reflected immediately for other users.
 
-**See also: Known Issues ‡**
-
-**Demo Limitations †:** To simplify the logic of this demo, I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done for the sake of expediency.  
+**Demo Limitations †:** I took the inefficient step to re-read all information related to the current user from the server whenever an update happens, see the `refreshMembersFromServer()` method.  This was done because during development there was a bug in the Chat SDK (which has since been fixed in version [0.7.3](https://www.npmjs.com/package/@pubnub/chat/v/0.7.3)!) but I did not go back and refactor my code.  
 
 ## Integration with BizOps Workspace: User & Channel Management
 
@@ -582,7 +576,3 @@ If you receive a moderation event, you will see a toast similar to the screensho
 # Demo Limitations †
 
 For each feature supported by this demo, some limitations are described.  Please note that these are limitations of the demo implementation, **not limitations of the Chat SDK**
-
-# Known Issues ‡ 
-
-Sometimes user names, avatars, group names, or invitations will not be updated automatically for other clients.  This includes updates made through the demo, or updates made through BizOps Workspace [User Management](https://www.pubnub.com/docs/bizops-workspace/user-management) / [Channel Management](https://www.pubnub.com/docs/bizops-workspace/channel-management).  If you experience this demo-only issue, please refresh the browser to retrieve the latest updates.

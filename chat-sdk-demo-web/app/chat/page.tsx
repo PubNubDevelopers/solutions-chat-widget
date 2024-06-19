@@ -199,13 +199,6 @@ export default function Page () {
           }
         }
         setPublicChannelsUsers(tempPublicUsers)
-        const me = tempPublicUsers[0].find(
-          user => user.id == chat.currentUser.id
-        )
-        if (me) {
-          if (me.name) {setName(me.name)}
-          if (me.profileUrl) {setProfileUrl(me.profileUrl)}
-        }
       })
   }
 
@@ -1033,9 +1026,10 @@ export default function Page () {
         activeChannel={null}
         modalType={ChatNameModals.USER}
         saveAction={async newName => {
-          await chat.currentUser.update({
+          const newUser = await chat.currentUser.update({
             name: newName
           })
+          setCurrentUser(newUser)
           setName(newName)
           showUserMessage(
             'Name Changed',
@@ -1132,6 +1126,7 @@ export default function Page () {
             {creatingNewMessage ? (
               <NewMessageGroup
                 chat={chat}
+                currentUser={currentUser}
                 setCreatingNewMessage={setCreatingNewMessage}
                 showUserMessage={showUserMessage}
                 sendChatEvent={(eventType, recipients, payload) => {

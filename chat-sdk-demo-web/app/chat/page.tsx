@@ -820,7 +820,15 @@ export default function Page () {
   }
 
   function logout () {
-    router.replace(`/`)
+    const identifier = searchParams.get('identifier')
+    if (identifier)
+      {
+        router.replace(`/?identifier=${identifier}`)
+      }
+      else
+      {
+        router.replace(`/`)
+      }
   }
 
   function showUserMessage (

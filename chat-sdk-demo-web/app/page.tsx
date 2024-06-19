@@ -2,13 +2,14 @@
 
 import Image from 'next/image'
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function Home () {
   const [userId, setUserId] = useState('')
   const [userName, setUserName] = useState('')
   const [showSpinner, setShowSpinner] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const autofocusInput = useRef<HTMLInputElement>(null)
 
   const handleInputChange = e => {
@@ -22,11 +23,21 @@ export default function Home () {
     return orig.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
   }
 
+  function getIdentifier () {
+    const searchParamsIdentifier = searchParams.get('identifier')
+    if (!searchParamsIdentifier) {
+      return ''
+    } else {
+      return `&identifier=${searchParamsIdentifier}`
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (userId === '') {
     } else {
-      router.replace(`/chat/?userId=${userId}`)
+      const identifier = getIdentifier()
+      router.replace(`/chat/?userId=${userId}${identifier}`)
     }
   }
 
@@ -35,7 +46,8 @@ export default function Home () {
       autofocusInput.current?.focus()
     } else {
       setShowSpinner(true)
-      router.replace(`/chat/?userId=${userId}`)
+      const identifier = getIdentifier()
+      router.replace(`/chat/?userId=${userId}${identifier}`)
     }
   }
 
@@ -46,9 +58,22 @@ export default function Home () {
         className='flex flex-col min-h-screen items-center justify-center w-full lg:w-1/2 bg-white'
       >
         <div id='login-container' className='flex flex-col max-w-80 gap-16'>
-        <div className='sm:hidden text-center text-lg text-neutral900 font-bold'>
-              This app is not designed for mobile.  <br/><br/>Please visit our separate demo at:<br/><a className="text-decoration-line: underline" href="https://www.pubnub.com/demos/chat-sdk-mobile/" target="_top">pubnub.com/demos/chat-sdk-mobile/</a><br/><br/>This shows an app written with React Native
-            </div>
+          <div className='sm:hidden text-center text-lg text-neutral900 font-bold'>
+            This app is not designed for mobile. <br />
+            <br />
+            Please visit our separate demo at:
+            <br />
+            <a
+              className='text-decoration-line: underline'
+              href='https://www.pubnub.com/demos/chat-sdk-mobile/'
+              target='_top'
+            >
+              pubnub.com/demos/chat-sdk-mobile/
+            </a>
+            <br />
+            <br />
+            This shows an app written with React Native
+          </div>
 
           <div className='hidden sm:flex flex-col gap-3'>
             <Image
@@ -66,7 +91,10 @@ export default function Home () {
               Built with the PubNub Chat SDK for JavaScript and TypeScript.
             </div>
           </div>
-          <form className='hidden sm:flex flex-col gap-16' onSubmit={handleSubmit}>
+          <form
+            className='hidden sm:flex flex-col gap-16'
+            onSubmit={handleSubmit}
+          >
             <div className='flex flex-col'>
               <label className='text-sm text-neutral900'>
                 Choose a User ID

@@ -34,7 +34,7 @@ To run this project yourself you will need a PubNub account
 
 1. Enable the Message Persistence feature on your keyset and choose a duration
 
-1. Enable the App Context feature on your keyset.  Make sure you check all the checkboxes related to events, i.e. User and Channel Metadata Events as well as Membership Events.
+1. Enable the App Context feature on your keyset.  **Check** the following boxes: `User Metadata Events`, `Channel Metadata Events`, `Membership Events`.  **Uncheck** the following boxes: `Disallow Get All Channel Metadata`, `Disallow Get All User Metadata`
 
 1. Leave the File Sharing feature disabled.  Although the Chat SDK supports sending files, this demo app does not.
 

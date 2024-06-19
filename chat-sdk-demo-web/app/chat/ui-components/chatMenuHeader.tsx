@@ -21,7 +21,7 @@ export default function ChatMenuHeader ({
             <Image
               src='/icons/expand-more.svg'
               alt='Expand'
-              className={expanded ? '' : 'rotate-180'}
+              className={`${expanded ? '' : 'rotate-180'} w-3 h-[7px]`}
               width={12}
               height={7}
               priority

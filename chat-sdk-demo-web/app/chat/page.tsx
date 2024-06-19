@@ -43,6 +43,7 @@ import {
   UnreadMessagesOnChannel,
   PresenceIcon
 } from '@/app/types'
+import { getAuthKey } from "@/app/getAuthKey"
 import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function Page () {
@@ -335,13 +336,15 @@ export default function Page () {
           ? process.env.NEXT_PUBLIC_GUIDED_DEMO
           : null
       )
+      const { accessManagerToken } = await getAuthKey(userId)
       const chat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
         typingTimeout: 5000,
         storeUserActivityTimestamps: true,
-        storeUserActivityInterval: 300000 /* 5 minutes */
+        storeUserActivityInterval: 300000, /* 5 minutes */
+        authKey: accessManagerToken,
       })
       setChat(chat)
       setCurrentUser(chat.currentUser)

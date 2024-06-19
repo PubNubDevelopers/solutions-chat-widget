@@ -64,7 +64,6 @@ export default function UserMessage ({
             <Image
               src='/icons/arrow_forward.svg'
               alt='Info'
-              className=''
               width={16}
               height={16}
             />

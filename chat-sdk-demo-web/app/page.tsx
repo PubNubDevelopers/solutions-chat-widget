@@ -103,6 +103,7 @@ export default function Home () {
                 type='text'
                 ref={autofocusInput}
                 value={userName}
+                placeholder="Choose a Name"
                 onChange={handleInputChange}
                 maxLength={63}
                 className={`bg-white border border-neutral300 text-neutral900 rounded-lg focus:ring-1 ${

@@ -249,6 +249,7 @@ export default function ChatSelectionMenu ({
                     }}
                     setActiveChannel={() => {
                       setActiveChannelPinnedMessage(null)
+                      setCreatingNewMessage(false)
                       if (
                         unreadMessage.channel.type === 'public' &&
                         publicChannels
@@ -317,6 +318,7 @@ export default function ChatSelectionMenu ({
                     text={publicChannel.name}
                     present={PresenceIcon.NOT_SHOWN}
                     setActiveChannel={() => {
+                      setCreatingNewMessage(false)
                       setActiveChannelPinnedMessage(null)
                       setActiveChannel(publicChannels[index])
                     }}
@@ -362,6 +364,7 @@ export default function ChatSelectionMenu ({
                         : ''
                     }
                     setActiveChannel={() => {
+                      setCreatingNewMessage(false)
                       setActiveChannelPinnedMessage(null)
                       setActiveChannel(privateGroups[index])
                     }}
@@ -416,6 +419,7 @@ export default function ChatSelectionMenu ({
                         : PresenceIcon.OFFLINE
                     }
                     setActiveChannel={() => {
+                      setCreatingNewMessage(false)
                       setActiveChannelPinnedMessage(null)
                       setActiveChannel(directChats[index])
                     }}

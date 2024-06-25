@@ -2,8 +2,8 @@
   //  IN PRODUCTION: Replace with your own logic to request an Access Manager token
 
 export async function getAuthKey(
-  userId: string
-): Promise<{ accessManagerToken: string | undefined }> {
+  userId: String
+): Promise<{ accessManagerToken: String | undefined }> {
   try {
     const TOKEN_SERVER =
       "https://devrel-demos-access-manager.netlify.app/.netlify/functions/api/chatsdk-web";
@@ -24,10 +24,9 @@ export async function getAuthKey(
         accessManagerToken: token,
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log(
-      "Failed to obtain the Access Manager token for demo:",
-      error.message
+      "Failed to obtain the Access Manager token for demo:" + error.message
     );
   }
 

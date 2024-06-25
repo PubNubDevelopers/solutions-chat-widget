@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Poppins } from 'next/font/google'
 import './globals.css'
 
@@ -20,7 +21,10 @@ export default function RootLayout ({
 }>) {
   return (
     <html lang='en'>
-      <body className={poppins.className}>{children}</body>
+      <Suspense>
+        {' '}
+        <body className={poppins.className}>{children}</body>
+      </Suspense>
     </html>
   )
 }

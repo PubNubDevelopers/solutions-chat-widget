@@ -3,13 +3,19 @@ import { useState } from 'react'
 import { roboto } from '@/app/fonts'
 import Avatar from './avatar'
 import ManagedMember from './managedMember'
+import {
+  ChatEventTypes
+} from '@/app/types'
 
 export default function ModalManageMembers ({
+  activeChannelUsers,
+  currentUserId,
+  activeChannel,
   saveAction,
   manageMembersModalVisible,
-  setManageMembersModalVisible
+  setManageMembersModalVisible,
+  sendChatEvent
 }) {
-
   return (
     <div
       className={`${
@@ -37,46 +43,33 @@ export default function ModalManageMembers ({
         </div>
         <div className='flex flex-col px-12 pb-12 gap-3'>
           <div className='flex font-semibold text-lg justify-center text-neutral-900 mb-2'>
-            Manage Members
+            View Members ({activeChannelUsers?.length})
           </div>
           <div className='flex font-normal text-base justify-center text-neutral-600'>
-            The Chat SDK supports access rights, so you can choose which users
-            have permission to remove others from a group
+            A membership associates a user with a specific channel and is
+            created / destroyed when a user joins or leaves a channel
+            respectively.
           </div>
 
           <div className='flex flex-col my-2 max-h-[40vh] overflow-y-auto overscroll-none'>
-
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Cameron Williamson" avatarUrl="/avatars/avatar10.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Brooklyn Simmons" avatarUrl="/avatars/avatar11.png" removeAction={() => {console.log("ToDo: Remove Member")}}/>
-          <ManagedMember name="Leslie Alexander" avatarUrl="/avatars/avatar12.png" removeAction={() => {console.log("ToDo: Remove Member")}} lastElement={true}/>
+            {activeChannelUsers?.map((user, index) => {
+              return (
+                <ManagedMember
+                  key={index}
+                  user={user}
+                  name={`${user.name}`}
+                  lastElement={index == activeChannelUsers?.length - 1}
+                />
+              )
+            })}
 
           </div>
-          <div className='flex flex-row justify-between'>
-            <div
-              className={`${roboto.className} flex flex-row justify-center items-center text-navy700 font-normal text-base w-1/3 h-12 cursor-pointer border border-neutral-300 rounded-lg bg-white`}
-              onClick={e => setManageMembersModalVisible(false)}
-            >
-              Cancel
-            </div>
+          <div className='flex flex-row justify-end'>
             <div
               className={`${roboto.className} flex flex-row justify-center items-center text-neutral-50 font-normal text-base w-1/3 h-12 cursor-pointer shadow-sm rounded-lg bg-navy900`}
               onClick={e => saveAction()}
             >
-              Save
+              OK
             </div>
           </div>
         </div>

@@ -1,29 +1,27 @@
 import Image from 'next/image'
 import ToolTip from './toolTip'
 import { useState } from 'react'
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
 
 export default function MessageActions ({
   received,
   actionsShown,
+  timetoken,
+  isPinned,
   messageActionsEnter,
   messageActionsLeave,
   replyInThreadClick,
   quoteMessageClick,
   pinMessageClick,
-  reactMessageClick,
-  copyMessageClick
+  copyMessageClick,
+  showEmojiPickerClick
 }) {
   const [emoteToolTip, setEmoteToolTip] = useState(false)
   const [quoteToolTip, setQuoteToolTip] = useState(false)
   const [pinToolTip, setPinToolTip] = useState(false)
   const [replyToolTip, setReplyToolTip] = useState(false)
   const [copyToolTip, setCopyToolTip] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   function copyClick (e) {
-    console.log('ToDo: Actually copy the message')
     copyMessageClick()
   }
   function copyEnter () {
@@ -70,14 +68,12 @@ export default function MessageActions ({
   }
 
   function emoteClick (e) {
-    setShowEmojiPicker(true)
-    //reactMessageClick()
-  }
-
-  function emojiSelected(data) {
-    console.log(data)
-    setShowEmojiPicker(false)
-    reactMessageClick(data)
+    showEmojiPickerClick({
+      isShown: true,
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      messageTimetoken: timetoken
+    })
   }
 
   function emoteEnter () {
@@ -93,13 +89,12 @@ export default function MessageActions ({
   }
   const handleMessageActionsMouseLeave = e => {
     messageActionsLeave()
-    setShowEmojiPicker(false)
   }
 
   return (
-    <div className={`relative ${!received && 'self-start'}`}>
+    <div className={`${!received && 'relative self-start'}`}>
       <div
-        className={`absolute flex flex-row-reverse p-2 gap-1 w-[252px] z-10 rounded-sm shadow-lg bg-white ${
+        className={`absolute flex flex-row-reverse p-2 gap-1 w-[252px] z-10 rounded-sm shadow-lg bg-white mr-24 ${
           received ? 'right-[10px]' : 'left-[10px]'
         } ${received ? '-bottom-[50px]' : '-bottom-[35px]'} cursor-pointer ${
           !actionsShown && 'hidden'
@@ -161,7 +156,7 @@ export default function MessageActions ({
           />
           <ToolTip
             className={`${pinToolTip ? 'block' : 'hidden'}`}
-            tip='Pin message'
+            tip={`${isPinned ? 'Unpin message' : 'Pin message'}`}
           />
         </div>
         <div
@@ -202,13 +197,6 @@ export default function MessageActions ({
             tip='React to message'
           />
         </div>
-        {showEmojiPicker && <div
-          className={`absolute  ${
-            received ? 'right-[250px]' : 'left-[60px]'
-          } -top-[50px]`}
-        >
-          <Picker data={data} onEmojiSelect={(data) => {emojiSelected(data)}} onClickOutside={() => {setShowEmojiPicker(false)}} />
-        </div>}
       </div>
     </div>
   )

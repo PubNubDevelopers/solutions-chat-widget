@@ -1,15 +1,29 @@
 import Image from 'next/image'
 import Avatar from './avatar'
 import { roboto } from '@/app/fonts'
+import { useState, useEffect } from 'react'
+import { ToastType } from '@/app/types'
+import { actionCompleted } from 'pubnub-demo-integration'
 
 export default function ProfileScreen ({
   profileScreenVisible,
   setProfileScreenVisible,
   name,
+  profileUrl,
   logout,
   changeName,
+  showUserMessage,
   changeUserNameScreenVisible
 }) {
+  useEffect(() => {
+    if (!profileScreenVisible) return
+    actionCompleted({
+      action: 'Open your Profile Settings',
+      blockDuplicateCalls: false,
+      debug: false
+    })
+  }, [profileScreenVisible])
+
   return (
     <div
       className={`${
@@ -50,11 +64,18 @@ export default function ProfileScreen ({
 
         <div className='flex justify-center pb-6'>
           <Avatar
-            avatarUrl={'/avatars/avatar01.png'}
+            avatarUrl={profileUrl}
             width={88}
             height={88}
             editIcon={true}
-            editActionHandler={() => console.log('todo: Edit Profile icon')}
+            editActionHandler={() => {
+              showUserMessage(
+                'Demo Limitation',
+                'Though supported by the Chat SDK, this demo does not support changing your user avatar, unless you use the "User Management" feature of BizOps Workspace',
+                'https://www.pubnub.com/docs/bizops-workspace/user-management',
+                ToastType.INFO
+              )
+            }}
           />
         </div>
         <div className='flex flex-row justify-between items-center py-4 px-4'>
@@ -79,9 +100,19 @@ export default function ProfileScreen ({
               Get notified about new messages and mentions from chats
             </div>
           </div>
-          <div className='h-6 relative inline-block'>
-            {/* ToDo: Checkbox is currently disabled with no handlers */}
-            <input type='checkbox' checked={false} disabled />
+          <div
+            className='h-6 relative inline-block'
+            onClick={() =>
+              showUserMessage(
+                'Demo Limitation:',
+                'Although not supported by this demo, you use the Chat SDK to alert your users with built-in or custom events',
+                'https://www.pubnub.com/docs/chat/chat-sdk/build/features/custom-events',
+                ToastType.INFO
+              )
+            }
+          >
+            {/* Checkbox is currently disabled with no handlers */}
+            <input type='checkbox' className="checked:before:bg-neutral-400 checked:after:translate-x-0" defaultChecked={false} onChange={e => {}} />
           </div>
         </div>
         <div className='border border-navy600'></div>
@@ -93,9 +124,23 @@ export default function ProfileScreen ({
               Receive receipts when messages are sent and read
             </div>
           </div>
-          <div className='h-6 relative inline-block'>
-            {/* ToDo: Checkbox is currently disabled with no handlers */}
-            <input type='checkbox' checked={true} disabled />
+          <div
+            className='h-6 relative inline-block'
+            onClick={() =>
+              showUserMessage(
+                'Demo Limitation:',
+                'Though supported by the Chat SDK, this demo does not support disabling read receipts',
+                'https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/read-receipts',
+                ToastType.INFO
+              )
+            }
+          >
+            {/* Checkbox is currently disabled with no handlers */}
+            <input
+              type='checkbox'
+              className='before:bg-sky-600 after:translate-x-4'
+              onChange={() => {}}
+            />
           </div>
         </div>
 

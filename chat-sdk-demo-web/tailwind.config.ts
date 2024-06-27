@@ -23,7 +23,9 @@ const config: Config = {
         'cherryDark': '#B91C1C',
         'pubnubbabyblue': '#C3E6FA',
         'success': '#22C55E',
-        'inputring': '#57969C'
+        'inputring': '#57969C',
+        'statusIndicatorInfo100': '#DBEAFE',
+        'statusIndicatorSuccess100': '#DCFCE7'
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

@@ -1,9 +1,17 @@
 import Image from 'next/image'
 
-export default function ToolTip ({ className, tip, messageActionsTip=true}) {
+export default function ToolTip ({ className, tip, messageActionsTip = true }) {
   return (
-    <div className={`${className} absolute w-full ${messageActionsTip ? "right-[0px]" : "right-[5px]"} bottom-[${messageActionsTip ? "50px" : "0px"}]`}>
-      <div className={`flex flex-col ${messageActionsTip ? "items-center" : "items-end"}`}>
+    <div
+      className={`${className} absolute w-full ${
+        messageActionsTip ? 'right-[0px]' : 'right-[5px]'
+      } bottom-[${messageActionsTip ? '50px' : '0px'}]`}
+    >
+      <div
+        className={`flex flex-col ${
+          messageActionsTip ? 'items-center' : 'items-end'
+        }`}
+      >
         <div className='text-neutral-50 bg-navy900 px-2 py-2 min-w-16 text-xs text-center'>
           {tip}
         </div>

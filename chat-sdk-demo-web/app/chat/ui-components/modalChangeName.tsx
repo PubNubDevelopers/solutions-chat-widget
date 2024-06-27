@@ -1,20 +1,35 @@
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { roboto } from '@/app/fonts'
-import { ChatNameModals } from '../types'
+import { ChatNameModals, ToastType } from '@/app/types'
 
 export default function ModalChangeName ({
   name,
+  activeChannel,
   modalType,
   saveAction,
+  showUserMessage,
   changeNameModalVisible,
   setChangeNameModalVisible
 }) {
-  const [newChatName, setNewChatName] = useState(name)
+  const [newChatName, setNewChatName] = useState('')
+
+  useEffect(() => {
+    if (!activeChannel || modalType == ChatNameModals.USER) return
+    setNewChatName(activeChannel.name)
+  }, [activeChannel, modalType])
+
+  useEffect(() => {
+    if (!name || modalType == ChatNameModals.CHANNEL) return
+    setNewChatName(name)
+  }, [modalType, name])
 
   return (
-    <div className={`${
-        !changeNameModalVisible && 'hidden'} fixed mx-auto inset-0 flex justify-center items-center z-40 select-none`}>
+    <div
+      className={`${
+        !changeNameModalVisible && 'hidden'
+      } fixed mx-auto inset-0 flex justify-center items-center z-40 select-none`}
+    >
       {/* Example Modal */}
       <div className='flex flex-col lg:w-1/2 md:w-2/3 sm:w-2/3 shadow-xl rounded-xl bg-white border border-neutral-300'>
         <div className='flex flex-row justify-end'>
@@ -36,10 +51,14 @@ export default function ModalChangeName ({
         </div>
         <div className='flex flex-col px-12 pb-12 gap-5'>
           <div className='flex font-semibold text-lg justify-center text-neutral-900 mb-2'>
-            {modalType == ChatNameModals.USER ? "Change your name" : "Change chat name"}
+            {modalType == ChatNameModals.USER
+              ? 'Change your name'
+              : 'Change chat name'}
           </div>
           <div className='flex font-normal text-base justify-center text-neutral-600'>
-            {modalType == ChatNameModals.USER ? "The Chat SDK uses Metadata to store context about your user, such as their name or alias" : "The Chat SDK uses Metadata to store context about your chat, such as a human readable name"}
+            {modalType == ChatNameModals.USER
+              ? 'The Chat SDK uses Metadata to store context about your user, such as their name or alias'
+              : 'The Chat SDK uses Metadata to store context about your chat, such as a human readable name'}
           </div>
 
           <div className='flex flex-col gap-1 my-4'>
@@ -61,13 +80,29 @@ export default function ModalChangeName ({
           <div className='flex flex-row justify-between'>
             <div
               className={`${roboto.className} flex flex-row justify-center items-center text-navy700 font-normal text-base w-1/3 h-12 cursor-pointer border border-neutral-300 rounded-lg bg-white`}
-              onClick={e => setChangeNameModalVisible(false)}
+              onClick={e => {
+                setChangeNameModalVisible(false)
+              }}
             >
               Cancel
             </div>
             <div
               className={`${roboto.className} flex flex-row justify-center items-center text-neutral-50 font-normal text-base w-1/3 h-12 cursor-pointer shadow-sm rounded-lg bg-navy900`}
-              onClick={e => saveAction(newChatName)}
+              onClick={() => {
+                if (activeChannel?.type === 'public') {
+                  {
+                    showUserMessage(
+                      'Demo Limitation',
+                      'Though supported by the Chat SDK, this demo does not support changing public channel names.  Please try changing a private group name instead',
+                      'https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/updates#update-channel-details',
+                      ToastType.ERROR
+                    )
+                  }
+                } else {
+                  saveAction(newChatName)
+                  setChangeNameModalVisible(false)
+                }
+              }}
             >
               Save
             </div>

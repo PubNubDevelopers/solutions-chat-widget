@@ -44,7 +44,7 @@ export default function ChatSelectionMenu ({
       id='chats-menu'
       className={`flex flex-col ${!isLg && 
         chatSelectionMenuMinimized ? 'w-5 min-w-5' : 'lg:min-w-80 lg:w-80 min-w-60 w-60'
-      } bg-navy50 py-0 overflow-y-auto overscroll-none mt-[64px] pb-6 select-none`}
+      } bg-navy50 py-0 overflow-y-auto overscroll-none mt-[64px] pb-6 select-none border-r border-navy-200`}
     >
       <div
         className={`${!isLg && 

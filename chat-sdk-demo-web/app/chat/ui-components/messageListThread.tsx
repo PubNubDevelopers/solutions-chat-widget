@@ -99,7 +99,7 @@ export default function MessageListThread ({
           </div>
         </div>
         <div
-          className={`flex flex-col border border-navy-200 h-screen overflow-y-auto pb-6 mb-[178px]`}
+          className={`flex flex-col border-x border-navy-200 h-screen overflow-y-auto pb-6 mb-[178px]`}
           ref={messageListRef}
         >
           {/* ORIGINAL MESSAGE */}

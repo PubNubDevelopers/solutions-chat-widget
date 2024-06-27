@@ -191,7 +191,7 @@ export default function MessageList ({
     <div className='flex flex-col max-h-screen'>
       <div
         id='chats-header'
-        className='flex flex-row items-center h-16 min-h-16 border border-navy-200 select-none'
+        className='flex flex-row items-center h-16 min-h-16 border-y border-navy-200 select-none'
       >
         <div
           className={`${roboto.className} text-base font-medium flex flex-row grow justify-center items-center gap-3`}

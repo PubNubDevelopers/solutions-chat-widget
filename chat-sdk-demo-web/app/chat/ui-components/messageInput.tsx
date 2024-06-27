@@ -147,7 +147,7 @@ export default function MessageInput ({
 
   return (
     <div
-      className={`flex flex-col w-full items-center border border-navy200 select-none ${
+      className={`flex flex-col w-full items-center border-y border-r border-navy200 select-none ${
         quotedMessage ? 'h-[170px]' : ''
       } pr-6`}
     >

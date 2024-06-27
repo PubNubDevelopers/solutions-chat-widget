@@ -1132,7 +1132,7 @@ export default function Page () {
         <div className='relative w-full'>
           <div
             id='chats-main'
-            className='flex flex-col grow w-full max-h-screen py-0 mt-[64px]'
+            className='flex flex-col grow w-full max-h-screen py-0 mt-[64px] bg-white'
           >
             {creatingNewMessage ? (
               <NewMessageGroup

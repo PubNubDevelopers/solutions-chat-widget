@@ -73,7 +73,7 @@ export default function MessageListThread ({
       <div
         className={`${
           !showThread && 'hidden'
-        } flex flex-col min-w-80 max-w-80 max-h-screen py-0 mt-[64px]`}
+        } flex flex-col min-w-80 max-w-80 max-h-screen py-0 mt-[64px] bg-white`}
       >
         <div
           id='threads-header'

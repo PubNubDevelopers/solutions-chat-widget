@@ -1129,7 +1129,7 @@ export default function Page () {
           currentUserProfileUrl={profileUrl}
           showUserMessage={showUserMessage}
         />
-        <div className='relative w-full'>
+        <div className='relative w-full bg-white'>
           <div
             id='chats-main'
             className='flex flex-col grow w-full max-h-screen py-0 mt-[64px] bg-white'
@@ -1247,7 +1247,7 @@ export default function Page () {
             <div
               className={`${
                 creatingNewMessage && 'hidden'
-              } absolute bottom-0 left-0 right-0`}
+              } absolute bottom-0 left-0 right-0 bg-white`}
             >
               <MessageInput
                 activeChannel={activeChannel}

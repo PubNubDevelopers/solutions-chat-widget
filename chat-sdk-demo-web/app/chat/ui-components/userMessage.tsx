@@ -28,6 +28,7 @@ export default function UserMessage ({
             className=''
             width={24}
             height={24}
+            priority
           />
         )}
         {type === ToastType.CHECK && (
@@ -37,6 +38,7 @@ export default function UserMessage ({
             className=''
             width={24}
             height={24}
+            priority
           />
         )}
         {type === ToastType.ERROR && (
@@ -46,6 +48,7 @@ export default function UserMessage ({
             className=''
             width={24}
             height={24}
+            priority
           />
         )}
       </div>

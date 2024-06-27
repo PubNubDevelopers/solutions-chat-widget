@@ -99,8 +99,10 @@ export default function ModalChangeName ({
                     )
                   }
                 } else {
-                  saveAction(newChatName)
-                  setChangeNameModalVisible(false)
+                  if (newChatName && newChatName.length > 0) {
+                    saveAction(newChatName)
+                    setChangeNameModalVisible(false)
+                  }
                 }
               }}
             >

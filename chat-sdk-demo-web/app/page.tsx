@@ -147,7 +147,7 @@ export default function Home () {
         <Image
           src='/welcome.svg'
           alt='Welcome to the Chat SDK sample app'
-          className='dark:invert'
+          className=''
           width={467}
           height={403}
           priority

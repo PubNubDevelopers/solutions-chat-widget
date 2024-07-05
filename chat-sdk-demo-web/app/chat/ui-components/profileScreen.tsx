@@ -28,12 +28,12 @@ export default function ProfileScreen ({
     <div
       className={`${
         !profileScreenVisible && 'hidden'
-      } flex flex-col h-full flex-wrap h-16 p-3 rounded-l-lg bg-sky-950 select-none fixed right-0 w-96 z-20`}
+      } flex flex-col h-full p-3 rounded-l-lg bg-sky-950 select-none fixed right-0 w-96 z-20`}
     >
       <div
         className={`${roboto.className} ${
           changeUserNameScreenVisible && 'opacity-40'
-        } text-sm font-medium flex flex flex-row text-white py-3 items-center`}
+        } text-sm font-medium flex flex-row text-white py-3 items-center`}
       >
         <div
           className='flex cursor-pointer'

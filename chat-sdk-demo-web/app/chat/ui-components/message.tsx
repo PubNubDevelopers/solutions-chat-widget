@@ -312,7 +312,18 @@ export default function Message ({
                   message
                     .getMessageElements()
                     .map((msgPart, index) => renderMessagePart(msgPart, index))}
-                {message.actions && message.actions.edited && <span className="text-navy500">&nbsp;&nbsp;(edited)</span>}
+                {message.actions && message.actions.edited && (
+                  <span className='text-navy500'>&nbsp;&nbsp;(edited)</span>
+                )}
+                {message.files && message.files.length > 0 && (
+                  <Image
+                    src={`${message.files[0].url}`}
+                    alt='PubNub Logo'
+                    className='absolute right-2 top-2'
+                    width={25}
+                    height={25}
+                  />
+                )}
               </div>
             </div>
             {!received && showReadIndicator && (
@@ -345,13 +356,19 @@ export default function Message ({
                     ))
                 : ''}
             </div>
-            {!inThread && message.hasThread && <div className='absolute right-[10px] -bottom-[28px] flex flex-row items-center z-0 cursor-pointer select-none' onClick={() => {messageActionHandler(
-                  MessageActionsTypes.REPLY_IN_THREAD,
-                  message
-                )}}>
-              {/*Whether or not there is a threaded reply*/}
-              <div className='flex flex-row cursor-pointer' >
-              <Image
+            {!inThread && message.hasThread && (
+              <div
+                className='absolute right-[10px] -bottom-[28px] flex flex-row items-center z-0 cursor-pointer select-none'
+                onClick={() => {
+                  messageActionHandler(
+                    MessageActionsTypes.REPLY_IN_THREAD,
+                    message
+                  )
+                }}
+              >
+                {/*Whether or not there is a threaded reply*/}
+                <div className='flex flex-row cursor-pointer'>
+                  <Image
                     src='/icons/reveal-thread.svg'
                     alt='Expand'
                     className=''
@@ -359,11 +376,12 @@ export default function Message ({
                     height={20}
                     priority
                   />
-              <div className='text-sm font-normal text-navy700'>
-              Replies
+                  <div className='text-sm font-normal text-navy700'>
+                    Replies
+                  </div>
+                </div>
               </div>
-              </div>
-            </div>}
+            )}
             {/* actions go here for received */}
             {received && !inThread && !inPinned && (
               <MessageActions

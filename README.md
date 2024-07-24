@@ -428,6 +428,24 @@ You can easily access the user's online state with the `user.active` field.  Thi
 
 This demo uses [global app presence](https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/presence#global-presence) with the `storeUserActivityInterval` value set to 5 minutes.  As mentioned in the 'unread messages' section, the app maintains listeners for every channel the user is a member of, so the 'traditional' presence API would return true for every channel anyway. 
 
+## Adding files to messages
+
+The Chat SDK allows you to attach [files](https://www.pubnub.com/docs/chat/chat-sdk/build/features/messages/files) to messages, such as text files or images.  Whereas the JavaScript SDK allows you to attach a single file per message, the Chat SDK allows you to attach multiple files, so for example you could send a message containing 5 images.  Files will be stored in PubNub's file storage, so ensure you have [File sharing](https://www.pubnub.com/docs/general/files) enabled on your keyset for this feature to work.  Received files can be found in the `message.files` object, which contains an array of the attached files, so you might access the first file as follows:
+
+```typescript
+{message.files && message.files.length > 0 && (
+  <Image
+    src={`${message.files[0].url}`}
+  />
+)}
+```
+
+**Demo Limitations †:** 
+
+This demo will hard code an attached file if you click the paperclip icon, so you will not see the expected file browser to choose the file to attach.  The file is exchanged through the Chat SDK in the same way as a user-selected file however. 
+
+![Screenshot](./media/attachments.png)
+
 ## Mentioning Users & Referencing Channels
 
 [Mentioning Users](https://www.pubnub.com/docs/chat/chat-sdk/build/features/users/mentions) & [Referencing Channels](https://www.pubnub.com/docs/chat/chat-sdk/build/features/channels/references) allows you to tag an existing user or channel to render the text differently and perform some custom action after the message is sent, for example clicking on a referenced channel might switch to that channel.

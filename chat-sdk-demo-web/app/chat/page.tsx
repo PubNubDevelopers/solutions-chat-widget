@@ -337,7 +337,7 @@ export default function Page () {
           : null
       )
       const { accessManagerToken } = await getAuthKey(userId)
-      const chat = await Chat.init({
+      const localChat = await Chat.init({
         publishKey: process.env.NEXT_PUBLIC_PUBNUB_PUBLISH_KEY,
         subscribeKey: process.env.NEXT_PUBLIC_PUBNUB_SUBSCRIBE_KEY,
         userId: userId,
@@ -346,37 +346,37 @@ export default function Page () {
         storeUserActivityInterval: 300000, /* 5 minutes */
         authKey: accessManagerToken,
       })
-      setChat(chat)
-      setCurrentUser(chat.currentUser)
+      setChat(localChat)
+      setCurrentUser(localChat.currentUser)
       
-      if (!chat.currentUser.profileUrl) {
+      if (!localChat.currentUser.profileUrl) {
         const randomProfileUrl = Math.floor(
           Math.random() * testData.avatars.length
         )
-        await chat.currentUser.update({
+        await localChat.currentUser.update({
           name: '' + userId,
           profileUrl: testData.avatars[randomProfileUrl]
         })
         setName('' + userId)
         setProfileUrl(testData.avatars[randomProfileUrl])
       } else {
-        if (chat.currentUser.name) {setName(chat.currentUser.name)}
-        setProfileUrl(chat.currentUser.profileUrl)
+        if (localChat.currentUser.name) {setName(localChat.currentUser.name)}
+        setProfileUrl(localChat.currentUser.profileUrl)
       }
 
-      await chat
+      await localChat
         .getChannels({ filter: `type == 'public'` })
         .then(async channelsResponse => {
           if (channelsResponse.channels.length < 2) {
             //  There are fewer than the expected number of public channels on this keyset, do any required Keyset initialization
-            await keysetInit(chat)
+            await keysetInit(localChat)
             location.reload()
           } else {
             //  Join public channels
             if (channelsResponse.channels.length > 0) {
               setLoadMessage('Creating Memberships')
               //  Join each of the public channels
-              const currentMemberships = await chat.currentUser.getMemberships({
+              const currentMemberships = await localChat.currentUser.getMemberships({
                 filter: "channel.type == 'public'"
               })
 
@@ -389,13 +389,13 @@ export default function Page () {
                 membership => membership.channel.id == 'public-work'
               )
               if (!publicMembership) {
-                const publicChannel = await chat.getChannel('public-general')
+                const publicChannel = await localChat.getChannel('public-general')
                 publicChannel?.join(message => {
                   //  We have a message listener elsewhere for consistency with private and direct chats
                 })
               }
               if (!workMembership) {
-                const workChannel = await chat.getChannel('public-work')
+                const workChannel = await localChat.getChannel('public-work')
                 workChannel?.join(message => {
                   //  We have a message listener elsewhere for consistency with private and direct chats
                 })
@@ -407,9 +407,9 @@ export default function Page () {
       //  Initialization for private groups and direct messages
       //  Calling inside a timeout as there was some timing issue when creating a new user
       let setTimeoutIdInit = setTimeout(() => {
-        updateChannelMembershipsForPublic(chat)
-        updateChannelMembershipsForDirects(chat)
-        updateChannelMembershipsForGroups(chat)
+        updateChannelMembershipsForPublic(localChat)
+        updateChannelMembershipsForDirects(localChat)
+        updateChannelMembershipsForGroups(localChat)
       }, 500)
 
       actionCompleted({
@@ -418,8 +418,9 @@ export default function Page () {
         debug: false
       })
     }
+    if (chat) return
     init()
-  }, [userId, setChat, searchParams, router])
+  }, [userId, chat, searchParams, router])
 
   useEffect(() => {
     //  Connect to the direct chats whenever they change so we can keep a track of unread messages

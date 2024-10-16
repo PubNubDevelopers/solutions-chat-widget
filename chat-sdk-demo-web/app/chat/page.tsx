@@ -331,6 +331,7 @@ export default function Page () {
         setLoadMessage('No Subscribe Key Found')
         return
       }
+      //  NEXT_PUBLIC_GUIDED_DEMO can be ignored and omitted from your .env file
       setGuidedDemo(
         process.env.NEXT_PUBLIC_GUIDED_DEMO
           ? process.env.NEXT_PUBLIC_GUIDED_DEMO
